@@ -874,7 +874,7 @@ private fun uniffiCheckApiChecksums(lib: IntegrityCheckingUniffiLib) {
     if (lib.uniffi_mob_checksum_method_client_is_synced() != 61050.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_mob_checksum_method_client_send() != 12004.toShort()) {
+    if (lib.uniffi_mob_checksum_method_client_send() != 51319.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_mob_checksum_method_signer_address() != 11665.toShort()) {
@@ -1376,9 +1376,8 @@ public interface ClientInterface {
     
     /**
      * Send tokens to a recipient (synchronous wrapper).
-     * If `granter` is set, wraps MsgSend in MsgExec (authz),
-     * using the granter as the sender and the signer as the grantee.
-     * If `fee_granter` is set, the fee granter (e.g. treasury) pays gas.
+     * If `granter` is set, wraps MsgSend in MsgExec (authz).
+     * If `fee_granter` is set, that account pays gas.
      */
     fun `send`(`toAddress`: kotlin.String, `amount`: List<Coin>, `granter`: kotlin.String?, `feeGranter`: kotlin.String?, `memo`: kotlin.String?): TxResponse
     
@@ -1654,9 +1653,8 @@ open class Client: Disposable, AutoCloseable, ClientInterface
     
     /**
      * Send tokens to a recipient (synchronous wrapper).
-     * If `granter` is set, wraps MsgSend in MsgExec (authz),
-     * using the granter as the sender and the signer as the grantee.
-     * If `fee_granter` is set, the fee granter (e.g. treasury) pays gas.
+     * If `granter` is set, wraps MsgSend in MsgExec (authz).
+     * If `fee_granter` is set, that account pays gas.
      */
     @Throws(MobException::class)override fun `send`(`toAddress`: kotlin.String, `amount`: List<Coin>, `granter`: kotlin.String?, `feeGranter`: kotlin.String?, `memo`: kotlin.String?): TxResponse {
             return FfiConverterTypeTxResponse.lift(

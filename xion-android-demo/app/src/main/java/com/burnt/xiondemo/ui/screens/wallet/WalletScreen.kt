@@ -291,7 +291,8 @@ fun WalletScreen(
         // Error banner
         ErrorBanner(
             message = uiState.error,
-            onDismiss = { viewModel.clearError() }
+            onDismiss = { viewModel.clearError() },
+            onRetry = { viewModel.refresh() }
         )
     }
 }

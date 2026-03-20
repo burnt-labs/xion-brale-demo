@@ -2,8 +2,11 @@ package com.burnt.xiondemo.data.datasource
 
 import com.burnt.xiondemo.data.model.BalanceInfo
 import com.burnt.xiondemo.data.model.TransactionResult
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import uniffi.mob.ChainConfig
 import uniffi.mob.Client
@@ -35,11 +38,13 @@ class RealMobDataSource @Inject constructor() : MobDataSource {
 
     private var client: Client? = null
     private var signer: Signer? = null
+    private val cleanupScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
     override suspend fun createClientWithSigner(mnemonic: String): String = withContext(Dispatchers.IO) {
-        // Clean up existing resources to prevent leaking tokio runtimes
-        client?.close()
-        signer?.close()
+        // Null refs immediately so new operations see "Client not initialized",
+        // but defer close() so in-flight RPCs on the old runtime can finish.
+        val oldClient = client
+        val oldSigner = signer
         client = null
         signer = null
 
@@ -75,6 +80,15 @@ class RealMobDataSource @Inject constructor() : MobDataSource {
         // Set fields only AFTER successful client creation
         signer = newSigner
         client = newClient
+
+        // Deferred cleanup of old resources
+        if (oldClient != null || oldSigner != null) {
+            cleanupScope.launch {
+                delay(2000)
+                oldClient?.close()
+                oldSigner?.close()
+            }
+        }
 
         newSigner.address()
     }
@@ -145,9 +159,15 @@ class RealMobDataSource @Inject constructor() : MobDataSource {
     override fun getSignerAddress(): String? = signer?.address()
 
     override fun disconnect() {
-        client?.close()
-        signer?.close()
+        val oldClient = client
+        val oldSigner = signer
         client = null
         signer = null
+        // Defer close so in-flight RPCs on the old runtime can finish
+        cleanupScope.launch {
+            delay(2000)
+            oldClient?.close()
+            oldSigner?.close()
+        }
     }
 }
