@@ -182,7 +182,8 @@ fun LoadingOverlay(
 fun ErrorBanner(
     message: String?,
     onDismiss: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onRetry: (() -> Unit)? = null
 ) {
     AnimatedVisibility(
         visible = message != null,
@@ -217,6 +218,18 @@ fun ErrorBanner(
                     color = MaterialTheme.colorScheme.onErrorContainer,
                     modifier = Modifier.weight(1f)
                 )
+                if (onRetry != null) {
+                    Text(
+                        text = "Retry",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.error,
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(4.dp))
+                            .clickable(onClick = onRetry)
+                            .padding(4.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                }
                 Text(
                     text = "Dismiss",
                     style = MaterialTheme.typography.labelMedium,

@@ -94,6 +94,7 @@ fun ConnectScreen(
             ErrorBanner(
                 message = uiState.error,
                 onDismiss = { viewModel.clearError() },
+                onRetry = { viewModel.retryRestore() },
                 modifier = Modifier.align(Alignment.TopCenter).padding(top = 8.dp)
             )
         }

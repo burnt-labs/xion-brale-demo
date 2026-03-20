@@ -3,6 +3,7 @@ package com.burnt.xiondemo.data.datasource
 import com.burnt.xiondemo.data.model.BalanceInfo
 import com.burnt.xiondemo.data.model.TransactionResult
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import uniffi.mob.ChainConfig
 import uniffi.mob.Client
@@ -36,6 +37,12 @@ class RealMobDataSource @Inject constructor() : MobDataSource {
     private var signer: Signer? = null
 
     override suspend fun createClientWithSigner(mnemonic: String): String = withContext(Dispatchers.IO) {
+        // Clean up existing resources to prevent leaking tokio runtimes
+        client?.close()
+        signer?.close()
+        client = null
+        signer = null
+
         val config = ChainConfig(
             chainId = "xion-testnet-2",
             rpcEndpoint = "https://rpc.xion-testnet-2.burnt.com:443",
@@ -50,17 +57,23 @@ class RealMobDataSource @Inject constructor() : MobDataSource {
             addressPrefix = "xion",
             derivationPath = "m/44'/118'/0'/0/0"
         )
-        signer = newSigner
 
+        // Never fall back to a bare Client — attachSigner is not implemented in FFI.
+        // Retry once after a brief delay for transient cold-start failures.
         val newClient = try {
             Client.newWithSigner(config, newSigner)
         } catch (e: Exception) {
-            // Account info refresh fails for new/unfunded session keys.
-            // Fall back to bare client + attachSigner.
-            val c = Client(config)
-            try { c.attachSigner(newSigner) } catch (_: Exception) {}
-            c
+            delay(500)
+            try {
+                Client.newWithSigner(config, newSigner)
+            } catch (retryError: Exception) {
+                newSigner.close()
+                throw retryError
+            }
         }
+
+        // Set fields only AFTER successful client creation
+        signer = newSigner
         client = newClient
 
         newSigner.address()

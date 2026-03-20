@@ -109,4 +109,17 @@ class ConnectViewModel @Inject constructor(
     fun clearError() {
         _uiState.update { it.copy(error = null) }
     }
+
+    fun retryRestore() {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, error = null) }
+            val result = repository.restoreSession()
+            if (result is Result.Success && result.data) {
+                _uiState.update { it.copy(isConnected = true, isLoading = false) }
+            } else {
+                val message = if (result is Result.Error) result.message else "Session restore failed"
+                _uiState.update { it.copy(isLoading = false, error = message) }
+            }
+        }
+    }
 }
