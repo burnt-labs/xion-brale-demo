@@ -1,0 +1,144 @@
+<h2>Architecture Approach</h2>
+<p class="subtitle">How should the native apps integrate mob + OAuth for real transaction signing?</p>
+
+<div class="section">
+  <p>The existing demo routes OAuth transactions through a REST API (server signs). The abstraxion flow signs <strong>locally</strong> using a session keypair + authz grants. Here are three approaches:</p>
+</div>
+
+<div class="options">
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Mob-First Unified (Recommended)</h3>
+      <p><strong>OAuth for auth only</strong> &rarr; mob handles ALL signing locally</p>
+      <div class="mockup" style="margin-top: 12px;">
+        <div class="mockup-header">Architecture: Mob-First</div>
+        <div class="mockup-body" style="font-family: monospace; font-size: 13px; line-height: 1.6;">
+<pre style="margin:0;">
+┌─────────────────────────────────────┐
+│         UI Layer (Compose)          │
+│   Connect │ Wallet │ Send │ Contract│
+└──────────────┬──────────────────────┘
+               │
+┌──────────────▼──────────────────────┐
+│        XionRepository               │
+│   Single path: OAuth + mob signing  │
+└──────┬───────────────┬──────────────┘
+       │               │
+┌──────▼──────┐ ┌──────▼──────────────┐
+│ OAuthManager│ │  MobSigningService  │
+│ (auth only) │ │  (all transactions) │
+│             │ │                     │
+│ • Login     │ │ • Session keypair   │
+│ • Get Meta  │ │ • Sign with authz   │
+│   Account   │ │ • Fee granter       │
+│ • Get grants│ │ • Query balance     │
+│             │ │ • Send tokens       │
+└──────┬──────┘ │ • Execute contracts │
+       │        └──────┬──────────────┘
+       │               │
+  Chrome Tabs     mob (Rust/UniFFI)
+       │               │
+   XION OAuth      XION RPC Node
+   Dashboard       (real signing)
+</pre>
+        </div>
+      </div>
+      <div class="pros-cons" style="margin-top: 12px;">
+        <div class="pros"><h4>Pros</h4><ul>
+          <li>Cleanest architecture — single signing path</li>
+          <li>Directly uses PR #5's granter/fee_granter params</li>
+          <li>No server dependency for transactions</li>
+          <li>Same pattern works for iOS (Swift UniFFI)</li>
+        </ul></div>
+        <div class="cons"><h4>Cons</h4><ul>
+          <li>Requires building mob native libraries</li>
+          <li>More refactoring of existing code</li>
+        </ul></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Shared SDK Module</h3>
+      <p>Build a reusable <strong>XionAuth SDK</strong> that wraps mob + OAuth, then build apps on top</p>
+      <div class="mockup" style="margin-top: 12px;">
+        <div class="mockup-header">Architecture: SDK Layer</div>
+        <div class="mockup-body" style="font-family: monospace; font-size: 13px; line-height: 1.6;">
+<pre style="margin:0;">
+┌──────────────────────────────┐
+│     Wallet App (UI only)     │
+└──────────────┬───────────────┘
+               │
+┌──────────────▼───────────────┐
+│   XionAuth SDK Module        │
+│  ┌─────────┐ ┌─────────────┐│
+│  │  OAuth   │ │   Signing   ││
+│  │  Manager │ │   Engine    ││
+│  └────┬─────┘ └──────┬──────┘│
+│       │              │       │
+│  ┌────▼──────────────▼─────┐│
+│  │   Session Manager       ││
+│  │   (grants, keys, state) ││
+│  └─────────────────────────┘│
+└──────────────┬───────────────┘
+               │
+          mob (UniFFI)
+</pre>
+        </div>
+      </div>
+      <div class="pros-cons" style="margin-top: 12px;">
+        <div class="pros"><h4>Pros</h4><ul>
+          <li>Reusable SDK for other XION apps</li>
+          <li>Clean separation of concerns</li>
+          <li>Could publish as a library later</li>
+        </ul></div>
+        <div class="cons"><h4>Cons</h4><ul>
+          <li>More upfront work for a single app</li>
+          <li>Over-engineering if only building one wallet</li>
+          <li>SDK boundaries add complexity</li>
+        </ul></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="c" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>Mob Signing + REST Queries</h3>
+      <p>Use mob for <strong>signing only</strong>, REST API for balance/history/grants</p>
+      <div class="mockup" style="margin-top: 12px;">
+        <div class="mockup-header">Architecture: Hybrid</div>
+        <div class="mockup-body" style="font-family: monospace; font-size: 13px; line-height: 1.6;">
+<pre style="margin:0;">
+┌──────────────────────────────┐
+│         UI Layer             │
+└──────┬───────────────┬───────┘
+       │               │
+┌──────▼──────┐ ┌──────▼──────┐
+│ mob Library │ │  REST APIs  │
+│ (signing)   │ │ (queries)   │
+│             │ │             │
+│ • Keypair   │ │ • Balance   │
+│ • Sign tx   │ │ • Tx history│
+│ • Broadcast │ │ • Grants    │
+└─────────────┘ └─────────────┘
+</pre>
+        </div>
+      </div>
+      <div class="pros-cons" style="margin-top: 12px;">
+        <div class="pros"><h4>Pros</h4><ul>
+          <li>Less mob surface area to integrate</li>
+          <li>REST queries are simpler to debug</li>
+        </ul></div>
+        <div class="cons"><h4>Cons</h4><ul>
+          <li>Split responsibility — harder to reason about</li>
+          <li>mob already provides query capabilities</li>
+          <li>Duplicated network layer</li>
+        </ul></div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,7 @@
+{"type":"server-started","port":50949,"host":"127.0.0.1","url_host":"localhost","url":"http://localhost:50949","screen_dir":"/Users/adrianthompson/Documents/35 - XION/02 - Projects/29 - House Money/apps/.superpowers/brainstorm/46146-1773934073"}
+{"type":"screen-added","file":"/Users/adrianthompson/Documents/35 - XION/02 - Projects/29 - House Money/apps/.superpowers/brainstorm/46146-1773934073/approaches.html"}
+{"type":"screen-added","file":"/Users/adrianthompson/Documents/35 - XION/02 - Projects/29 - House Money/apps/.superpowers/brainstorm/46146-1773934073/auth-flow.html"}
+{"type":"screen-added","file":"/Users/adrianthompson/Documents/35 - XION/02 - Projects/29 - House Money/apps/.superpowers/brainstorm/46146-1773934073/android-changes.html"}
+{"type":"screen-added","file":"/Users/adrianthompson/Documents/35 - XION/02 - Projects/29 - House Money/apps/.superpowers/brainstorm/46146-1773934073/ios-project.html"}
+{"type":"screen-added","file":"/Users/adrianthompson/Documents/35 - XION/02 - Projects/29 - House Money/apps/.superpowers/brainstorm/46146-1773934073/waiting.html"}
+{"type":"server-stopped","reason":"idle timeout"}

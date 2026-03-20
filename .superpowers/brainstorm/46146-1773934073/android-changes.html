@@ -1,0 +1,179 @@
+<h2>Android Refactoring: File-by-File Changes</h2>
+<p class="subtitle">Evolving xion-android-demo from dual-path mock to single-path real signing</p>
+
+<div class="section">
+  <h3>Data Models</h3>
+  <div class="split">
+    <div class="mockup">
+      <div class="mockup-header" style="color: #EF5350;">WalletState.kt — Before</div>
+      <div class="mockup-body" style="font-size: 12px; font-family: monospace;">
+<pre style="margin:0;">sealed class WalletState {
+  object Disconnected
+  object Connecting
+  data class DirectWallet(
+    address, mnemonic
+  )
+  data class OAuth2Session(
+    address, accessToken, refreshToken
+  )
+}</pre>
+      </div>
+    </div>
+    <div class="mockup">
+      <div class="mockup-header" style="color: #00E676;">WalletState.kt — After</div>
+      <div class="mockup-body" style="font-size: 12px; font-family: monospace;">
+<pre style="margin:0;">sealed class WalletState {
+  object Disconnected
+  data class Connecting(
+    step: ConnectionStep
+  )
+  data class Connected(
+    metaAccountAddress: String,
+    sessionKeyAddress: String,
+    treasuryAddress: String,
+    grantsActive: Boolean,
+    sessionExpiresAt: Long?
+  )
+}
+
+enum ConnectionStep {
+  AUTHENTICATING,
+  GENERATING_SESSION_KEY,
+  SETTING_UP_GRANTS,
+  VERIFYING_GRANTS
+}</pre>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>Change Summary (16 files)</h3>
+  <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+    <thead>
+      <tr style="border-bottom: 2px solid rgba(255,255,255,0.2); text-align: left;">
+        <th style="padding: 8px;">File</th>
+        <th style="padding: 8px;">Action</th>
+        <th style="padding: 8px;">What Changes</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+        <td style="padding: 8px; font-family: monospace; font-size: 11px;">WalletState.kt</td>
+        <td style="padding: 8px; color: #FFA726;">Rewrite</td>
+        <td style="padding: 8px;">Remove DirectWallet/OAuth2Session, add Connected with session fields</td>
+      </tr>
+      <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.03);">
+        <td style="padding: 8px; font-family: monospace; font-size: 11px;">MobDataSource.kt</td>
+        <td style="padding: 8px; color: #EF5350;">Rewrite</td>
+        <td style="padding: 8px;">Delete MockMobDataSource. Implement RealMobDataSource with UniFFI calls. Add granter/feeGranter params to send/executeContract</td>
+      </tr>
+      <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+        <td style="padding: 8px; font-family: monospace; font-size: 11px;">OAuthDataSource.kt</td>
+        <td style="padding: 8px; color: #FFA726;">Strip</td>
+        <td style="padding: 8px;">Remove send(), executeContract(), getBalance(). Keep auth methods only</td>
+      </tr>
+      <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.03);">
+        <td style="padding: 8px; font-family: monospace; font-size: 11px;">XionRepositoryImpl.kt</td>
+        <td style="padding: 8px; color: #EF5350;">Rewrite</td>
+        <td style="padding: 8px;">Single path: OAuth→session key→mob signing. Add restoreSession(), grant verification</td>
+      </tr>
+      <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+        <td style="padding: 8px; font-family: monospace; font-size: 11px;">XionRepository.kt</td>
+        <td style="padding: 8px; color: #FFA726;">Update</td>
+        <td style="padding: 8px;">Remove connectWithMnemonic/generateNewWallet. Add restoreSession()</td>
+      </tr>
+      <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.03);">
+        <td style="padding: 8px; font-family: monospace; font-size: 11px;">SecureStorage.kt</td>
+        <td style="padding: 8px; color: #FFA726;">Update</td>
+        <td style="padding: 8px;">Replace saveMnemonic with saveSessionData (mnemonic, granter, session addr, treasury)</td>
+      </tr>
+      <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+        <td style="padding: 8px; font-family: monospace; font-size: 11px;">OAuthManager.kt</td>
+        <td style="padding: 8px; color: #42A5F5;">Extend</td>
+        <td style="padding: 8px;">Callback now takes full URI, extracts granter address from query params</td>
+      </tr>
+      <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.03);">
+        <td style="padding: 8px; font-family: monospace; font-size: 11px;">MainActivity.kt</td>
+        <td style="padding: 8px; color: #42A5F5;">Minor</td>
+        <td style="padding: 8px;">Pass full URI to OAuthManager instead of just code string</td>
+      </tr>
+      <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+        <td style="padding: 8px; font-family: monospace; font-size: 11px;">ConnectViewModel.kt</td>
+        <td style="padding: 8px; color: #FFA726;">Simplify</td>
+        <td style="padding: 8px;">Remove importWallet/generateNewWallet. Add restoreSession on init</td>
+      </tr>
+      <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.03);">
+        <td style="padding: 8px; font-family: monospace; font-size: 11px;">ConnectScreen.kt</td>
+        <td style="padding: 8px; color: #FFA726;">Simplify</td>
+        <td style="padding: 8px;">Remove mnemonic import UI. OAuth "Sign in with XION" only</td>
+      </tr>
+      <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+        <td style="padding: 8px; font-family: monospace; font-size: 11px;">WalletViewModel.kt</td>
+        <td style="padding: 8px; color: #FFA726;">Update</td>
+        <td style="padding: 8px;">Update for Connected state (metaAccountAddress, grantsActive, etc.)</td>
+      </tr>
+      <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.03);">
+        <td style="padding: 8px; font-family: monospace; font-size: 11px;">build.gradle.kts</td>
+        <td style="padding: 8px; color: #FFA726;">Update</td>
+        <td style="padding: 8px;">Remove USE_MOCK_MOB. Add TREASURY_ADDRESS, OAUTH_CLIENT_ID BuildConfig</td>
+      </tr>
+      <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+        <td style="padding: 8px; font-family: monospace; font-size: 11px;">Constants.kt</td>
+        <td style="padding: 8px; color: #FFA726;">Update</td>
+        <td style="padding: 8px;">Add session/treasury constants, remove old mnemonic prefs</td>
+      </tr>
+      <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.03);">
+        <td style="padding: 8px; font-family: monospace; font-size: 11px;">AppModule.kt</td>
+        <td style="padding: 8px; color: #42A5F5;">Simplify</td>
+        <td style="padding: 8px;">Remove mock toggle, always provide RealMobDataSource</td>
+      </tr>
+      <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+        <td style="padding: 8px; font-family: monospace; font-size: 11px;">build-mob-android.sh</td>
+        <td style="padding: 8px; color: #42A5F5;">Fix</td>
+        <td style="padding: 8px;">Change git URL from nicholasgasior/mob to burnt-labs/mob</td>
+      </tr>
+      <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.03);">
+        <td style="padding: 8px; font-family: monospace; font-size: 11px; color: #EF5350;">XionRestApi.kt</td>
+        <td style="padding: 8px; color: #EF5350;">DELETE</td>
+        <td style="padding: 8px;">No longer needed — transactions go through mob, not REST</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="section" style="margin-top: 24px;">
+  <h3>Implementation Order (6 passes, each compiles independently)</h3>
+  <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+    <div style="flex: 1; min-width: 140px; padding: 12px; background: rgba(255,255,255,0.05); border-radius: 8px; border-left: 3px solid #42A5F5;">
+      <div style="font-size: 11px; text-transform: uppercase; color: rgba(255,255,255,0.5);">Pass 1</div>
+      <div style="font-weight: bold; margin: 4px 0;">Foundation</div>
+      <div style="font-size: 12px; color: rgba(255,255,255,0.7);">Models, constants, build config, build script</div>
+    </div>
+    <div style="flex: 1; min-width: 140px; padding: 12px; background: rgba(255,255,255,0.05); border-radius: 8px; border-left: 3px solid #FFA726;">
+      <div style="font-size: 11px; text-transform: uppercase; color: rgba(255,255,255,0.5);">Pass 2</div>
+      <div style="font-weight: bold; margin: 4px 0;">Data Layer</div>
+      <div style="font-size: 12px; color: rgba(255,255,255,0.7);">MobDataSource, OAuthDataSource strip, DI cleanup</div>
+    </div>
+    <div style="flex: 1; min-width: 140px; padding: 12px; background: rgba(255,255,255,0.05); border-radius: 8px; border-left: 3px solid #00E676;">
+      <div style="font-size: 11px; text-transform: uppercase; color: rgba(255,255,255,0.5);">Pass 3</div>
+      <div style="font-weight: bold; margin: 4px 0;">Repository</div>
+      <div style="font-size: 12px; color: rgba(255,255,255,0.7);">XionRepository interface + impl rewrite</div>
+    </div>
+    <div style="flex: 1; min-width: 140px; padding: 12px; background: rgba(255,255,255,0.05); border-radius: 8px; border-left: 3px solid #AB47BC;">
+      <div style="font-size: 11px; text-transform: uppercase; color: rgba(255,255,255,0.5);">Pass 4</div>
+      <div style="font-weight: bold; margin: 4px 0;">Security + Auth</div>
+      <div style="font-size: 12px; color: rgba(255,255,255,0.7);">SecureStorage, OAuthManager, MainActivity</div>
+    </div>
+    <div style="flex: 1; min-width: 140px; padding: 12px; background: rgba(255,255,255,0.05); border-radius: 8px; border-left: 3px solid #26C6DA;">
+      <div style="font-size: 11px; text-transform: uppercase; color: rgba(255,255,255,0.5);">Pass 5</div>
+      <div style="font-weight: bold; margin: 4px 0;">UI</div>
+      <div style="font-size: 12px; color: rgba(255,255,255,0.7);">All ViewModels + Screens updated</div>
+    </div>
+    <div style="flex: 1; min-width: 140px; padding: 12px; background: rgba(255,255,255,0.05); border-radius: 8px; border-left: 3px solid #EF5350;">
+      <div style="font-size: 11px; text-transform: uppercase; color: rgba(255,255,255,0.5);">Pass 6</div>
+      <div style="font-weight: bold; margin: 4px 0;">Hardening</div>
+      <div style="font-size: 12px; color: rgba(255,255,255,0.7);">Grant expiry, error recovery, session restore</div>
+    </div>
+  </div>
+</div>

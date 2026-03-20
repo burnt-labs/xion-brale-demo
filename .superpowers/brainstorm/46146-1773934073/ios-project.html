@@ -1,0 +1,196 @@
+<h2>iOS Project: xion-ios</h2>
+<p class="subtitle">New SwiftUI app mirroring Android's architecture, using mob's Swift UniFFI bindings</p>
+
+<div class="section">
+  <h3>Project Structure</h3>
+  <div class="mockup">
+    <div class="mockup-header">xion-ios/ directory layout</div>
+    <div class="mockup-body" style="font-family: monospace; font-size: 12px; line-height: 1.5;">
+<pre style="margin:0;">xion-ios/
+├── xion-ios.xcodeproj/
+├── scripts/
+│   └── build-mob-ios.sh              # Rust → xcframework for iOS
+├── Frameworks/
+│   └── libmob.xcframework/           # Built mob binary (arm64 + simulator)
+├── MobBindings/
+│   └── mob.swift                     # UniFFI-generated Swift bindings
+│
+├── XionDemo/
+│   ├── App/
+│   │   ├── XionDemoApp.swift         # @main, deep link handler
+│   │   └── AppContainer.swift        # Manual DI (replaces Hilt)
+│   │
+│   ├── Configuration/
+│   │   └── Constants.swift           # Chain config (matches Android exactly)
+│   │
+│   ├── Models/
+│   │   ├── WalletState.swift         # enum: disconnected/connecting/connected
+│   │   ├── TransactionResult.swift
+│   │   ├── BalanceInfo.swift
+│   │   └── OAuthTokens.swift
+│   │
+│   ├── Services/
+│   │   ├── MobSigningService.swift   # UniFFI wrapper (send, executeContract)
+│   │   ├── OAuthService.swift        # ASWebAuthenticationSession + PKCE
+│   │   ├── SessionManager.swift      # Session key lifecycle
+│   │   └── SecureStorage.swift       # iOS Keychain operations
+│   │
+│   ├── Data/
+│   │   └── Repository/
+│   │       ├── XionRepository.swift  # Protocol
+│   │       └── XionRepositoryImpl.swift
+│   │
+│   ├── Navigation/
+│   │   └── AppNavigation.swift       # NavigationStack + Route enum
+│   │
+│   └── UI/
+│       ├── Theme/
+│       │   ├── XionColors.swift      # Brand colors (matches Android)
+│       │   └── XionTypography.swift
+│       ├── Components/
+│       │   ├── BalanceCard.swift
+│       │   ├── TransactionRow.swift
+│       │   └── LoadingOverlay.swift
+│       └── Screens/
+│           ├── Connect/              # OAuth "Sign in" only
+│           ├── Wallet/               # Dashboard
+│           ├── Send/                 # Token transfer
+│           ├── Contract/             # Smart contract execution
+│           └── History/              # Transaction list
+│
+└── XionDemoTests/</pre>
+    </div>
+  </div>
+</div>
+
+<div class="section" style="margin-top: 24px;">
+  <h3>Platform Mapping: Android → iOS</h3>
+  <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+    <thead>
+      <tr style="border-bottom: 2px solid rgba(255,255,255,0.2); text-align: left;">
+        <th style="padding: 8px;">Concern</th>
+        <th style="padding: 8px;">Android</th>
+        <th style="padding: 8px;">iOS</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+        <td style="padding: 8px;">UI Framework</td>
+        <td style="padding: 8px;">Jetpack Compose</td>
+        <td style="padding: 8px;">SwiftUI</td>
+      </tr>
+      <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.03);">
+        <td style="padding: 8px;">DI</td>
+        <td style="padding: 8px;">Hilt</td>
+        <td style="padding: 8px;">Manual AppContainer</td>
+      </tr>
+      <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+        <td style="padding: 8px;">Navigation</td>
+        <td style="padding: 8px;">Compose Navigation</td>
+        <td style="padding: 8px;">NavigationStack</td>
+      </tr>
+      <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.03);">
+        <td style="padding: 8px;">HTTP Client</td>
+        <td style="padding: 8px;">Retrofit + OkHttp</td>
+        <td style="padding: 8px;">URLSession + Codable</td>
+      </tr>
+      <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+        <td style="padding: 8px;">OAuth Browser</td>
+        <td style="padding: 8px;">Chrome Custom Tabs + deep link callback</td>
+        <td style="padding: 8px;">ASWebAuthenticationSession (self-contained)</td>
+      </tr>
+      <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.03);">
+        <td style="padding: 8px;">Secure Storage</td>
+        <td style="padding: 8px;">EncryptedSharedPreferences + Keystore</td>
+        <td style="padding: 8px;">iOS Keychain Services</td>
+      </tr>
+      <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+        <td style="padding: 8px;">mob FFI</td>
+        <td style="padding: 8px;">JNA (.so shared libs)</td>
+        <td style="padding: 8px;">Static linking (.a in xcframework)</td>
+      </tr>
+      <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.03);">
+        <td style="padding: 8px;">Concurrency</td>
+        <td style="padding: 8px;">Coroutines + Dispatchers.IO</td>
+        <td style="padding: 8px;">Swift async/await + DispatchQueue for FFI</td>
+      </tr>
+      <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+        <td style="padding: 8px;">State Management</td>
+        <td style="padding: 8px;">StateFlow + compose collectAsState</td>
+        <td style="padding: 8px;">@Published + ObservableObject</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="section" style="margin-top: 24px;">
+  <h3>mob Build Script: iOS Targets</h3>
+  <div class="mockup">
+    <div class="mockup-header">build-mob-ios.sh key steps</div>
+    <div class="mockup-body" style="font-family: monospace; font-size: 12px; line-height: 1.5;">
+<pre style="margin:0;">
+# 1. Clone burnt-labs/mob → third_party/mob
+
+# 2. Install Rust iOS targets
+rustup target add aarch64-apple-ios        # Device
+rustup target add aarch64-apple-ios-sim    # Simulator (Apple Silicon)
+rustup target add x86_64-apple-ios         # Simulator (Intel)
+
+# 3. Build static libraries (.a) for each target
+cargo build --release --target aarch64-apple-ios
+cargo build --release --target aarch64-apple-ios-sim
+cargo build --release --target x86_64-apple-ios
+
+# 4. Create universal simulator binary
+lipo -create \
+  target/aarch64-apple-ios-sim/release/libmob.a \
+  target/x86_64-apple-ios/release/libmob.a \
+  -output libmob-sim-universal.a
+
+# 5. Generate Swift bindings via UniFFI
+cargo run --bin uniffi-bindgen generate \
+  --library libmob.a --language swift --out-dir bindings/
+# → mob.swift, mobFFI.h, mobFFI.modulemap
+
+# 6. Package as xcframework
+xcodebuild -create-xcframework \
+  -library target/aarch64-apple-ios/release/libmob.a \
+  -headers bindings/ \
+  -library libmob-sim-universal.a \
+  -headers bindings/ \
+  -output Frameworks/libmob.xcframework
+</pre>
+    </div>
+  </div>
+</div>
+
+<div class="section" style="margin-top: 24px;">
+  <h3>iOS Implementation Phases</h3>
+  <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+    <div style="flex: 1; min-width: 200px; padding: 12px; background: rgba(255,255,255,0.05); border-radius: 8px; border-left: 3px solid #42A5F5;">
+      <div style="font-size: 11px; text-transform: uppercase; color: rgba(255,255,255,0.5);">Phase 1</div>
+      <div style="font-weight: bold; margin: 4px 0;">Scaffold + Build System</div>
+      <div style="font-size: 12px; color: rgba(255,255,255,0.7);">Xcode project, build-mob-ios.sh, xcframework integration, verify mob.swift compiles</div>
+    </div>
+    <div style="flex: 1; min-width: 200px; padding: 12px; background: rgba(255,255,255,0.05); border-radius: 8px; border-left: 3px solid #FFA726;">
+      <div style="font-size: 11px; text-transform: uppercase; color: rgba(255,255,255,0.5);">Phase 2</div>
+      <div style="font-weight: bold; margin: 4px 0;">Services Layer</div>
+      <div style="font-size: 12px; color: rgba(255,255,255,0.7);">MobSigningService, OAuthService, SecureStorage, NetworkService, PKCE util</div>
+    </div>
+    <div style="flex: 1; min-width: 200px; padding: 12px; background: rgba(255,255,255,0.05); border-radius: 8px; border-left: 3px solid #00E676;">
+      <div style="font-size: 11px; text-transform: uppercase; color: rgba(255,255,255,0.5);">Phase 3</div>
+      <div style="font-weight: bold; margin: 4px 0;">Session + Repository</div>
+      <div style="font-size: 12px; color: rgba(255,255,255,0.7);">SessionManager (full auth flow), XionRepository, Models</div>
+    </div>
+    <div style="flex: 1; min-width: 200px; padding: 12px; background: rgba(255,255,255,0.05); border-radius: 8px; border-left: 3px solid #AB47BC;">
+      <div style="font-size: 11px; text-transform: uppercase; color: rgba(255,255,255,0.5);">Phase 4</div>
+      <div style="font-weight: bold; margin: 4px 0;">UI (5 Screens)</div>
+      <div style="font-size: 12px; color: rgba(255,255,255,0.7);">Connect, Wallet, Send, Contract, History — matching Android layouts</div>
+    </div>
+    <div style="flex: 1; min-width: 200px; padding: 12px; background: rgba(255,255,255,0.05); border-radius: 8px; border-left: 3px solid #26C6DA;">
+      <div style="font-size: 11px; text-transform: uppercase; color: rgba(255,255,255,0.5);">Phase 5</div>
+      <div style="font-weight: bold; margin: 4px 0;">Polish + Testing</div>
+      <div style="font-size: 12px; color: rgba(255,255,255,0.7);">Deep links, dark mode, error handling, Keychain cleanup, unit tests</div>
+    </div>
+  </div>
+</div>

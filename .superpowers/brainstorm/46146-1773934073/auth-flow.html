@@ -1,0 +1,103 @@
+<h2>Authentication & Session Flow</h2>
+<p class="subtitle">How the native apps replicate the abstraxion React Native flow using mob</p>
+
+<div class="section">
+  <div class="mockup">
+    <div class="mockup-header">End-to-End Flow: OAuth &rarr; Session Key &rarr; Gasless Transactions</div>
+    <div class="mockup-body" style="font-family: monospace; font-size: 12px; line-height: 1.5; overflow-x: auto;">
+<pre style="margin:0; white-space: pre;">
+ ┌──────────────────────────────────────────────────────────────────────────────────────┐
+ │                              AUTHENTICATION PHASE                                    │
+ │                                                                                      │
+ │  ┌──────────┐    1. Tap "Sign in"    ┌──────────────────┐    2. Social Login         │
+ │  │  Native  │ ───────────────────►   │  XION OAuth      │   (Google, Apple, etc.)    │
+ │  │   App    │                        │  Dashboard       │ ◄─── User authenticates    │
+ │  │          │ ◄───────────────────   │  (Browser)       │                            │
+ │  └──────────┘    3. Redirect back    └──────────────────┘                            │
+ │       │          xiondemo://callback                                                 │
+ │       │          ?code=AUTH_CODE                                                     │
+ │       │          &granter=xion1...meta_account                                       │
+ │       │                                                                              │
+ │       ▼          4. Exchange code                                                    │
+ │  ┌──────────┐    for tokens (PKCE)   ┌──────────────────┐                            │
+ │  │  OAuth   │ ───────────────────►   │  XION Token      │                            │
+ │  │  Service │ ◄───────────────────   │  Endpoint        │                            │
+ │  └──────────┘    access_token +      └──────────────────┘                            │
+ │       │          granter address                                                     │
+ │       │          (Meta Account)                                                      │
+ └───────┼──────────────────────────────────────────────────────────────────────────────┘
+         │
+ ┌───────┼──────────────────────────────────────────────────────────────────────────────┐
+ │       ▼       SESSION KEY SETUP PHASE                                                │
+ │                                                                                      │
+ │  ┌──────────┐    5. Generate random mnemonic                                         │
+ │  │   mob    │    6. Derive session keypair ──► Session Address (grantee)              │
+ │  │  library │    7. Store mnemonic in Keychain/Keystore (encrypted)                  │
+ │  └──────────┘                                                                        │
+ │       │                                                                              │
+ │       │          8. Grants are set up (by OAuth dashboard during login):              │
+ │       │          ┌─────────────────────────────────────────────────┐                  │
+ │       │          │  Authz Grant:                                   │                  │
+ │       │          │    granter = Meta Account (xion1...meta)        │                  │
+ │       │          │    grantee = Session Key  (xion1...session)     │                  │
+ │       │          │    type    = ContractExecutionAuthorization      │                  │
+ │       │          │                                                 │                  │
+ │       │          │  Fee Grant:                                     │                  │
+ │       │          │    granter = Treasury     (xion1...treasury)    │                  │
+ │       │          │    grantee = Session Key  (xion1...session)     │                  │
+ │       │          │    type    = BasicAllowance                     │                  │
+ │       │          └─────────────────────────────────────────────────┘                  │
+ │       │                                                                              │
+ └───────┼──────────────────────────────────────────────────────────────────────────────┘
+         │
+ ┌───────┼──────────────────────────────────────────────────────────────────────────────┐
+ │       ▼       TRANSACTION PHASE (every tx after setup)                               │
+ │                                                                                      │
+ │  ┌──────────┐    9. Build MsgExecuteContract                                         │
+ │  │   mob    │       sender = Meta Account (granter)                                  │
+ │  │ library  │                                                                        │
+ │  │          │   10. Wrap in MsgExec                                                  │
+ │  │          │       grantee = Session Key (signs the outer msg)                      │
+ │  │          │                                                                        │
+ │  │          │   11. Set Fee with fee_granter = Treasury                              │
+ │  │          │       (session key pays $0 gas)                                        │
+ │  │          │                                                                        │
+ │  │          │   12. Sign with session key private key                                │
+ │  │          │                                                                        │
+ │  │          │   13. Broadcast to XION RPC ──────────► ┌─────────────┐                │
+ │  │          │                                         │  XION Chain │                │
+ │  │          │ ◄────────────────────── TxResponse ──── │  (testnet)  │                │
+ │  └──────────┘                                         └─────────────┘                │
+ │                                                                                      │
+ │  This is what PR #5 enables:                                                         │
+ │    client.executeContract(contract, msg, funds,                                      │
+ │      granter = "xion1...meta",       ← MsgExec wrapping                             │
+ │      feeGranter = "xion1...treasury" ← gasless                                      │
+ │    )                                                                                 │
+ └──────────────────────────────────────────────────────────────────────────────────────┘
+</pre>
+    </div>
+  </div>
+</div>
+
+<div class="section" style="margin-top: 24px;">
+  <h3>Key Insight: What Changes from the Current Demo</h3>
+  <div class="split">
+    <div class="mockup">
+      <div class="mockup-header" style="color: #EF5350;">Current Demo (wrong)</div>
+      <div class="mockup-body" style="font-size: 13px;">
+        <p><strong>OAuth path:</strong> REST API with bearer token &rarr; <em>server</em> signs transactions</p>
+        <p><strong>Direct path:</strong> mob with user's mnemonic &rarr; user signs &amp; pays gas</p>
+        <p style="color: #EF5350;">&#10008; Two separate paths, neither matches abstraxion</p>
+      </div>
+    </div>
+    <div class="mockup">
+      <div class="mockup-header" style="color: #00E676;">New Design (correct)</div>
+      <div class="mockup-body" style="font-size: 13px;">
+        <p><strong>Single path:</strong> OAuth for auth &rarr; mob generates session key &rarr; mob signs locally with authz grants</p>
+        <p><strong>Gasless:</strong> Treasury pays all gas via fee_granter</p>
+        <p style="color: #00E676;">&#10004; Matches abstraxion React Native exactly</p>
+      </div>
+    </div>
+  </div>
+</div>

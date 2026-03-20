@@ -1,0 +1,678 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		03B1A93A10236CB947410836 /* ContractViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 25E785FF9EF98B235BD860F8 /* ContractViewModel.swift */; };
+		094F8DC308DE5F200AA879B3 /* XionDemoTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = ADD7DE0D48508FC058EB8AB2 /* XionDemoTests.swift */; };
+		0ABFD60BCEDE203FC168AC55 /* XionDemoApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1602B45D3EF6F636EB9EACEB /* XionDemoApp.swift */; };
+		0B58324737299AFF65DB6C10 /* ErrorBanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5DAD3A0F230F6B3330DFFD74 /* ErrorBanner.swift */; };
+		0C879CE13D4997E30772E510 /* AppNavigation.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0ECB908C6B92B51C8F48626 /* AppNavigation.swift */; };
+		0CF4185F85AAE32FC5F8876B /* XionRepositoryImpl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F2AFED85D82CD4D002BA8B2 /* XionRepositoryImpl.swift */; };
+		16C6E1117C8181ED87D54778 /* TransactionRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE3ED94ACC56195FA7175C7A /* TransactionRow.swift */; };
+		1E408DDA14C4BB7F3EF90C48 /* PkceUtil.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF126DC5A966B3884D10223E /* PkceUtil.swift */; };
+		2267DF2710337FFBC6AD3F60 /* OAuthTokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B912AE5BAC19B48BA6461E7 /* OAuthTokens.swift */; };
+		27852C538E389F817485444E /* WalletViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5EF1D8764D935DBE972A6CC4 /* WalletViewModel.swift */; };
+		2954FBBCFE018DAF441FBD90 /* SendViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19AEEAE59BE25CCBC7070322 /* SendViewModel.swift */; };
+		48746369412CA06C2D12259E /* ConnectView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB89E988C0373C1FFDB856DC /* ConnectView.swift */; };
+		4C93DAE6A5CC9A02C3741497 /* WalletView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AE3E0FAE73A24606C05DD83 /* WalletView.swift */; };
+		615AFE7C3E072A318FFCAC76 /* WalletState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75522E71D873C01A831E50C4 /* WalletState.swift */; };
+		62AC25CBB6218068D226EE73 /* SecureStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = D84ED0A3AAA17DCDC796F086 /* SecureStorage.swift */; };
+		63182FA82E509D87D9CC4BD8 /* XionRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4109D21057DDFFED09E0233D /* XionRepository.swift */; };
+		64220AACD42E7D8FA5A6D0A6 /* ContractView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 742BCAD321F8ADE8C3AFF970 /* ContractView.swift */; };
+		678AA5F691DEE8E0BA5DE67A /* OAuthService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F9F52F2271809128DF044A4E /* OAuthService.swift */; };
+		7095A51245073EC37A8A8340 /* XionTypography.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2CE2E126287BFF118BDCACB /* XionTypography.swift */; };
+		778758408CE359368BBE62C8 /* SendView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E886FD18B4C007E3D3324904 /* SendView.swift */; };
+		79115013436612F46A531622 /* AddressDisplay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62B610670109F185885A91B0 /* AddressDisplay.swift */; };
+		79FD5EDDF88C418741DB9C69 /* SessionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B47243A696BBF12B9851043 /* SessionManager.swift */; };
+		90A26D567865E59B0FC9C4CB /* AppContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = F18B4B81972F35AC4535DE51 /* AppContainer.swift */; };
+		9A7BFC4F8BD8288854532938 /* LoadingOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = AABFBA1D457FE2C6B484C5D7 /* LoadingOverlay.swift */; };
+		A00D03509A43183B1CD2E2A3 /* TransactionResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A49C9B0124170FD65FFD03C /* TransactionResult.swift */; };
+		A0D44613411CC9F865AFE0B5 /* HistoryViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85240F56DCF2F8120F75E8BA /* HistoryViewModel.swift */; };
+		A169AC3A653840778AC31B17 /* HistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3271C53EAC0A8B24F6763043 /* HistoryView.swift */; };
+		A1EBFE489E647E38E6DE5CC0 /* XionColors.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C03806F11CD471B10D00F8A /* XionColors.swift */; };
+		BCB70DFB916CD2ADD37460B8 /* BalanceCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 547759FB6A926523455BCAB0 /* BalanceCard.swift */; };
+		C54709C62CBD90B69D8FC352 /* ConnectViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C86F821F555C0C5401CFB43 /* ConnectViewModel.swift */; };
+		CAB80F95294223E1836730A0 /* BalanceInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AF43EFCDE6FBC7C6325A898 /* BalanceInfo.swift */; };
+		D18B425C0710913B9FF21160 /* CoinFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = B35EAFAF1E01E8DBDC753DF2 /* CoinFormatter.swift */; };
+		D63DE373E9C9584AE965FB96 /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3736E3B2AB010F41909D4EE3 /* Constants.swift */; };
+		DEBFDCC72523F4B69D052D02 /* MobSigningService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB8E1EED56FDEC7F2B145F9A /* MobSigningService.swift */; };
+		F4A721D77A903E159DEEC6F1 /* XionOAuthAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1286FBC2066DA3E22AF21E1A /* XionOAuthAPI.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		F750B12D2213FB01DB395A50 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 424D07468DA60D4ADE6AE36B /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 5044FFFD778B71BEEADC1D80;
+			remoteInfo = XionDemo;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		0AF43EFCDE6FBC7C6325A898 /* BalanceInfo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BalanceInfo.swift; sourceTree = "<group>"; };
+		1286FBC2066DA3E22AF21E1A /* XionOAuthAPI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = XionOAuthAPI.swift; sourceTree = "<group>"; };
+		1602B45D3EF6F636EB9EACEB /* XionDemoApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = XionDemoApp.swift; sourceTree = "<group>"; };
+		19AEEAE59BE25CCBC7070322 /* SendViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SendViewModel.swift; sourceTree = "<group>"; };
+		1A49C9B0124170FD65FFD03C /* TransactionResult.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransactionResult.swift; sourceTree = "<group>"; };
+		1C86F821F555C0C5401CFB43 /* ConnectViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectViewModel.swift; sourceTree = "<group>"; };
+		25E785FF9EF98B235BD860F8 /* ContractViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContractViewModel.swift; sourceTree = "<group>"; };
+		3271C53EAC0A8B24F6763043 /* HistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryView.swift; sourceTree = "<group>"; };
+		3736E3B2AB010F41909D4EE3 /* Constants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Constants.swift; sourceTree = "<group>"; };
+		4109D21057DDFFED09E0233D /* XionRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = XionRepository.swift; sourceTree = "<group>"; };
+		547759FB6A926523455BCAB0 /* BalanceCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BalanceCard.swift; sourceTree = "<group>"; };
+		5C03806F11CD471B10D00F8A /* XionColors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = XionColors.swift; sourceTree = "<group>"; };
+		5DAD3A0F230F6B3330DFFD74 /* ErrorBanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ErrorBanner.swift; sourceTree = "<group>"; };
+		5EF1D8764D935DBE972A6CC4 /* WalletViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalletViewModel.swift; sourceTree = "<group>"; };
+		62B610670109F185885A91B0 /* AddressDisplay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddressDisplay.swift; sourceTree = "<group>"; };
+		6F2AFED85D82CD4D002BA8B2 /* XionRepositoryImpl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = XionRepositoryImpl.swift; sourceTree = "<group>"; };
+		742BCAD321F8ADE8C3AFF970 /* ContractView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContractView.swift; sourceTree = "<group>"; };
+		75522E71D873C01A831E50C4 /* WalletState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalletState.swift; sourceTree = "<group>"; };
+		7B47243A696BBF12B9851043 /* SessionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionManager.swift; sourceTree = "<group>"; };
+		85240F56DCF2F8120F75E8BA /* HistoryViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryViewModel.swift; sourceTree = "<group>"; };
+		9AE3E0FAE73A24606C05DD83 /* WalletView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalletView.swift; sourceTree = "<group>"; };
+		9B912AE5BAC19B48BA6461E7 /* OAuthTokens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OAuthTokens.swift; sourceTree = "<group>"; };
+		AABFBA1D457FE2C6B484C5D7 /* LoadingOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoadingOverlay.swift; sourceTree = "<group>"; };
+		AB8E1EED56FDEC7F2B145F9A /* MobSigningService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MobSigningService.swift; sourceTree = "<group>"; };
+		ADD7DE0D48508FC058EB8AB2 /* XionDemoTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = XionDemoTests.swift; sourceTree = "<group>"; };
+		AE3ED94ACC56195FA7175C7A /* TransactionRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransactionRow.swift; sourceTree = "<group>"; };
+		AF126DC5A966B3884D10223E /* PkceUtil.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PkceUtil.swift; sourceTree = "<group>"; };
+		B0ECB908C6B92B51C8F48626 /* AppNavigation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppNavigation.swift; sourceTree = "<group>"; };
+		B35EAFAF1E01E8DBDC753DF2 /* CoinFormatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoinFormatter.swift; sourceTree = "<group>"; };
+		D84ED0A3AAA17DCDC796F086 /* SecureStorage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecureStorage.swift; sourceTree = "<group>"; };
+		DB89E988C0373C1FFDB856DC /* ConnectView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectView.swift; sourceTree = "<group>"; };
+		E1C5763DBFC1CA80EBB3BF5E /* XionDemo.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = XionDemo.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		E2CE2E126287BFF118BDCACB /* XionTypography.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = XionTypography.swift; sourceTree = "<group>"; };
+		E48E8CB8D316A0028A4CFAF7 /* XionDemoTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = XionDemoTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		E886FD18B4C007E3D3324904 /* SendView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SendView.swift; sourceTree = "<group>"; };
+		F18B4B81972F35AC4535DE51 /* AppContainer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppContainer.swift; sourceTree = "<group>"; };
+		F9F52F2271809128DF044A4E /* OAuthService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OAuthService.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		01188E3312CDF3A89C0E0708 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				F18B4B81972F35AC4535DE51 /* AppContainer.swift */,
+				1602B45D3EF6F636EB9EACEB /* XionDemoApp.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		0A8119119B763374692AF87F /* UI */ = {
+			isa = PBXGroup;
+			children = (
+				7336C49749B671F0B0D69D75 /* Components */,
+				4E168913616ABE273C9F5D48 /* Screens */,
+				9248EEDBA24BDF91CF407361 /* Theme */,
+			);
+			path = UI;
+			sourceTree = "<group>";
+		};
+		0E613E97034CE3B8EB1C2763 /* Send */ = {
+			isa = PBXGroup;
+			children = (
+				E886FD18B4C007E3D3324904 /* SendView.swift */,
+				19AEEAE59BE25CCBC7070322 /* SendViewModel.swift */,
+			);
+			path = Send;
+			sourceTree = "<group>";
+		};
+		2BEF38CC3FA2013439052A75 /* Utilities */ = {
+			isa = PBXGroup;
+			children = (
+				B35EAFAF1E01E8DBDC753DF2 /* CoinFormatter.swift */,
+				AF126DC5A966B3884D10223E /* PkceUtil.swift */,
+			);
+			path = Utilities;
+			sourceTree = "<group>";
+		};
+		400ACFA93D7AEBF65D801AD4 /* Data */ = {
+			isa = PBXGroup;
+			children = (
+				E3F9899B3E43A6C07A42CE10 /* Remote */,
+				905AD1E2A0C683311421B5C1 /* Repository */,
+			);
+			path = Data;
+			sourceTree = "<group>";
+		};
+		4E168913616ABE273C9F5D48 /* Screens */ = {
+			isa = PBXGroup;
+			children = (
+				816B25B6476C371E8C94D0C6 /* Connect */,
+				87515C2B95D630654344E68D /* Contract */,
+				F6784800ECAF43483BF79E2D /* History */,
+				0E613E97034CE3B8EB1C2763 /* Send */,
+				FD9E9FAF935D6887D952F18B /* Wallet */,
+			);
+			path = Screens;
+			sourceTree = "<group>";
+		};
+		7336C49749B671F0B0D69D75 /* Components */ = {
+			isa = PBXGroup;
+			children = (
+				62B610670109F185885A91B0 /* AddressDisplay.swift */,
+				547759FB6A926523455BCAB0 /* BalanceCard.swift */,
+				5DAD3A0F230F6B3330DFFD74 /* ErrorBanner.swift */,
+				AABFBA1D457FE2C6B484C5D7 /* LoadingOverlay.swift */,
+				AE3ED94ACC56195FA7175C7A /* TransactionRow.swift */,
+			);
+			path = Components;
+			sourceTree = "<group>";
+		};
+		78EB4B3DBA6E5327A2E83AF4 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				0AF43EFCDE6FBC7C6325A898 /* BalanceInfo.swift */,
+				9B912AE5BAC19B48BA6461E7 /* OAuthTokens.swift */,
+				1A49C9B0124170FD65FFD03C /* TransactionResult.swift */,
+				75522E71D873C01A831E50C4 /* WalletState.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		80F633CD8D05ED433223E385 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				E1C5763DBFC1CA80EBB3BF5E /* XionDemo.app */,
+				E48E8CB8D316A0028A4CFAF7 /* XionDemoTests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		816B25B6476C371E8C94D0C6 /* Connect */ = {
+			isa = PBXGroup;
+			children = (
+				DB89E988C0373C1FFDB856DC /* ConnectView.swift */,
+				1C86F821F555C0C5401CFB43 /* ConnectViewModel.swift */,
+			);
+			path = Connect;
+			sourceTree = "<group>";
+		};
+		82D95AEEE7F1A9E6B4609D3B = {
+			isa = PBXGroup;
+			children = (
+				84C22ED7F4AB21BF33ECF2E2 /* XionDemo */,
+				B0AED18E291099AE681ECB0E /* XionDemoTests */,
+				80F633CD8D05ED433223E385 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		84C22ED7F4AB21BF33ECF2E2 /* XionDemo */ = {
+			isa = PBXGroup;
+			children = (
+				01188E3312CDF3A89C0E0708 /* App */,
+				E5A4CA3FF839677C15F960AF /* Configuration */,
+				400ACFA93D7AEBF65D801AD4 /* Data */,
+				78EB4B3DBA6E5327A2E83AF4 /* Models */,
+				99013392B9337922A48599A5 /* Navigation */,
+				B1D5053D65564D4CA6D065D8 /* Services */,
+				0A8119119B763374692AF87F /* UI */,
+				2BEF38CC3FA2013439052A75 /* Utilities */,
+			);
+			path = XionDemo;
+			sourceTree = "<group>";
+		};
+		87515C2B95D630654344E68D /* Contract */ = {
+			isa = PBXGroup;
+			children = (
+				742BCAD321F8ADE8C3AFF970 /* ContractView.swift */,
+				25E785FF9EF98B235BD860F8 /* ContractViewModel.swift */,
+			);
+			path = Contract;
+			sourceTree = "<group>";
+		};
+		905AD1E2A0C683311421B5C1 /* Repository */ = {
+			isa = PBXGroup;
+			children = (
+				4109D21057DDFFED09E0233D /* XionRepository.swift */,
+				6F2AFED85D82CD4D002BA8B2 /* XionRepositoryImpl.swift */,
+			);
+			path = Repository;
+			sourceTree = "<group>";
+		};
+		9248EEDBA24BDF91CF407361 /* Theme */ = {
+			isa = PBXGroup;
+			children = (
+				5C03806F11CD471B10D00F8A /* XionColors.swift */,
+				E2CE2E126287BFF118BDCACB /* XionTypography.swift */,
+			);
+			path = Theme;
+			sourceTree = "<group>";
+		};
+		99013392B9337922A48599A5 /* Navigation */ = {
+			isa = PBXGroup;
+			children = (
+				B0ECB908C6B92B51C8F48626 /* AppNavigation.swift */,
+			);
+			path = Navigation;
+			sourceTree = "<group>";
+		};
+		B0AED18E291099AE681ECB0E /* XionDemoTests */ = {
+			isa = PBXGroup;
+			children = (
+				ADD7DE0D48508FC058EB8AB2 /* XionDemoTests.swift */,
+			);
+			path = XionDemoTests;
+			sourceTree = "<group>";
+		};
+		B1D5053D65564D4CA6D065D8 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				AB8E1EED56FDEC7F2B145F9A /* MobSigningService.swift */,
+				F9F52F2271809128DF044A4E /* OAuthService.swift */,
+				D84ED0A3AAA17DCDC796F086 /* SecureStorage.swift */,
+				7B47243A696BBF12B9851043 /* SessionManager.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		E3F9899B3E43A6C07A42CE10 /* Remote */ = {
+			isa = PBXGroup;
+			children = (
+				1286FBC2066DA3E22AF21E1A /* XionOAuthAPI.swift */,
+			);
+			path = Remote;
+			sourceTree = "<group>";
+		};
+		E5A4CA3FF839677C15F960AF /* Configuration */ = {
+			isa = PBXGroup;
+			children = (
+				3736E3B2AB010F41909D4EE3 /* Constants.swift */,
+			);
+			path = Configuration;
+			sourceTree = "<group>";
+		};
+		F6784800ECAF43483BF79E2D /* History */ = {
+			isa = PBXGroup;
+			children = (
+				3271C53EAC0A8B24F6763043 /* HistoryView.swift */,
+				85240F56DCF2F8120F75E8BA /* HistoryViewModel.swift */,
+			);
+			path = History;
+			sourceTree = "<group>";
+		};
+		FD9E9FAF935D6887D952F18B /* Wallet */ = {
+			isa = PBXGroup;
+			children = (
+				9AE3E0FAE73A24606C05DD83 /* WalletView.swift */,
+				5EF1D8764D935DBE972A6CC4 /* WalletViewModel.swift */,
+			);
+			path = Wallet;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		5044FFFD778B71BEEADC1D80 /* XionDemo */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 60F5B4676EB43E2A51B813B9 /* Build configuration list for PBXNativeTarget "XionDemo" */;
+			buildPhases = (
+				B34EB543C6720AF9EEE2CEA7 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = XionDemo;
+			packageProductDependencies = (
+			);
+			productName = XionDemo;
+			productReference = E1C5763DBFC1CA80EBB3BF5E /* XionDemo.app */;
+			productType = "com.apple.product-type.application";
+		};
+		DFF77BD0E7A3F48AACC4F41C /* XionDemoTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 4BB839132C9859F1079652C1 /* Build configuration list for PBXNativeTarget "XionDemoTests" */;
+			buildPhases = (
+				8DCED570D366087731C23D93 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				3D2B1A52A7EA56B6E4729D1C /* PBXTargetDependency */,
+			);
+			name = XionDemoTests;
+			packageProductDependencies = (
+			);
+			productName = XionDemoTests;
+			productReference = E48E8CB8D316A0028A4CFAF7 /* XionDemoTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		424D07468DA60D4ADE6AE36B /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1500;
+				TargetAttributes = {
+					5044FFFD778B71BEEADC1D80 = {
+						DevelopmentTeam = "";
+					};
+				};
+			};
+			buildConfigurationList = 627F715096B2C557D42114CA /* Build configuration list for PBXProject "XionDemo" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = 82D95AEEE7F1A9E6B4609D3B;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 80F633CD8D05ED433223E385 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				5044FFFD778B71BEEADC1D80 /* XionDemo */,
+				DFF77BD0E7A3F48AACC4F41C /* XionDemoTests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		8DCED570D366087731C23D93 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				094F8DC308DE5F200AA879B3 /* XionDemoTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B34EB543C6720AF9EEE2CEA7 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				79115013436612F46A531622 /* AddressDisplay.swift in Sources */,
+				90A26D567865E59B0FC9C4CB /* AppContainer.swift in Sources */,
+				0C879CE13D4997E30772E510 /* AppNavigation.swift in Sources */,
+				BCB70DFB916CD2ADD37460B8 /* BalanceCard.swift in Sources */,
+				CAB80F95294223E1836730A0 /* BalanceInfo.swift in Sources */,
+				D18B425C0710913B9FF21160 /* CoinFormatter.swift in Sources */,
+				48746369412CA06C2D12259E /* ConnectView.swift in Sources */,
+				C54709C62CBD90B69D8FC352 /* ConnectViewModel.swift in Sources */,
+				D63DE373E9C9584AE965FB96 /* Constants.swift in Sources */,
+				64220AACD42E7D8FA5A6D0A6 /* ContractView.swift in Sources */,
+				03B1A93A10236CB947410836 /* ContractViewModel.swift in Sources */,
+				0B58324737299AFF65DB6C10 /* ErrorBanner.swift in Sources */,
+				A169AC3A653840778AC31B17 /* HistoryView.swift in Sources */,
+				A0D44613411CC9F865AFE0B5 /* HistoryViewModel.swift in Sources */,
+				9A7BFC4F8BD8288854532938 /* LoadingOverlay.swift in Sources */,
+				DEBFDCC72523F4B69D052D02 /* MobSigningService.swift in Sources */,
+				678AA5F691DEE8E0BA5DE67A /* OAuthService.swift in Sources */,
+				2267DF2710337FFBC6AD3F60 /* OAuthTokens.swift in Sources */,
+				1E408DDA14C4BB7F3EF90C48 /* PkceUtil.swift in Sources */,
+				62AC25CBB6218068D226EE73 /* SecureStorage.swift in Sources */,
+				778758408CE359368BBE62C8 /* SendView.swift in Sources */,
+				2954FBBCFE018DAF441FBD90 /* SendViewModel.swift in Sources */,
+				79FD5EDDF88C418741DB9C69 /* SessionManager.swift in Sources */,
+				A00D03509A43183B1CD2E2A3 /* TransactionResult.swift in Sources */,
+				16C6E1117C8181ED87D54778 /* TransactionRow.swift in Sources */,
+				615AFE7C3E072A318FFCAC76 /* WalletState.swift in Sources */,
+				4C93DAE6A5CC9A02C3741497 /* WalletView.swift in Sources */,
+				27852C538E389F817485444E /* WalletViewModel.swift in Sources */,
+				A1EBFE489E647E38E6DE5CC0 /* XionColors.swift in Sources */,
+				0ABFD60BCEDE203FC168AC55 /* XionDemoApp.swift in Sources */,
+				F4A721D77A903E159DEEC6F1 /* XionOAuthAPI.swift in Sources */,
+				63182FA82E509D87D9CC4BD8 /* XionRepository.swift in Sources */,
+				0CF4185F85AAE32FC5F8876B /* XionRepositoryImpl.swift in Sources */,
+				7095A51245073EC37A8A8340 /* XionTypography.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		3D2B1A52A7EA56B6E4729D1C /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 5044FFFD778B71BEEADC1D80 /* XionDemo */;
+			targetProxy = F750B12D2213FB01DB395A50 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		03F991612185E92D7CC99748 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.9;
+			};
+			name = Debug;
+		};
+		2476233115B07AE2294F66C7 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(PROJECT_DIR)/XionDemo/Frameworks",
+				);
+				INFOPLIST_FILE = XionDemo/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0.0;
+				OTHER_LDFLAGS = (
+					"-lresolv",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.burnt.xiondemo.ios;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		59044139135D44249E3A25E3 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.9;
+			};
+			name = Release;
+		};
+		CC3410E87D2DEE97C77916C5 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(PROJECT_DIR)/XionDemo/Frameworks",
+				);
+				INFOPLIST_FILE = XionDemo/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0.0;
+				OTHER_LDFLAGS = (
+					"-lresolv",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.burnt.xiondemo.ios;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		DDF461D80C5CF23F6DC07604 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.burnt.xiondemo.ios.tests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/XionDemo.app/XionDemo";
+			};
+			name = Release;
+		};
+		E30DB861CA79B73A0C3AD58E /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.burnt.xiondemo.ios.tests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/XionDemo.app/XionDemo";
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		4BB839132C9859F1079652C1 /* Build configuration list for PBXNativeTarget "XionDemoTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				E30DB861CA79B73A0C3AD58E /* Debug */,
+				DDF461D80C5CF23F6DC07604 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		60F5B4676EB43E2A51B813B9 /* Build configuration list for PBXNativeTarget "XionDemo" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				CC3410E87D2DEE97C77916C5 /* Debug */,
+				2476233115B07AE2294F66C7 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		627F715096B2C557D42114CA /* Build configuration list for PBXProject "XionDemo" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				03F991612185E92D7CC99748 /* Debug */,
+				59044139135D44249E3A25E3 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 424D07468DA60D4ADE6AE36B /* Project object */;
+}
