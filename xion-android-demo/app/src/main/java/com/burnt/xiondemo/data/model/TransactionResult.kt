@@ -9,5 +9,10 @@ data class TransactionResult(
     val gasUsed: String,
     val gasWanted: String,
     val height: Long,
-    val rawLog: String
+    val rawLog: String,
+    val timestamp: String = "",
+    val fee: String = "",
+    val txType: String = "",
+    val amount: String = "",
+    val recipient: String = ""
 )

@@ -2,6 +2,7 @@ package com.burnt.xiondemo.ui.screens.wallet
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.burnt.xiondemo.data.model.TransactionResult
 import com.burnt.xiondemo.data.model.WalletState
 import com.burnt.xiondemo.data.repository.XionRepository
 import com.burnt.xiondemo.util.Constants
@@ -26,7 +27,8 @@ data class WalletUiState(
     val chainId: String = Constants.CHAIN_ID,
     val error: String? = null,
     val sessionExpiryWarning: Boolean = false,
-    val isDisconnected: Boolean = false
+    val isDisconnected: Boolean = false,
+    val transactions: List<TransactionResult> = emptyList()
 )
 
 @HiltViewModel
@@ -42,6 +44,7 @@ class WalletViewModel @Inject constructor(
             repository.walletState.collect { state ->
                 when (state) {
                     is WalletState.Connected -> {
+                        val previousAddress = _uiState.value.address
                         _uiState.update {
                             it.copy(
                                 address = state.metaAccountAddress,
@@ -50,11 +53,23 @@ class WalletViewModel @Inject constructor(
                                 grantsActive = state.grantsActive
                             )
                         }
+                        if (previousAddress == null) {
+                            loadRecentTransactions()
+                        }
                     }
                     is WalletState.Disconnected -> {
                         _uiState.update { it.copy(isDisconnected = true) }
                     }
                     is WalletState.Connecting -> {}
+                }
+            }
+        }
+
+        viewModelScope.launch {
+            repository.transactionHistory.collect { inMemoryTxs ->
+                if (inMemoryTxs.isNotEmpty()) {
+                    // A new tx was just sent — refresh from chain to get full details
+                    loadRecentTransactions()
                 }
             }
         }
@@ -73,6 +88,7 @@ class WalletViewModel @Inject constructor(
     fun refresh() {
         loadBalance()
         loadBlockHeight()
+        loadRecentTransactions()
     }
 
     private fun loadBalance() {
@@ -99,6 +115,19 @@ class WalletViewModel @Inject constructor(
             when (val result = repository.getBlockHeight()) {
                 is Result.Success -> {
                     _uiState.update { it.copy(blockHeight = result.data) }
+                }
+                is Result.Error -> {}
+                is Result.Loading -> {}
+            }
+        }
+    }
+
+    private fun loadRecentTransactions() {
+        viewModelScope.launch {
+            val address = _uiState.value.address ?: return@launch
+            when (val result = repository.getRecentTransactions(address)) {
+                is Result.Success -> {
+                    _uiState.update { it.copy(transactions = result.data) }
                 }
                 is Result.Error -> {}
                 is Result.Loading -> {}

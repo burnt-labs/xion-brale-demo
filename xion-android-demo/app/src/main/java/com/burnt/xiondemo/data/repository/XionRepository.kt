@@ -19,6 +19,7 @@ interface XionRepository {
     suspend fun send(toAddress: String, amount: String, memo: String): Result<TransactionResult>
     suspend fun executeContract(contractAddress: String, msg: String, funds: String?): Result<TransactionResult>
     suspend fun getTx(txHash: String): Result<TransactionResult>
+    suspend fun getRecentTransactions(address: String): Result<List<TransactionResult>>
 
     fun disconnect()
 }
