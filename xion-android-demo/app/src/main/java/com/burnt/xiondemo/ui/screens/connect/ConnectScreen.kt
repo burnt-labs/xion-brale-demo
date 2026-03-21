@@ -48,7 +48,7 @@ fun ConnectScreen(
                 modifier = Modifier
                     .width(160.dp)
                     .align(Alignment.TopCenter)
-                    .padding(top = 24.dp)
+                    .padding(top = 72.dp)
             )
 
             Column(
