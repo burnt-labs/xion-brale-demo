@@ -4,6 +4,8 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.burnt.xiondemo.ui.screens.brale.OfframpScreen
+import com.burnt.xiondemo.ui.screens.brale.OnrampScreen
 import com.burnt.xiondemo.ui.screens.connect.ConnectScreen
 import com.burnt.xiondemo.ui.screens.contract.ContractScreen
 import com.burnt.xiondemo.ui.screens.history.HistoryScreen
@@ -14,6 +16,8 @@ object Routes {
     const val WALLET = "wallet"
     const val CONTRACT = "contract"
     const val HISTORY = "history"
+    const val ONRAMP = "onramp"
+    const val OFFRAMP = "offramp"
 }
 
 @Composable
@@ -38,6 +42,8 @@ fun NavGraph() {
             WalletScreen(
                 onNavigateToContract = { navController.navigate(Routes.CONTRACT) },
                 onNavigateToHistory = { navController.navigate(Routes.HISTORY) },
+                onNavigateToOnramp = { navController.navigate(Routes.ONRAMP) },
+                onNavigateToOfframp = { navController.navigate(Routes.OFFRAMP) },
                 onDisconnected = {
                     navController.navigate(Routes.CONNECT) {
                         popUpTo(Routes.WALLET) { inclusive = true }
@@ -52,6 +58,14 @@ fun NavGraph() {
 
         composable(Routes.HISTORY) {
             HistoryScreen(onBack = { navController.popBackStack() })
+        }
+
+        composable(Routes.ONRAMP) {
+            OnrampScreen(onDone = { navController.popBackStack() })
+        }
+
+        composable(Routes.OFFRAMP) {
+            OfframpScreen(onDone = { navController.popBackStack() })
         }
     }
 }

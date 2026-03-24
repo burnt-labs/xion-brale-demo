@@ -87,6 +87,14 @@ class SecureStorage @Inject constructor(
             .apply()
     }
 
+    fun getString(key: String): String? {
+        return sharedPreferences.getString(key, null)
+    }
+
+    fun putString(key: String, value: String) {
+        sharedPreferences.edit().putString(key, value).apply()
+    }
+
     fun clearAll() {
         sharedPreferences.edit().clear().apply()
     }

@@ -27,6 +27,15 @@ object Constants {
     const val SAMPLE_CONTRACT_ADDRESS = ""
     const val SAMPLE_CONTRACT_MSG = """{"increment": {}}"""
 
+    // Brale
+    val BRALE_PROXY_URL = BuildConfig.BRALE_PROXY_URL
+    const val BRALE_TRANSFER_TYPE = "xion_testnet"
+    const val BRALE_STABLECOIN_DENOM = "SBC"
+
+    // Brale pref keys
+    const val PREF_BRALE_BANK_ADDRESS_ID = "brale_bank_address_id"
+    const val PREF_BRALE_XION_ADDRESS_ID = "brale_xion_address_id"
+
     // Keystore
     const val KEYSTORE_ALIAS = "xion_demo_session_key"
     const val PREFS_NAME = "xion_demo_secure_prefs"

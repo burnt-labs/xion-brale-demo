@@ -34,6 +34,8 @@ import com.burnt.xiondemo.util.CoinFormatter
 fun WalletScreen(
     onNavigateToContract: () -> Unit,
     onNavigateToHistory: () -> Unit,
+    onNavigateToOnramp: () -> Unit,
+    onNavigateToOfframp: () -> Unit,
     onDisconnected: () -> Unit,
     viewModel: WalletViewModel = hiltViewModel()
 ) {
@@ -215,6 +217,34 @@ fun WalletScreen(
                 text = "Send Tokens",
                 fontWeight = FontWeight.SemiBold
             )
+        }
+
+        // Buy / Cash Out buttons
+        Spacer(modifier = Modifier.height(12.dp))
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Button(
+                onClick = onNavigateToOnramp,
+                modifier = Modifier.weight(1f),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = XionGreen)
+            ) {
+                Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
+                Spacer(modifier = Modifier.width(6.dp))
+                Text("Buy", fontWeight = FontWeight.SemiBold)
+            }
+            Button(
+                onClick = onNavigateToOfframp,
+                modifier = Modifier.weight(1f),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = MintscanBlue)
+            ) {
+                Icon(Icons.Default.AccountBalance, contentDescription = null, modifier = Modifier.size(18.dp))
+                Spacer(modifier = Modifier.width(6.dp))
+                Text("Cash Out", fontWeight = FontWeight.SemiBold)
+            }
         }
 
         Spacer(modifier = Modifier.height(24.dp))
