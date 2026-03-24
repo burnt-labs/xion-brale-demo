@@ -1,1 +1,0 @@
-@rpath/XionDemo.debug.dylib
