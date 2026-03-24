@@ -2,7 +2,6 @@ import SwiftUI
 
 enum Route: Hashable {
     case wallet
-    case send
     case contract
     case history
 }
@@ -18,15 +17,13 @@ struct AppNavigation: View {
             NavigationStack(path: $path) {
                 WalletView(
                     viewModel: WalletViewModel(repository: container.repository),
-                    onNavigateToSend: { path.append(Route.send) },
+                    sendViewModel: SendViewModel(repository: container.repository),
                     onNavigateToContract: { path.append(Route.contract) },
                     onNavigateToHistory: { path.append(Route.history) },
                     onDisconnected: { isConnected = false }
                 )
                 .navigationDestination(for: Route.self) { route in
                     switch route {
-                    case .send:
-                        SendView(viewModel: SendViewModel(repository: container.repository))
                     case .contract:
                         ContractView(viewModel: ContractViewModel(repository: container.repository))
                     case .history:

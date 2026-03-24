@@ -18,4 +18,5 @@ extension Color {
     static let greetingText = Color(red: 0.17, green: 0.17, blue: 0.18)
     static let subtitleText = Color(red: 0.56, green: 0.56, blue: 0.58)
     static let xionOrange = Color(red: 1.0, green: 0.6, blue: 0.0)
+    static let mintscanBlue = Color(red: 0.231, green: 0.510, blue: 0.965)
 }

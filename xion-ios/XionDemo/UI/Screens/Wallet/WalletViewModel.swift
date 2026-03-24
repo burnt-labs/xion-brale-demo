@@ -90,6 +90,7 @@ final class WalletViewModel: ObservableObject {
             sessionAddress = session
             connectionType = "Meta Account"
             grantsActive = grants
+            loadTransactions()
         case .disconnected:
             isDisconnected = true
         case .connecting:

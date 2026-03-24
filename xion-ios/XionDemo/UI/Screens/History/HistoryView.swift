@@ -29,7 +29,7 @@ struct HistoryView: View {
                     Button {
                         viewModel.selectedTransaction = tx
                     } label: {
-                        TransactionRow(transaction: tx)
+                        CompactTransactionRow(transaction: tx)
                     }
                     .listRowSeparator(.hidden)
                     .listRowBackground(Color.clear)

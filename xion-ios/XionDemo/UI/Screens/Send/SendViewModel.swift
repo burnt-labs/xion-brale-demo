@@ -9,9 +9,8 @@ final class SendViewModel: ObservableObject {
     @Published var recipientError: String?
     @Published var amountError: String?
     @Published var isLoading = false
-    @Published var txHash: String?
+    @Published var txResult: TransactionResult?
     @Published var error: String?
-    @Published var showConfirmation = false
 
     private let repository: XionRepositoryProtocol
 
@@ -23,6 +22,20 @@ final class SendViewModel: ObservableObject {
         recipient.hasPrefix(Constants.addressPrefix) &&
         recipient.count >= 39 &&
         CoinFormatter.isValidAmount(amount)
+    }
+
+    func updateRecipient(_ value: String) {
+        recipient = value
+        validateRecipient()
+    }
+
+    func updateAmount(_ value: String) {
+        amount = value
+        validateAmount()
+    }
+
+    func updateMemo(_ value: String) {
+        memo = value
     }
 
     func validateRecipient() {
@@ -47,12 +60,7 @@ final class SendViewModel: ObservableObject {
         }
     }
 
-    func confirmSend() {
-        showConfirmation = true
-    }
-
     func send() {
-        showConfirmation = false
         let microAmount = CoinFormatter.displayToMicro(amount)
 
         Task {
@@ -64,7 +72,7 @@ final class SendViewModel: ObservableObject {
                     amount: microAmount,
                     memo: memo
                 )
-                txHash = result.txHash
+                txResult = result
             } catch {
                 self.error = error.localizedDescription
             }
@@ -73,6 +81,17 @@ final class SendViewModel: ObservableObject {
     }
 
     func clearError() {
+        error = nil
+    }
+
+    func resetState() {
+        recipient = ""
+        amount = ""
+        memo = ""
+        recipientError = nil
+        amountError = nil
+        isLoading = false
+        txResult = nil
         error = nil
     }
 }
