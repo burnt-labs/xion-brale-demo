@@ -1,0 +1,73 @@
+{
+  "buildCommand" : {
+    "command" : "build",
+    "skipDependencies" : false,
+    "style" : "buildOnly"
+  },
+  "configuredTargets" : [
+    {
+      "guid" : "99a3216b5fa82b462e64eac2d8d257118f6c7ce9932e5bed21f23ae364b88a7c"
+    }
+  ],
+  "containerPath" : "/Users/adrianthompson/Documents/35 - XION/02 - Projects/29 - House Money/apps/xion-ios/XionDemo.xcodeproj",
+  "continueBuildingAfterErrors" : false,
+  "dependencyScope" : "workspace",
+  "enableIndexBuildArena" : false,
+  "hideShellScriptEnvironment" : false,
+  "parameters" : {
+    "action" : "build",
+    "activeArchitecture" : "arm64",
+    "activeRunDestination" : {
+      "disableOnlyActiveArch" : false,
+      "platform" : "iphonesimulator",
+      "sdk" : "iphonesimulator18.4",
+      "sdkVariant" : "iphonesimulator",
+      "supportedArchitectures" : [
+        "arm64",
+        "x86_64"
+      ],
+      "targetArchitecture" : "arm64"
+    },
+    "arenaInfo" : {
+      "buildIntermediatesPath" : "/Users/adrianthompson/Documents/35 - XION/02 - Projects/29 - House Money/apps/xion-ios/build/Build/Intermediates.noindex",
+      "buildProductsPath" : "/Users/adrianthompson/Documents/35 - XION/02 - Projects/29 - House Money/apps/xion-ios/build/Build/Products",
+      "derivedDataPath" : "/Users/adrianthompson/Documents/35 - XION/02 - Projects/29 - House Money/apps/xion-ios/build",
+      "indexDataStoreFolderPath" : "/Users/adrianthompson/Documents/35 - XION/02 - Projects/29 - House Money/apps/xion-ios/build/Index.noindex/DataStore",
+      "indexEnableDataStore" : true,
+      "indexPCHPath" : "/Users/adrianthompson/Documents/35 - XION/02 - Projects/29 - House Money/apps/xion-ios/build/Index.noindex/PrecompiledHeaders",
+      "pchPath" : "/Users/adrianthompson/Documents/35 - XION/02 - Projects/29 - House Money/apps/xion-ios/build/Build/Intermediates.noindex/PrecompiledHeaders"
+    },
+    "configurationName" : "Debug",
+    "overrides" : {
+      "commandLine" : {
+        "table" : {
+
+        }
+      },
+      "synthesized" : {
+        "table" : {
+          "ACTION" : "build",
+          "ASSETCATALOG_FILTER_FOR_DEVICE_MODEL" : "iPhone17,1",
+          "ASSETCATALOG_FILTER_FOR_DEVICE_OS_VERSION" : "18.4",
+          "ASSETCATALOG_FILTER_FOR_THINNING_DEVICE_CONFIGURATION" : "iPhone17,1",
+          "BUILD_ACTIVE_RESOURCES_ONLY" : "YES",
+          "CLANG_COVERAGE_MAPPING" : "YES",
+          "CLANG_PROFILE_DATA_DIRECTORY" : "/Users/adrianthompson/Documents/35 - XION/02 - Projects/29 - House Money/apps/xion-ios/build/Build/ProfileData",
+          "ENABLE_PREVIEWS" : "NO",
+          "ENABLE_XOJIT_PREVIEWS" : "YES",
+          "ONLY_ACTIVE_ARCH" : "YES",
+          "TARGET_DEVICE_IDENTIFIER" : "D33EEBF6-2546-4847-8924-A4656932FDF0",
+          "TARGET_DEVICE_MODEL" : "iPhone17,1",
+          "TARGET_DEVICE_OS_VERSION" : "18.4",
+          "TARGET_DEVICE_PLATFORM_NAME" : "iphonesimulator"
+        }
+      }
+    }
+  },
+  "schemeCommand" : "launch",
+  "showNonLoggedProgress" : true,
+  "useDryRun" : false,
+  "useImplicitDependencies" : true,
+  "useLegacyBuildLocations" : false,
+  "useParallelTargets" : true
+}

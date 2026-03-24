@@ -1,0 +1,4 @@
+module Bip39 {
+header "Bip39-Swift.h"
+export *
+}

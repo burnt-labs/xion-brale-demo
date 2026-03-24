@@ -7,7 +7,7 @@ struct XionDemoApp: App {
     var body: some Scene {
         WindowGroup {
             AppNavigation(container: container)
-                .preferredColorScheme(.dark)
+                .preferredColorScheme(.light)
         }
     }
 }

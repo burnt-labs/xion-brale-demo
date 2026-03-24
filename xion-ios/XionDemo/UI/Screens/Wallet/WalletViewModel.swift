@@ -15,6 +15,7 @@ final class WalletViewModel: ObservableObject {
     @Published var error: String?
     @Published var sessionExpiryWarning = false
     @Published var isDisconnected = false
+    @Published var transactions: [TransactionResult] = []
 
     private let repository: XionRepositoryProtocol
     private var cancellables = Set<AnyCancellable>()
@@ -37,6 +38,7 @@ final class WalletViewModel: ObservableObject {
     func refresh() {
         loadBalance()
         loadBlockHeight()
+        loadTransactions()
     }
 
     func disconnect() {
@@ -66,6 +68,17 @@ final class WalletViewModel: ObservableObject {
                 blockHeight = try await repository.getBlockHeight()
             } catch {
                 // Non-critical
+            }
+        }
+    }
+
+    private func loadTransactions() {
+        guard let addr = address else { return }
+        Task {
+            do {
+                transactions = try await repository.getRecentTransactions(address: addr)
+            } catch {
+                // Non-critical — don't show error for history failure
             }
         }
     }

@@ -14,11 +14,11 @@ struct ConnectView: View {
 
                 Text("Welcome,")
                     .font(.system(size: 32))
-                    .foregroundStyle(.greetingText)
+                    .foregroundStyle(Color.greetingText)
 
                 Text("Connect to get started")
                     .font(.system(size: 28, weight: .bold))
-                    .foregroundStyle(.greetingText)
+                    .foregroundStyle(Color.greetingText)
                     .padding(.top, 4)
 
                 Spacer()
@@ -27,14 +27,14 @@ struct ConnectView: View {
                 VStack(alignment: .leading, spacing: 16) {
                     Image(systemName: "person.circle.fill")
                         .font(.system(size: 36))
-                        .foregroundStyle(.xionOrange)
+                        .foregroundStyle(Color.xionOrange)
 
                     Text("Connect with XION")
                         .font(.system(size: 18, weight: .semibold))
 
                     Text("Sign in with your Meta Account for a walletless blockchain experience. No keys to manage.")
                         .font(.system(size: 14))
-                        .foregroundStyle(.subtitleText)
+                        .foregroundStyle(Color.subtitleText)
                         .lineSpacing(4)
 
                     Button(action: viewModel.startOAuthFlow) {
@@ -48,9 +48,9 @@ struct ConnectView: View {
                     .clipShape(RoundedRectangle(cornerRadius: 12))
                 }
                 .padding(24)
-                .background(.cardBackground)
+                .background(Color.cardBackground)
                 .clipShape(RoundedRectangle(cornerRadius: 20))
-                .shadow(color: .cardShadow, radius: 4, y: 2)
+                .shadow(color: Color.cardShadow, radius: 4, y: 2)
 
                 Spacer().frame(height: 32)
             }

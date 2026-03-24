@@ -5,7 +5,10 @@ struct HistoryView: View {
 
     var body: some View {
         Group {
-            if viewModel.transactions.isEmpty {
+            if viewModel.isLoading && viewModel.transactions.isEmpty {
+                ProgressView("Loading transactions...")
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else if viewModel.transactions.isEmpty {
                 VStack(spacing: 16) {
                     Spacer()
                     Image(systemName: "clock.badge.questionmark")
@@ -57,6 +60,25 @@ private struct TransactionDetailSheet: View {
                     LabeledContent("Height", value: "\(transaction.height)")
                     LabeledContent("Gas Used", value: transaction.gasUsed)
                     LabeledContent("Gas Wanted", value: transaction.gasWanted)
+                    if !transaction.fee.isEmpty && transaction.fee != "0" {
+                        LabeledContent("Fee", value: "\(transaction.fee) \(Constants.coinDenom)")
+                    }
+                    if !transaction.txType.isEmpty {
+                        LabeledContent("Type", value: transaction.txType)
+                    }
+                    if !transaction.timestamp.isEmpty {
+                        LabeledContent("Time", value: transaction.timestamp)
+                    }
+                }
+                if !transaction.amount.isEmpty {
+                    Section("Transfer") {
+                        LabeledContent("Amount", value: CoinFormatter.formatWithDenom(transaction.amount))
+                        if !transaction.recipient.isEmpty {
+                            LabeledContent("Recipient") {
+                                AddressDisplay(address: transaction.recipient)
+                            }
+                        }
+                    }
                 }
                 if !transaction.rawLog.isEmpty {
                     Section("Raw Log") {

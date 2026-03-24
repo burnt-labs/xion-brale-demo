@@ -18,12 +18,12 @@ struct WalletView: View {
 
                 Text("Hi \(shortAddress),")
                     .font(.system(size: 20))
-                    .foregroundStyle(.subtitleText)
+                    .foregroundStyle(Color.subtitleText)
                     .padding(.top, 16)
 
                 Text("What would you like to do?")
                     .font(.system(size: 24, weight: .bold))
-                    .foregroundStyle(.greetingText)
+                    .foregroundStyle(Color.greetingText)
                     .padding(.top, 4)
 
                 // Grant status warnings
@@ -53,17 +53,17 @@ struct WalletView: View {
                     } else {
                         Text(viewModel.balance.map { CoinFormatter.formatWithDenom($0) } ?? "—")
                             .font(.system(size: 32, weight: .bold))
-                            .foregroundStyle(.greetingText)
+                            .foregroundStyle(Color.greetingText)
                     }
                     Text("Available Balance")
                         .font(.system(size: 14))
-                        .foregroundStyle(.subtitleText)
+                        .foregroundStyle(Color.subtitleText)
                 }
                 .frame(maxWidth: .infinity)
                 .padding(24)
-                .background(.cardBackground)
+                .background(Color.cardBackground)
                 .clipShape(RoundedRectangle(cornerRadius: 20))
-                .shadow(color: .cardShadow, radius: 2, y: 1)
+                .shadow(color: Color.cardShadow, radius: 2, y: 1)
                 .padding(.top, 24)
 
                 // 2x2 Action cards
@@ -101,6 +101,27 @@ struct WalletView: View {
                     )
                 }
                 .padding(.top, 24)
+
+                // Recent Transactions
+                if !viewModel.transactions.isEmpty {
+                    HStack {
+                        Text("Recent Transactions")
+                            .font(.system(size: 16, weight: .semibold))
+                            .foregroundStyle(Color.greetingText)
+                        Spacer()
+                        Button("See All", action: onNavigateToHistory)
+                            .font(.system(size: 14, weight: .medium))
+                            .foregroundStyle(Color.xionOrange)
+                    }
+                    .padding(.top, 24)
+
+                    VStack(spacing: 8) {
+                        ForEach(viewModel.transactions) { tx in
+                            TransactionRow(transaction: tx)
+                        }
+                    }
+                    .padding(.top, 4)
+                }
 
                 // Disconnect
                 Button(role: .destructive, action: viewModel.disconnect) {

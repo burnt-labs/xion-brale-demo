@@ -1,0 +1,48 @@
+{
+  "" : {
+    "diagnostics" : "/Users/adrianthompson/Documents/35 - XION/02 - Projects/29 - House Money/apps/xion-ios/build/Build/Intermediates.noindex/Bip39.build/Debug-iphonesimulator/Bip39.build/Objects-normal/arm64/Bip39-master.dia",
+    "emit-module-dependencies" : "/Users/adrianthompson/Documents/35 - XION/02 - Projects/29 - House Money/apps/xion-ios/build/Build/Intermediates.noindex/Bip39.build/Debug-iphonesimulator/Bip39.build/Objects-normal/arm64/Bip39-master-emit-module.d",
+    "emit-module-diagnostics" : "/Users/adrianthompson/Documents/35 - XION/02 - Projects/29 - House Money/apps/xion-ios/build/Build/Intermediates.noindex/Bip39.build/Debug-iphonesimulator/Bip39.build/Objects-normal/arm64/Bip39-master-emit-module.dia",
+    "swift-dependencies" : "/Users/adrianthompson/Documents/35 - XION/02 - Projects/29 - House Money/apps/xion-ios/build/Build/Intermediates.noindex/Bip39.build/Debug-iphonesimulator/Bip39.build/Objects-normal/arm64/Bip39-master.swiftdeps"
+  },
+  "/Users/adrianthompson/Documents/35 - XION/02 - Projects/29 - House Money/apps/xion-ios/vendor/bip39/Sources/Bip39/Mnemonic.swift" : {
+    "const-values" : "/Users/adrianthompson/Documents/35 - XION/02 - Projects/29 - House Money/apps/xion-ios/build/Build/Intermediates.noindex/Bip39.build/Debug-iphonesimulator/Bip39.build/Objects-normal/arm64/Mnemonic.swiftconstvalues",
+    "dependencies" : "/Users/adrianthompson/Documents/35 - XION/02 - Projects/29 - House Money/apps/xion-ios/build/Build/Intermediates.noindex/Bip39.build/Debug-iphonesimulator/Bip39.build/Objects-normal/arm64/Mnemonic.d",
+    "diagnostics" : "/Users/adrianthompson/Documents/35 - XION/02 - Projects/29 - House Money/apps/xion-ios/build/Build/Intermediates.noindex/Bip39.build/Debug-iphonesimulator/Bip39.build/Objects-normal/arm64/Mnemonic.dia",
+    "index-unit-output-path" : "/Bip39.build/Debug-iphonesimulator/Bip39.build/Objects-normal/arm64/Mnemonic.o",
+    "llvm-bc" : "/Users/adrianthompson/Documents/35 - XION/02 - Projects/29 - House Money/apps/xion-ios/build/Build/Intermediates.noindex/Bip39.build/Debug-iphonesimulator/Bip39.build/Objects-normal/arm64/Mnemonic.bc",
+    "object" : "/Users/adrianthompson/Documents/35 - XION/02 - Projects/29 - House Money/apps/xion-ios/build/Build/Intermediates.noindex/Bip39.build/Debug-iphonesimulator/Bip39.build/Objects-normal/arm64/Mnemonic.o",
+    "swift-dependencies" : "/Users/adrianthompson/Documents/35 - XION/02 - Projects/29 - House Money/apps/xion-ios/build/Build/Intermediates.noindex/Bip39.build/Debug-iphonesimulator/Bip39.build/Objects-normal/arm64/Mnemonic.swiftdeps",
+    "swiftmodule" : "/Users/adrianthompson/Documents/35 - XION/02 - Projects/29 - House Money/apps/xion-ios/build/Build/Intermediates.noindex/Bip39.build/Debug-iphonesimulator/Bip39.build/Objects-normal/arm64/Mnemonic~partial.swiftmodule"
+  },
+  "/Users/adrianthompson/Documents/35 - XION/02 - Projects/29 - House Money/apps/xion-ios/vendor/bip39/Sources/Bip39/Wordlist.swift" : {
+    "const-values" : "/Users/adrianthompson/Documents/35 - XION/02 - Projects/29 - House Money/apps/xion-ios/build/Build/Intermediates.noindex/Bip39.build/Debug-iphonesimulator/Bip39.build/Objects-normal/arm64/Wordlist.swiftconstvalues",
+    "dependencies" : "/Users/adrianthompson/Documents/35 - XION/02 - Projects/29 - House Money/apps/xion-ios/build/Build/Intermediates.noindex/Bip39.build/Debug-iphonesimulator/Bip39.build/Objects-normal/arm64/Wordlist.d",
+    "diagnostics" : "/Users/adrianthompson/Documents/35 - XION/02 - Projects/29 - House Money/apps/xion-ios/build/Build/Intermediates.noindex/Bip39.build/Debug-iphonesimulator/Bip39.build/Objects-normal/arm64/Wordlist.dia",
+    "index-unit-output-path" : "/Bip39.build/Debug-iphonesimulator/Bip39.build/Objects-normal/arm64/Wordlist.o",
+    "llvm-bc" : "/Users/adrianthompson/Documents/35 - XION/02 - Projects/29 - House Money/apps/xion-ios/build/Build/Intermediates.noindex/Bip39.build/Debug-iphonesimulator/Bip39.build/Objects-normal/arm64/Wordlist.bc",
+    "object" : "/Users/adrianthompson/Documents/35 - XION/02 - Projects/29 - House Money/apps/xion-ios/build/Build/Intermediates.noindex/Bip39.build/Debug-iphonesimulator/Bip39.build/Objects-normal/arm64/Wordlist.o",
+    "swift-dependencies" : "/Users/adrianthompson/Documents/35 - XION/02 - Projects/29 - House Money/apps/xion-ios/build/Build/Intermediates.noindex/Bip39.build/Debug-iphonesimulator/Bip39.build/Objects-normal/arm64/Wordlist.swiftdeps",
+    "swiftmodule" : "/Users/adrianthompson/Documents/35 - XION/02 - Projects/29 - House Money/apps/xion-ios/build/Build/Intermediates.noindex/Bip39.build/Debug-iphonesimulator/Bip39.build/Objects-normal/arm64/Wordlist~partial.swiftmodule"
+  },
+  "/Users/adrianthompson/Documents/35 - XION/02 - Projects/29 - House Money/apps/xion-ios/vendor/bip39/Sources/Bip39/Wordlists/Chinese.swift" : {
+    "const-values" : "/Users/adrianthompson/Documents/35 - XION/02 - Projects/29 - House Money/apps/xion-ios/build/Build/Intermediates.noindex/Bip39.build/Debug-iphonesimulator/Bip39.build/Objects-normal/arm64/Chinese.swiftconstvalues",
+    "dependencies" : "/Users/adrianthompson/Documents/35 - XION/02 - Projects/29 - House Money/apps/xion-ios/build/Build/Intermediates.noindex/Bip39.build/Debug-iphonesimulator/Bip39.build/Objects-normal/arm64/Chinese.d",
+    "diagnostics" : "/Users/adrianthompson/Documents/35 - XION/02 - Projects/29 - House Money/apps/xion-ios/build/Build/Intermediates.noindex/Bip39.build/Debug-iphonesimulator/Bip39.build/Objects-normal/arm64/Chinese.dia",
+    "index-unit-output-path" : "/Bip39.build/Debug-iphonesimulator/Bip39.build/Objects-normal/arm64/Chinese.o",
+    "llvm-bc" : "/Users/adrianthompson/Documents/35 - XION/02 - Projects/29 - House Money/apps/xion-ios/build/Build/Intermediates.noindex/Bip39.build/Debug-iphonesimulator/Bip39.build/Objects-normal/arm64/Chinese.bc",
+    "object" : "/Users/adrianthompson/Documents/35 - XION/02 - Projects/29 - House Money/apps/xion-ios/build/Build/Intermediates.noindex/Bip39.build/Debug-iphonesimulator/Bip39.build/Objects-normal/arm64/Chinese.o",
+    "swift-dependencies" : "/Users/adrianthompson/Documents/35 - XION/02 - Projects/29 - House Money/apps/xion-ios/build/Build/Intermediates.noindex/Bip39.build/Debug-iphonesimulator/Bip39.build/Objects-normal/arm64/Chinese.swiftdeps",
+    "swiftmodule" : "/Users/adrianthompson/Documents/35 - XION/02 - Projects/29 - House Money/apps/xion-ios/build/Build/Intermediates.noindex/Bip39.build/Debug-iphonesimulator/Bip39.build/Objects-normal/arm64/Chinese~partial.swiftmodule"
+  },
+  "/Users/adrianthompson/Documents/35 - XION/02 - Projects/29 - House Money/apps/xion-ios/vendor/bip39/Sources/Bip39/Wordlists/English.swift" : {
+    "const-values" : "/Users/adrianthompson/Documents/35 - XION/02 - Projects/29 - House Money/apps/xion-ios/build/Build/Intermediates.noindex/Bip39.build/Debug-iphonesimulator/Bip39.build/Objects-normal/arm64/English.swiftconstvalues",
+    "dependencies" : "/Users/adrianthompson/Documents/35 - XION/02 - Projects/29 - House Money/apps/xion-ios/build/Build/Intermediates.noindex/Bip39.build/Debug-iphonesimulator/Bip39.build/Objects-normal/arm64/English.d",
+    "diagnostics" : "/Users/adrianthompson/Documents/35 - XION/02 - Projects/29 - House Money/apps/xion-ios/build/Build/Intermediates.noindex/Bip39.build/Debug-iphonesimulator/Bip39.build/Objects-normal/arm64/English.dia",
+    "index-unit-output-path" : "/Bip39.build/Debug-iphonesimulator/Bip39.build/Objects-normal/arm64/English.o",
+    "llvm-bc" : "/Users/adrianthompson/Documents/35 - XION/02 - Projects/29 - House Money/apps/xion-ios/build/Build/Intermediates.noindex/Bip39.build/Debug-iphonesimulator/Bip39.build/Objects-normal/arm64/English.bc",
+    "object" : "/Users/adrianthompson/Documents/35 - XION/02 - Projects/29 - House Money/apps/xion-ios/build/Build/Intermediates.noindex/Bip39.build/Debug-iphonesimulator/Bip39.build/Objects-normal/arm64/English.o",
+    "swift-dependencies" : "/Users/adrianthompson/Documents/35 - XION/02 - Projects/29 - House Money/apps/xion-ios/build/Build/Intermediates.noindex/Bip39.build/Debug-iphonesimulator/Bip39.build/Objects-normal/arm64/English.swiftdeps",
+    "swiftmodule" : "/Users/adrianthompson/Documents/35 - XION/02 - Projects/29 - House Money/apps/xion-ios/build/Build/Intermediates.noindex/Bip39.build/Debug-iphonesimulator/Bip39.build/Objects-normal/arm64/English~partial.swiftmodule"
+  }
+}

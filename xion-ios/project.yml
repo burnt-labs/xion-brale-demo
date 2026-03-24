@@ -25,11 +25,11 @@ targets:
       - path: XionDemo
         excludes:
           - Frameworks
-          - MobBindings
           - Info.plist
     dependencies:
       - package: Bip39
         product: Bip39
+      - framework: XionDemo/Frameworks/libmob.xcframework
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.burnt.xiondemo.ios
@@ -39,8 +39,6 @@ targets:
         DEVELOPMENT_TEAM: ""
         OTHER_LDFLAGS:
           - "-lresolv"
-        FRAMEWORK_SEARCH_PATHS:
-          - "$(PROJECT_DIR)/XionDemo/Frameworks"
     info:
       path: XionDemo/Info.plist
       properties:

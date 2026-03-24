@@ -1,0 +1,4 @@
+module UncommonCrypto {
+header "UncommonCrypto-Swift.h"
+export *
+}

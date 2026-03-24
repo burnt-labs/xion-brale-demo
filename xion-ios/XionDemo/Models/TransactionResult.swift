@@ -9,4 +9,9 @@ struct TransactionResult: Identifiable, Codable {
     let gasWanted: String
     let height: Int64
     let rawLog: String
+    var timestamp: String = ""
+    var fee: String = ""
+    var txType: String = ""
+    var amount: String = ""
+    var recipient: String = ""
 }

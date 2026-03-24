@@ -32,8 +32,9 @@ struct TransactionRow: View {
                 .foregroundStyle(.tertiary)
         }
         .padding(16)
-        .background(.ultraThinMaterial)
+        .background(Color.cardBackground)
         .clipShape(RoundedRectangle(cornerRadius: 12))
+        .shadow(color: Color.cardShadow, radius: 2, y: 1)
     }
 
     private func truncatedHash(_ hash: String) -> String {

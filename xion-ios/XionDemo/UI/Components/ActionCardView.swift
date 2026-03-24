@@ -23,14 +23,14 @@ struct ActionCardView: View {
 
                 Text(description)
                     .font(.system(size: 12))
-                    .foregroundStyle(.subtitleText)
+                    .foregroundStyle(Color.subtitleText)
                     .lineLimit(2)
             }
             .padding(16)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(.cardBackground)
+            .background(Color.cardBackground)
             .clipShape(RoundedRectangle(cornerRadius: 16))
-            .shadow(color: .cardShadow, radius: 2, y: 1)
+            .shadow(color: Color.cardShadow, radius: 2, y: 1)
         }
         .buttonStyle(.plain)
     }
