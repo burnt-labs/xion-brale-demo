@@ -38,8 +38,8 @@ object CoinFormatter {
     /**
      * Format a micro amount with denom for display: "1.5 XION"
      */
-    fun formatWithDenom(microAmount: String): String {
-        return "${microToDisplay(microAmount)} ${Constants.DISPLAY_DENOM}"
+    fun formatWithDenom(microAmount: String, denom: String = Constants.DISPLAY_DENOM): String {
+        return "${microToDisplay(microAmount)} $denom"
     }
 
     /**

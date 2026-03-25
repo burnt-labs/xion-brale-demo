@@ -6,6 +6,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -19,6 +20,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.burnt.xiondemo.ui.components.ErrorBanner
 import com.burnt.xiondemo.ui.theme.*
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun OfframpScreen(
     onDone: () -> Unit,
@@ -26,27 +28,45 @@ fun OfframpScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
-    Box(modifier = Modifier.fillMaxWidth()) {
-        when (uiState.step) {
-            OfframpStep.FORM -> OfframpForm(uiState, viewModel, onDone)
-            OfframpStep.DEPOSITING -> DepositingContent()
-            OfframpStep.PROCESSING -> ProcessingOfframpContent()
-            OfframpStep.STATUS -> OfframpStatusContent(uiState, onDone, viewModel)
+    Scaffold(
+        containerColor = ScreenBackground,
+        topBar = {
+            TopAppBar(
+                title = { Text("Cash Out", color = GreetingText) },
+                navigationIcon = {
+                    IconButton(onClick = onDone) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = GreetingText)
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = ScreenBackground)
+            )
         }
+    ) { padding ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+        ) {
+            when (uiState.step) {
+                OfframpStep.FORM -> OfframpForm(uiState, viewModel)
+                OfframpStep.DEPOSITING -> DepositingContent()
+                OfframpStep.PROCESSING -> ProcessingOfframpContent()
+                OfframpStep.STATUS -> OfframpStatusContent(uiState, onDone, viewModel)
+            }
 
-        ErrorBanner(
-            message = uiState.error,
-            onDismiss = { viewModel.clearError() },
-            modifier = Modifier.align(Alignment.TopCenter)
-        )
+            ErrorBanner(
+                message = uiState.error,
+                onDismiss = { viewModel.clearError() },
+                modifier = Modifier.align(Alignment.TopCenter).padding(horizontal = 24.dp)
+            )
+        }
     }
 }
 
 @Composable
 private fun OfframpForm(
     uiState: OfframpUiState,
-    viewModel: OfframpViewModel,
-    onDone: () -> Unit
+    viewModel: OfframpViewModel
 ) {
     Column(
         modifier = Modifier
@@ -55,14 +75,8 @@ private fun OfframpForm(
             .padding(24.dp)
     ) {
         Text(
-            text = "Cash Out",
-            style = MaterialTheme.typography.headlineMedium,
-            fontWeight = FontWeight.Bold
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-        Text(
             text = "Convert stablecoins to USD and withdraw to your bank account",
-            style = MaterialTheme.typography.bodyMedium,
+            fontSize = 14.sp,
             color = SubtitleText
         )
 
@@ -70,14 +84,9 @@ private fun OfframpForm(
 
         // Bank status
         Card(
-            colors = CardDefaults.cardColors(
-                containerColor = if (uiState.bankLinked) {
-                    MaterialTheme.colorScheme.primaryContainer
-                } else {
-                    MaterialTheme.colorScheme.errorContainer
-                }
-            ),
-            shape = RoundedCornerShape(12.dp)
+            colors = CardDefaults.cardColors(containerColor = CardBackground),
+            shape = RoundedCornerShape(12.dp),
+            elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth().padding(16.dp),
@@ -86,12 +95,14 @@ private fun OfframpForm(
                 Icon(
                     imageVector = if (uiState.bankLinked) Icons.Default.CheckCircle else Icons.Default.Warning,
                     contentDescription = null,
-                    modifier = Modifier.size(24.dp)
+                    modifier = Modifier.size(24.dp),
+                    tint = if (uiState.bankLinked) XionGreen else XionOrange
                 )
                 Spacer(modifier = Modifier.width(12.dp))
                 Text(
                     text = if (uiState.bankLinked) "Bank Account Linked" else "Link a bank account first (use Buy flow)",
-                    fontWeight = FontWeight.Medium
+                    fontWeight = FontWeight.Medium,
+                    color = GreetingText
                 )
             }
         }
@@ -102,47 +113,40 @@ private fun OfframpForm(
         OutlinedTextField(
             value = uiState.amount,
             onValueChange = { viewModel.updateAmount(it) },
-            label = { Text("Amount (USD)") },
-            placeholder = { Text("100.00") },
+            label = { Text("Amount (USD)", color = SubtitleText) },
+            placeholder = { Text("100.00", color = SubtitleText) },
             modifier = Modifier.fillMaxWidth(),
             isError = uiState.amountError != null,
             supportingText = uiState.amountError?.let { { Text(it) } },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
             singleLine = true,
             shape = RoundedCornerShape(12.dp),
-            leadingIcon = { Text("$", fontWeight = FontWeight.Bold, fontSize = 18.sp) }
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedTextColor = GreetingText,
+                unfocusedTextColor = GreetingText,
+                focusedBorderColor = MintscanBlue,
+                unfocusedBorderColor = SubtitleText.copy(alpha = 0.5f),
+                focusedLabelColor = MintscanBlue,
+                unfocusedLabelColor = SubtitleText,
+                cursorColor = MintscanBlue
+            ),
+            leadingIcon = { Text("$", fontWeight = FontWeight.Bold, fontSize = 18.sp, color = GreetingText) }
         )
 
         Spacer(modifier = Modifier.height(16.dp))
 
         // Info card
         Card(
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
-            shape = RoundedCornerShape(12.dp)
+            colors = CardDefaults.cardColors(containerColor = CardBackground),
+            shape = RoundedCornerShape(12.dp),
+            elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                    Text("You send", style = MaterialTheme.typography.bodyMedium)
-                    Text(
-                        text = if (uiState.amount.isNotEmpty()) "~${uiState.amount} SBC" else "—",
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Medium
-                    )
-                }
+                DetailRow("You send", if (uiState.amount.isNotEmpty()) "~${uiState.amount} SBC" else "\u2014")
                 Spacer(modifier = Modifier.height(8.dp))
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                    Text("You receive", style = MaterialTheme.typography.bodyMedium)
-                    Text(
-                        text = if (uiState.amount.isNotEmpty()) "\$${uiState.amount}" else "\$0.00",
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Medium
-                    )
-                }
+                DetailRow("You receive", if (uiState.amount.isNotEmpty()) "\$${uiState.amount}" else "\$0.00")
                 Spacer(modifier = Modifier.height(8.dp))
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                    Text("Method", style = MaterialTheme.typography.bodyMedium, color = SubtitleText)
-                    Text("Same-Day ACH", style = MaterialTheme.typography.bodyMedium, color = SubtitleText)
-                }
+                DetailRow("Method", "Same-Day ACH", valueColor = SubtitleText)
             }
         }
 
@@ -150,7 +154,7 @@ private fun OfframpForm(
             Spacer(modifier = Modifier.height(12.dp))
             Text(
                 text = "Stablecoins will be sent to Brale custodial address for processing",
-                style = MaterialTheme.typography.bodySmall,
+                fontSize = 12.sp,
                 color = SubtitleText
             )
         }
@@ -164,42 +168,36 @@ private fun OfframpForm(
             shape = RoundedCornerShape(12.dp),
             colors = ButtonDefaults.buttonColors(containerColor = MintscanBlue)
         ) {
-            Text("Cash Out")
+            Text("Cash Out", fontWeight = FontWeight.SemiBold)
         }
-
-        Spacer(modifier = Modifier.height(32.dp))
     }
 }
 
 @Composable
 private fun DepositingContent() {
     Column(
-        modifier = Modifier.fillMaxWidth().padding(48.dp),
+        modifier = Modifier.fillMaxSize().padding(48.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        CircularProgressIndicator(modifier = Modifier.size(48.dp))
+        CircularProgressIndicator(modifier = Modifier.size(48.dp), color = XionOrange)
         Spacer(modifier = Modifier.height(16.dp))
-        Text("Sending stablecoins to Brale...", style = MaterialTheme.typography.bodyLarge)
+        Text("Sending stablecoins to Brale...", fontSize = 16.sp, color = GreetingText)
         Spacer(modifier = Modifier.height(8.dp))
-        Text(
-            text = "Broadcasting on-chain transaction",
-            style = MaterialTheme.typography.bodySmall,
-            color = SubtitleText
-        )
+        Text("Broadcasting on-chain transaction", fontSize = 12.sp, color = SubtitleText)
     }
 }
 
 @Composable
 private fun ProcessingOfframpContent() {
     Column(
-        modifier = Modifier.fillMaxWidth().padding(48.dp),
+        modifier = Modifier.fillMaxSize().padding(48.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        CircularProgressIndicator(modifier = Modifier.size(48.dp))
+        CircularProgressIndicator(modifier = Modifier.size(48.dp), color = XionOrange)
         Spacer(modifier = Modifier.height(16.dp))
-        Text("Creating offramp transfer...", style = MaterialTheme.typography.bodyLarge)
+        Text("Creating offramp transfer...", fontSize = 16.sp, color = GreetingText)
     }
 }
 
@@ -239,23 +237,25 @@ private fun OfframpStatusContent(
                 "processing" -> "Processing..."
                 else -> "Pending..."
             },
-            style = MaterialTheme.typography.headlineMedium,
-            fontWeight = FontWeight.Bold
+            fontSize = 20.sp,
+            fontWeight = FontWeight.Bold,
+            color = GreetingText
         )
 
         Spacer(modifier = Modifier.height(20.dp))
 
         Card(
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+            colors = CardDefaults.cardColors(containerColor = CardBackground),
             shape = RoundedCornerShape(12.dp),
+            elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
             modifier = Modifier.fillMaxWidth()
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
-                StatusRow("Transfer ID", transfer.id.take(12) + "...")
-                StatusRow("Amount", "\$${transfer.amount.value} ${transfer.amount.currency}")
-                StatusRow("Status", transfer.status.replaceFirstChar { it.uppercase() })
-                uiState.depositTxHash?.let { StatusRow("On-chain Tx", it.take(12) + "...") }
-                transfer.createdAt?.let { StatusRow("Created", it.take(19).replace("T", " ")) }
+                DetailRow("Transfer ID", transfer.id.take(12) + "...")
+                DetailRow("Amount", "\$${transfer.amount.value} ${transfer.amount.currency}")
+                DetailRow("Status", transfer.status.replaceFirstChar { it.uppercase() })
+                uiState.depositTxHash?.let { DetailRow("On-chain Tx", it.take(12) + "...") }
+                transfer.createdAt?.let { DetailRow("Created", it.take(19).replace("T", " ")) }
             }
         }
 
@@ -267,11 +267,10 @@ private fun OfframpStatusContent(
                 onDone()
             },
             shape = RoundedCornerShape(12.dp),
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            colors = ButtonDefaults.buttonColors(containerColor = XionOrange)
         ) {
-            Text("Done")
+            Text("Done", fontWeight = FontWeight.SemiBold)
         }
-
-        Spacer(modifier = Modifier.height(32.dp))
     }
 }

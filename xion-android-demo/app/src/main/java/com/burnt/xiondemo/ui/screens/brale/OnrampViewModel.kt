@@ -3,10 +3,12 @@ package com.burnt.xiondemo.ui.screens.brale
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.burnt.xiondemo.data.model.BraleTransfer
+import com.burnt.xiondemo.data.model.WalletState
 import com.burnt.xiondemo.data.repository.BraleRepository
 import com.burnt.xiondemo.data.repository.XionRepository
 import com.burnt.xiondemo.security.SecureStorage
 import com.burnt.xiondemo.util.Constants
+import com.burnt.xiondemo.util.Result
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -20,15 +22,18 @@ data class OnrampUiState(
     val amountError: String? = null,
     val bankLinked: Boolean = false,
     val bankAddressId: String? = null,
+    val bankName: String? = null,
     val xionAddressId: String? = null,
     val plaidLinkToken: String? = null,
     val isLoading: Boolean = false,
     val transfer: BraleTransfer? = null,
+    val tokensReceived: Boolean = false,
+    val receivedAmount: String? = null,
     val error: String? = null,
     val step: OnrampStep = OnrampStep.FORM
 )
 
-enum class OnrampStep { FORM, LINKING_BANK, PROCESSING, STATUS }
+enum class OnrampStep { FORM, PROCESSING, STATUS }
 
 @HiltViewModel
 class OnrampViewModel @Inject constructor(
@@ -40,6 +45,8 @@ class OnrampViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(OnrampUiState())
     val uiState: StateFlow<OnrampUiState> = _uiState.asStateFlow()
 
+    private var initialSbcBalance: Long = 0
+
     init {
         val bankId = secureStorage.getString(Constants.PREF_BRALE_BANK_ADDRESS_ID)
         val xionId = secureStorage.getString(Constants.PREF_BRALE_XION_ADDRESS_ID)
@@ -48,6 +55,37 @@ class OnrampViewModel @Inject constructor(
             bankAddressId = bankId,
             xionAddressId = xionId
         )
+        if (bankId == null) checkExistingBankAddress()
+        if (xionId == null) checkExistingXionAddress()
+    }
+
+    private fun checkExistingXionAddress() {
+        viewModelScope.launch {
+            try {
+                val walletAddress = (xionRepository.walletState.value as? WalletState.Connected)?.metaAccountAddress ?: return@launch
+                val existing = braleRepository.findExistingXionAddress(walletAddress)
+                if (existing != null) {
+                    secureStorage.putString(Constants.PREF_BRALE_XION_ADDRESS_ID, existing.id)
+                    _uiState.value = _uiState.value.copy(xionAddressId = existing.id)
+                }
+            } catch (_: Exception) {}
+        }
+    }
+
+    private fun checkExistingBankAddress() {
+        viewModelScope.launch {
+            try {
+                val existing = braleRepository.findExistingBankAddress()
+                if (existing != null) {
+                    secureStorage.putString(Constants.PREF_BRALE_BANK_ADDRESS_ID, existing.id)
+                    _uiState.value = _uiState.value.copy(
+                        bankLinked = true,
+                        bankAddressId = existing.id,
+                        bankName = existing.name
+                    )
+                }
+            } catch (_: Exception) {}
+        }
     }
 
     fun updateAmount(value: String) {
@@ -73,12 +111,9 @@ class OnrampViewModel @Inject constructor(
 
     fun requestPlaidLinkToken(name: String, email: String) {
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isLoading = true, error = null, step = OnrampStep.LINKING_BANK)
+            _uiState.value = _uiState.value.copy(isLoading = true, error = null)
             try {
-                val response = braleRepository.createPlaidLinkToken(
-                    name = name,
-                    email = email
-                )
+                val response = braleRepository.createPlaidLinkToken(name = name, email = email)
                 _uiState.value = _uiState.value.copy(
                     plaidLinkToken = response.linkToken,
                     isLoading = false
@@ -86,8 +121,7 @@ class OnrampViewModel @Inject constructor(
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
                     error = e.message ?: "Failed to create Plaid link",
-                    isLoading = false,
-                    step = OnrampStep.FORM
+                    isLoading = false
                 )
             }
         }
@@ -95,28 +129,26 @@ class OnrampViewModel @Inject constructor(
 
     fun onPlaidSuccess(publicToken: String) {
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isLoading = true, error = null)
+            _uiState.value = _uiState.value.copy(isLoading = true, error = null, plaidLinkToken = null)
             try {
                 val addressId = braleRepository.registerBankAccount(publicToken)
                 secureStorage.putString(Constants.PREF_BRALE_BANK_ADDRESS_ID, addressId)
                 _uiState.value = _uiState.value.copy(
                     bankLinked = true,
                     bankAddressId = addressId,
-                    isLoading = false,
-                    step = OnrampStep.FORM
+                    isLoading = false
                 )
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
                     error = e.message ?: "Failed to register bank account",
-                    isLoading = false,
-                    step = OnrampStep.FORM
+                    isLoading = false
                 )
             }
         }
     }
 
     fun onPlaidCancelled() {
-        _uiState.value = _uiState.value.copy(step = OnrampStep.FORM, isLoading = false)
+        _uiState.value = _uiState.value.copy(plaidLinkToken = null, isLoading = false)
     }
 
     fun submitOnramp() {
@@ -126,10 +158,13 @@ class OnrampViewModel @Inject constructor(
             _uiState.value = state.copy(isLoading = true, error = null, step = OnrampStep.PROCESSING)
 
             try {
+                // Capture initial SBC balance before transfer
+                initialSbcBalance = getCurrentSbcBalance()
+
                 // Ensure Xion address is registered with Brale
                 val xionAddressId = state.xionAddressId ?: run {
                     val walletAddress = xionRepository.walletState.value.let { ws ->
-                        (ws as? com.burnt.xiondemo.data.model.WalletState.Connected)?.metaAccountAddress
+                        (ws as? WalletState.Connected)?.metaAccountAddress
                     } ?: throw IllegalStateException("Wallet not connected")
 
                     val addr = braleRepository.registerXionAddress(walletAddress)
@@ -145,10 +180,10 @@ class OnrampViewModel @Inject constructor(
                 )
                 _uiState.value = _uiState.value.copy(
                     transfer = transfer,
-                    isLoading = false,
-                    step = OnrampStep.STATUS
+                    isLoading = false
                 )
-                pollTransferStatus(transfer.id)
+                // Poll on-chain balance for token arrival
+                pollForTokenArrival()
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
                     error = e.message ?: "Onramp failed",
@@ -159,20 +194,32 @@ class OnrampViewModel @Inject constructor(
         }
     }
 
-    private fun pollTransferStatus(transferId: String) {
+    private suspend fun getCurrentSbcBalance(): Long {
+        return when (val result = xionRepository.getSbcBalance()) {
+            is Result.Success -> result.data.amount.toLongOrNull() ?: 0
+            else -> 0
+        }
+    }
+
+    private fun pollForTokenArrival() {
         viewModelScope.launch {
-            var delayMs = 3000L
-            repeat(20) {
-                delay(delayMs)
+            repeat(60) { // Poll for up to ~3 minutes
+                delay(3000)
                 try {
-                    val updated = braleRepository.getTransfer(transferId)
-                    _uiState.value = _uiState.value.copy(transfer = updated)
-                    if (updated.status == "complete" || updated.status == "failed" || updated.status == "canceled") {
+                    val currentBalance = getCurrentSbcBalance()
+                    if (currentBalance > initialSbcBalance) {
+                        val received = currentBalance - initialSbcBalance
+                        _uiState.value = _uiState.value.copy(
+                            tokensReceived = true,
+                            receivedAmount = received.toString(),
+                            step = OnrampStep.STATUS
+                        )
                         return@launch
                     }
                 } catch (_: Exception) {}
-                delayMs = minOf(delayMs * 2, 30000L)
             }
+            // Timeout — show status anyway with what we have
+            _uiState.value = _uiState.value.copy(step = OnrampStep.STATUS)
         }
     }
 
@@ -184,6 +231,7 @@ class OnrampViewModel @Inject constructor(
         _uiState.value = OnrampUiState(
             bankLinked = _uiState.value.bankLinked,
             bankAddressId = _uiState.value.bankAddressId,
+            bankName = _uiState.value.bankName,
             xionAddressId = _uiState.value.xionAddressId
         )
     }

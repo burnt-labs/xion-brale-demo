@@ -21,6 +21,7 @@ Demo wallet applications for the [XION blockchain](https://xion.burnt.com/), sho
 - [Project Structure](#project-structure)
 - [Building mob from Source](#building-mob-from-source)
 - [Troubleshooting](#troubleshooting)
+- [Developer Setup: Brale + Plaid Integration](#developer-setup-brale--plaid-integration)
 
 ---
 
@@ -1053,3 +1054,230 @@ The vendor SPM package can't find the xcframework. Ensure:
 ### Balance Shows "0" After Onramp
 
 Onramp mints stablecoins (SBC denomination), not XION. The wallet screen shows XION (uxion) balance. The stablecoin balance is tracked by Brale — query it via `GET /addresses/:id/balance?transfer_type=xion_testnet&value_type=SBC`.
+
+---
+
+## Developer Setup: Brale + Plaid Integration
+
+This section covers everything a developer needs to integrate Brale's stablecoin on/off-ramp into their own XION app.
+
+**Official Brale guide:** [ACH On-Ramp](https://docs.brale.xyz/guides/ach-on-ramp) | [Stablecoin to Fiat Offramp](https://docs.brale.xyz/guides/stablecoin-to-fiat-offramp) | [Transfers](https://docs.brale.xyz/key-concepts/transfers)
+
+### Prerequisites
+
+1. **Brale account** — You need a KYB-verified business account on Brale. Apply at [brale.xyz](https://brale.xyz). The account requires: business name, EIN, business address, phone number, email, website, business controller details (SSN, DOB), and beneficial owners (25%+ ownership). Account status progresses from `pending` → `complete` (approved).
+
+2. **Brale API credentials** — After approval, create OAuth2 client credentials in the Brale dashboard. You'll receive a `client_id` and `client_secret`. **Important:** Credentials are scoped to either testnet or production at creation time — the same API base URL (`https://api.brale.xyz`) is used for both, but the credentials determine which environment you access.
+
+3. **Plaid** — Brale handles Plaid configuration on their end. You do NOT need a separate Plaid account. The Plaid Link token is created through Brale's API, and Brale manages the Plaid integration. However, your mobile app needs the Plaid Link SDK to render the bank selection UI.
+
+### Step-by-Step Integration
+
+The full flow, matching [Brale's ACH On-Ramp guide](https://docs.brale.xyz/guides/ach-on-ramp):
+
+#### Step 1: Get Your Account ID
+
+```bash
+# Authenticate
+TOKEN=$(curl -s -X POST "https://auth.brale.xyz/oauth2/token" \
+  -H "Authorization: Basic $(echo -n 'CLIENT_ID:CLIENT_SECRET' | base64)" \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  -d "grant_type=client_credentials" | jq -r '.access_token')
+
+# List accounts
+curl -s "https://api.brale.xyz/accounts" -H "Authorization: Bearer $TOKEN"
+# → {"accounts":[{"id":"YOUR_ACCOUNT_ID","name":"Your Business","status":"complete"}]}
+```
+
+Store the `account_id` in your proxy's `.env` file as `BRALE_ACCOUNT_ID`.
+
+#### Step 2: Create Plaid Link Token (Server-Side)
+
+Your backend calls Brale to create a Plaid link token. The mobile app never calls Brale directly.
+
+```
+POST /accounts/{account_id}/plaid/link_token
+```
+
+```json
+{
+  "legal_name": "John Doe",
+  "email_address": "john@example.com",
+  "phone_number": "+15551234567",
+  "date_of_birth": "1990-01-15"
+}
+```
+
+**Identity fields and Plaid verification:**
+- All four fields (`legal_name`, `email_address`, `phone_number`, `date_of_birth`) are technically optional per Brale's API
+- However, **Plaid uses these for identity verification**. If `phone_number` is provided, Plaid will send an SMS verification code to that number. The user must enter the code before they can select their bank
+- If `phone_number` is omitted, Plaid may prompt the user to enter their phone number inline
+- **The phone number must be in E.164 format** (e.g., `+15551234567`). Invalid format will cause Plaid to fail silently
+- **These should be the end user's real details**, not hardcoded test values. Collect them during your app's onboarding or account creation flow
+
+Response:
+```json
+{
+  "link_token": "link-production-abc123...",
+  "expiration": "2026-03-25T05:37:05Z",
+  "callback_url": "http://api.brale.xyz:80/accounts/.../plaid/register-account"
+}
+```
+
+#### Step 3: Launch Plaid Link (Mobile App)
+
+Pass the `link_token` to the Plaid Link SDK:
+
+**Android (Kotlin/Compose):**
+```kotlin
+// build.gradle.kts
+implementation("com.plaid.link:sdk-core:4.5.1")
+
+// In your Composable
+val plaidLauncher = rememberLauncherForActivityResult(OpenPlaidLink()) { result ->
+    when (result) {
+        is LinkSuccess -> viewModel.onPlaidSuccess(result.publicToken)
+        is LinkExit -> viewModel.onPlaidCancelled()
+    }
+}
+
+// When link_token is ready:
+val config = LinkTokenConfiguration.Builder().token(linkToken).build()
+plaidLauncher.launch(config)
+```
+
+**iOS (SwiftUI):** Use the [Plaid Link iOS SDK](https://plaid.com/docs/link/ios/).
+
+The user will:
+1. Verify their identity (SMS code to their phone number)
+2. Search for and select their bank
+3. Log in to their bank
+4. Select a checking/savings account
+5. Plaid returns a `public_token` to your app
+
+#### Step 4: Register the Bank Account
+
+Exchange the Plaid `public_token` for a Brale bank address:
+
+```
+POST /accounts/{account_id}/plaid/register-account
+```
+
+```json
+{
+  "public_token": "public-production-xyz789...",
+  "customer_webhook_url": "https://yourapp.com/webhooks/plaid",
+  "transfer_types": ["ach_debit", "ach_credit", "same_day_ach_credit"]
+}
+```
+
+- `customer_webhook_url` is required — Brale forwards Plaid events (e.g., `ITEM_LOGIN_REQUIRED` for re-authentication)
+- `transfer_types` determines which rails are enabled. `ach_debit` is required for onramp
+- **ACH debit is ONLY available through the Plaid-linked bank account flow.** You cannot enable `ach_debit` via direct bank entry
+
+Response:
+```json
+{
+  "address_id": "36nftTpbLIOwLZwEC7UXjwUGrcc"
+}
+```
+
+Store this `address_id` — it's the user's bank account for future transfers.
+
+#### Step 5: Register the User's Xion Wallet
+
+Create an external address for the user's on-chain wallet:
+
+```
+POST /accounts/{account_id}/addresses/external
+Idempotency-Key: <uuid>
+```
+
+```json
+{
+  "name": "User Xion Wallet",
+  "wallet_address": "xion1abc123...",
+  "transfer_types": ["xion_testnet"]
+}
+```
+
+Use `xion_testnet` for testnet or `xion` for mainnet.
+
+#### Step 6: Create the Onramp Transfer
+
+```
+POST /accounts/{account_id}/transfers
+Idempotency-Key: <uuid>
+```
+
+```json
+{
+  "amount": { "value": "100", "currency": "USD" },
+  "source": {
+    "address_id": "<bank_address_id>",
+    "value_type": "USD",
+    "transfer_type": "ach_debit"
+  },
+  "destination": {
+    "address_id": "<wallet_address_id>",
+    "value_type": "SBC",
+    "transfer_type": "xion_testnet"
+  },
+  "brand": {
+    "account_id": "<your_brale_account_id>"
+  }
+}
+```
+
+- The `brand` field is optional and controls the name on the user's bank statement (ACH only)
+- Always include an `Idempotency-Key` header on POST requests (the proxy handles this automatically)
+- Our proxy injects the `brand` field server-side so the mobile app doesn't need the account ID
+
+#### Step 7: Poll Transfer Status
+
+```
+GET /accounts/{account_id}/transfers/{transfer_id}
+```
+
+Status progression: `pending` → `processing` → `complete` (or `failed`/`canceled`)
+
+Poll with exponential backoff (3s → 6s → 12s → ... up to 30s). ACH debits can take 1-3 business days to settle in production.
+
+### Returning Users: Auto-Detect Existing Bank Accounts
+
+Once a user has linked their bank via Plaid, the `address_id` persists on your Brale account. On subsequent app launches, query existing addresses instead of requiring Plaid again:
+
+```
+GET /accounts/{account_id}/addresses
+```
+
+Look for addresses with `status: "active"` and `"ach_debit"` in `transfer_types`. If found, use that `address_id` directly — no Plaid flow needed.
+
+The demo app does this automatically in `OnrampViewModel.init()`:
+1. Check local storage for a saved `bank_address_id`
+2. If not found, query `GET /addresses` via the proxy
+3. If an active bank with `ach_debit` exists, auto-populate and skip Plaid
+
+### Common Pitfalls
+
+| Issue | Cause | Fix |
+|-------|-------|-----|
+| Plaid Link closes immediately after "Sending verification code" | Identity fields (name, email, phone) are dummy values or phone format is wrong | Collect real user details. Phone must be E.164 format (`+1...`) |
+| HTTP 400 "null value where string expected" | Kotlinx serialization sends `null` for optional fields | Set `explicitNulls = false` in your Json config |
+| HTTP 400 "No idempotency key found" | Missing `Idempotency-Key` header on POST requests | Ensure all POST requests include a UUID idempotency key |
+| "CLEARTEXT communication not permitted" (Android) | Android blocks HTTP by default | Add a `network_security_config.xml` allowing cleartext to your proxy host |
+| Transfer type not in allowlist | Proxy's `ALLOWED_TRANSFER_TYPES` is blocking the request | Add the type to `.env` and restart proxy |
+| Brale returns `{"addresses": [...]}` but model expects `{"data": [...]}` | Brale's response keys don't match generic `data` field | Use the exact field names from Brale's API (`addresses`, `transfers`, etc.) |
+| Bank address not auto-detected | Response parsing uses wrong field name | Ensure your model maps to `addresses` (not `data`) for the address list response |
+
+### Testnet vs Production
+
+| Aspect | Testnet | Production |
+|--------|---------|------------|
+| API credentials | Testnet-scoped from Brale dashboard | Production-scoped |
+| API URL | Same: `https://api.brale.xyz` | Same |
+| Transfer type | `xion_testnet` | `xion` |
+| Plaid environment | Plaid sandbox/production (managed by Brale) | Plaid production |
+| ACH settlement | May be faster | 1-3 business days |
+| Real money | No | Yes |
+| Proxy `ALLOWED_TRANSFER_TYPES` | Include `xion_testnet` | Include `xion` |

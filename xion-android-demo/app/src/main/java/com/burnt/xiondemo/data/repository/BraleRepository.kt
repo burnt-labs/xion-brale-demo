@@ -10,6 +10,8 @@ interface BraleRepository {
     suspend fun createPlaidLinkToken(name: String, email: String): PlaidLinkTokenResponse
     suspend fun registerBankAccount(publicToken: String): String
     suspend fun getInternalAddresses(): List<BraleAddress>
+    suspend fun findExistingBankAddress(): BraleAddress?
+    suspend fun findExistingXionAddress(walletAddress: String): BraleAddress?
     suspend fun registerXionAddress(walletAddress: String): BraleAddress
     suspend fun createOnrampTransfer(
         amount: String,
@@ -41,14 +43,30 @@ class BraleRepositoryImpl @Inject constructor(
     }
 
     override suspend fun getInternalAddresses(): List<BraleAddress> {
-        return api.getAddresses(type = "internal").data
+        return api.getAddresses(type = "internal").addresses
+    }
+
+    override suspend fun findExistingBankAddress(): BraleAddress? {
+        val all = api.getAddresses().addresses
+        return all.firstOrNull { addr ->
+            addr.status == "active" && addr.transferTypes.contains("ach_debit")
+        }
+    }
+
+    override suspend fun findExistingXionAddress(walletAddress: String): BraleAddress? {
+        val all = api.getAddresses().addresses
+        return all.firstOrNull { addr ->
+            addr.status == "active" &&
+            addr.transferTypes.contains(Constants.BRALE_TRANSFER_TYPE) &&
+            addr.address == walletAddress
+        }
     }
 
     override suspend fun registerXionAddress(walletAddress: String): BraleAddress {
         return api.createExternalAddress(
             CreateAddressRequest(
                 name = "XION Wallet $walletAddress",
-                walletAddress = walletAddress,
+                address = walletAddress,
                 transferTypes = listOf(Constants.BRALE_TRANSFER_TYPE)
             )
         )
@@ -103,6 +121,6 @@ class BraleRepositoryImpl @Inject constructor(
     }
 
     override suspend fun listTransfers(): List<BraleTransfer> {
-        return api.listTransfers().data
+        return api.listTransfers().transfers
     }
 }

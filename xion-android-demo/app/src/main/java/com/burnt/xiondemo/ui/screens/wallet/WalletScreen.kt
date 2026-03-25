@@ -10,6 +10,10 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.pullrefresh.PullRefreshIndicator
+import androidx.compose.material.pullrefresh.pullRefresh
+import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -29,7 +33,7 @@ import com.burnt.xiondemo.ui.screens.send.SendViewModel
 import com.burnt.xiondemo.ui.theme.*
 import com.burnt.xiondemo.util.CoinFormatter
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterialApi::class)
 @Composable
 fun WalletScreen(
     onNavigateToContract: () -> Unit,
@@ -46,6 +50,18 @@ fun WalletScreen(
 
     var showSendSheet by remember { mutableStateOf(false) }
 
+    // Refresh balances when screen becomes visible (e.g., returning from onramp/offramp)
+    val lifecycleOwner = androidx.compose.ui.platform.LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
+            if (event == androidx.lifecycle.Lifecycle.Event.ON_RESUME) {
+                viewModel.refresh()
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
+
     LaunchedEffect(uiState.isDisconnected) {
         if (uiState.isDisconnected) onDisconnected()
     }
@@ -57,6 +73,7 @@ fun WalletScreen(
                 sendViewModel.resetState()
             },
             shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp),
+            containerColor = CardBackground,
             windowInsets = WindowInsets(0)
         ) {
             Box(
@@ -78,10 +95,29 @@ fun WalletScreen(
         }
     }
 
-    Column(
+    var isRefreshing by remember { mutableStateOf(false) }
+
+    LaunchedEffect(uiState.isBalanceLoading) {
+        if (!uiState.isBalanceLoading) isRefreshing = false
+    }
+
+    val pullRefreshState = rememberPullRefreshState(
+        refreshing = isRefreshing,
+        onRefresh = {
+            isRefreshing = true
+            viewModel.refresh()
+        }
+    )
+
+    Box(
         modifier = Modifier
             .fillMaxSize()
             .background(ScreenBackground)
+            .pullRefresh(pullRefreshState)
+    ) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
             .verticalScroll(rememberScrollState())
             .padding(horizontal = 24.dp)
     ) {
@@ -190,6 +226,33 @@ fun WalletScreen(
                     Text(
                         text = if (uiState.balance != null) CoinFormatter.formatWithDenom(uiState.balance!!) else "\u2014",
                         fontSize = 28.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = GreetingText,
+                        maxLines = 1
+                    )
+                }
+            }
+        }
+
+        // SBC Stablecoin balance
+        if (uiState.sbcBalance != null) {
+            Spacer(modifier = Modifier.height(12.dp))
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = CardBackground),
+                shape = RoundedCornerShape(20.dp),
+                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+            ) {
+                Column(modifier = Modifier.padding(24.dp)) {
+                    Text(
+                        text = "Stablecoin Balance",
+                        fontSize = 14.sp,
+                        color = SubtitleText
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = CoinFormatter.formatWithDenom(uiState.sbcBalance!!, "SBC"),
+                        fontSize = 22.sp,
                         fontWeight = FontWeight.Bold,
                         color = GreetingText,
                         maxLines = 1
@@ -330,4 +393,11 @@ fun WalletScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
     }
+    PullRefreshIndicator(
+        refreshing = isRefreshing,
+        state = pullRefreshState,
+        modifier = Modifier.align(Alignment.TopCenter),
+        contentColor = XionOrange
+    )
+    } // Box pull-to-refresh
 }

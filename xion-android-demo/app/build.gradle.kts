@@ -23,15 +23,16 @@ android {
         buildConfigField("String", "XION_RPC_URL", "\"https://rpc.xion-testnet-2.burnt.com:443\"")
         buildConfigField("String", "XION_REST_URL", "\"https://api.xion-testnet-2.burnt.com/\"")
         buildConfigField("String", "XION_CHAIN_ID", "\"xion-testnet-2\"")
-        buildConfigField("String", "XION_TREASURY_ADDRESS", "\"xion1sm3qp7kdqkkqgq5sdze6fjvk02a9psqqht2s575kdw06y4prlqcqhqa0mj\"")
+        buildConfigField("String", "XION_TREASURY_ADDRESS", "\"xion1rytzathz8y2r58lj26ls3z90tn475qdtpet58nc98v0mur78g4yqvm44qk\"")
         buildConfigField("String", "XION_OAUTH_CLIENT_ID", "\"\"")
         buildConfigField("String", "XION_OAUTH_AUTHORIZATION_ENDPOINT", "\"https://auth.testnet.burnt.com/\"")
 
         // Brale onramp/offramp — 10.0.2.2 is the Android emulator host loopback.
         // For physical device testing, replace with your machine's LAN IP or deployed URL.
-        buildConfigField("String", "BRALE_PROXY_URL", "\"http://10.0.2.2:3000/\"")
+        buildConfigField("String", "BRALE_PROXY_URL", "\"http://192.168.100.199:3000/\"")
         buildConfigField("String", "BRALE_TRANSFER_TYPE", "\"xion_testnet\"")
         buildConfigField("String", "BRALE_STABLECOIN_DENOM", "\"SBC\"")
+        buildConfigField("String", "BRALE_SBC_ON_CHAIN_DENOM", "\"factory/xion17grq736740r70awldugfs3mls3stu9haewctv2/sbc\"")
     }
 
     buildTypes {
@@ -80,6 +81,7 @@ dependencies {
     implementation("androidx.compose.ui:ui-graphics")
     implementation("androidx.compose.ui:ui-tooling-preview")
     implementation("androidx.compose.material3:material3")
+    implementation("androidx.compose.material:material")
     implementation("androidx.compose.material:material-icons-extended")
     implementation("androidx.compose.ui:ui-text-google-fonts:1.6.0")
     debugImplementation("androidx.compose.ui:ui-tooling")
@@ -114,6 +116,9 @@ dependencies {
 
     // Browser (Chrome Custom Tabs)
     implementation("androidx.browser:browser:1.7.0")
+
+    // Plaid Link SDK (bank account linking for Brale onramp)
+    implementation("com.plaid.link:sdk-core:4.5.1")
 
     // Coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")

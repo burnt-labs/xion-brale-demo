@@ -18,7 +18,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.burnt.xiondemo.ui.components.ErrorBanner
+import com.burnt.xiondemo.ui.theme.*
 import java.text.NumberFormat
 import java.util.Locale
 
@@ -43,7 +45,6 @@ fun SendSheetContent(
 
     var showConfirm by remember { mutableStateOf(false) }
 
-    // Reset confirm state when sheet content recomposes from a reset
     LaunchedEffect(uiState.txResult, uiState.isLoading) {
         if (uiState.txResult == null && !uiState.isLoading) {
             showConfirm = false
@@ -77,6 +78,7 @@ fun SendSheetContent(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun FormContent(
     uiState: SendUiState,
@@ -84,6 +86,15 @@ private fun FormContent(
     onReview: () -> Unit
 ) {
     val clipboard = LocalClipboardManager.current
+    val textFieldColors = OutlinedTextFieldDefaults.colors(
+        focusedTextColor = GreetingText,
+        unfocusedTextColor = GreetingText,
+        focusedBorderColor = XionOrange,
+        unfocusedBorderColor = SubtitleText.copy(alpha = 0.5f),
+        focusedLabelColor = XionOrange,
+        unfocusedLabelColor = SubtitleText,
+        cursorColor = XionOrange
+    )
 
     Column(
         modifier = Modifier
@@ -93,26 +104,48 @@ private fun FormContent(
     ) {
         Text(
             text = "Send Tokens",
-            style = MaterialTheme.typography.headlineMedium,
-            fontWeight = FontWeight.Bold
+            fontSize = 20.sp,
+            fontWeight = FontWeight.Bold,
+            color = GreetingText
         )
         Spacer(modifier = Modifier.height(20.dp))
+
+        // Token selector
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            SendToken.entries.forEach { token ->
+                FilterChip(
+                    selected = uiState.selectedToken == token,
+                    onClick = { viewModel.selectToken(token) },
+                    label = { Text(token.displayName, color = if (uiState.selectedToken == token) CardBackground else GreetingText) },
+                    shape = RoundedCornerShape(8.dp),
+                    colors = FilterChipDefaults.filterChipColors(
+                        selectedContainerColor = XionOrange,
+                        selectedLabelColor = CardBackground
+                    )
+                )
+            }
+        }
+        Spacer(modifier = Modifier.height(16.dp))
 
         OutlinedTextField(
             value = uiState.recipient,
             onValueChange = { viewModel.updateRecipient(it) },
-            label = { Text("Recipient Address") },
-            placeholder = { Text("xion1...") },
+            label = { Text("Recipient Address", color = SubtitleText) },
+            placeholder = { Text("xion1...", color = SubtitleText) },
             modifier = Modifier.fillMaxWidth(),
             isError = uiState.recipientError != null,
             supportingText = uiState.recipientError?.let { { Text(it) } },
             singleLine = true,
             shape = RoundedCornerShape(12.dp),
+            colors = textFieldColors,
             trailingIcon = {
                 IconButton(onClick = {
                     clipboard.getText()?.text?.let { viewModel.updateRecipient(it) }
                 }) {
-                    Icon(Icons.Default.ContentPaste, contentDescription = "Paste")
+                    Icon(Icons.Default.ContentPaste, contentDescription = "Paste", tint = SubtitleText)
                 }
             }
         )
@@ -121,32 +154,32 @@ private fun FormContent(
         OutlinedTextField(
             value = uiState.amount,
             onValueChange = { viewModel.updateAmount(it) },
-            label = { Text("Amount (XION)") },
-            placeholder = { Text("0.0") },
+            label = { Text("Amount (${uiState.selectedToken.displayName})", color = SubtitleText) },
+            placeholder = { Text("0.0", color = SubtitleText) },
             modifier = Modifier.fillMaxWidth(),
             isError = uiState.amountError != null,
             supportingText = uiState.amountError?.let { { Text(it) } },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
             singleLine = true,
-            shape = RoundedCornerShape(12.dp)
+            shape = RoundedCornerShape(12.dp),
+            colors = textFieldColors
         )
         Spacer(modifier = Modifier.height(16.dp))
 
         OutlinedTextField(
             value = uiState.memo,
             onValueChange = { viewModel.updateMemo(it) },
-            label = { Text("Memo (optional)") },
+            label = { Text("Memo (optional)", color = SubtitleText) },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
-            shape = RoundedCornerShape(12.dp)
+            shape = RoundedCornerShape(12.dp),
+            colors = textFieldColors
         )
         Spacer(modifier = Modifier.height(24.dp))
 
         // Fee estimate
         Card(
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceVariant
-            ),
+            colors = CardDefaults.cardColors(containerColor = ScreenBackground),
             shape = RoundedCornerShape(12.dp)
         ) {
             Row(
@@ -155,12 +188,8 @@ private fun FormContent(
                     .padding(16.dp),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text("Estimated Fee", style = MaterialTheme.typography.bodyMedium)
-                Text(
-                    text = "~0.00625 XION",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                Text("Estimated Fee", fontSize = 14.sp, color = SubtitleText)
+                Text("~0.00625 XION", fontSize = 14.sp, color = SubtitleText)
             }
         }
 
@@ -170,9 +199,10 @@ private fun FormContent(
             onClick = onReview,
             modifier = Modifier.fillMaxWidth(),
             enabled = uiState.isFormValid,
-            shape = RoundedCornerShape(12.dp)
+            shape = RoundedCornerShape(12.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = XionOrange)
         ) {
-            Text("Review Transaction")
+            Text("Review Transaction", fontWeight = FontWeight.SemiBold)
         }
         Spacer(modifier = Modifier.height(32.dp))
     }
@@ -191,13 +221,14 @@ private fun ConfirmContent(
     ) {
         Text(
             text = "Confirm Transaction",
-            style = MaterialTheme.typography.headlineMedium,
-            fontWeight = FontWeight.Bold
+            fontSize = 20.sp,
+            fontWeight = FontWeight.Bold,
+            color = GreetingText
         )
         Spacer(modifier = Modifier.height(16.dp))
 
         ConfirmRow("To", uiState.recipient)
-        ConfirmRow("Amount", "${uiState.amount} XION")
+        ConfirmRow("Amount", "${uiState.amount} ${uiState.selectedToken.displayName}")
         if (uiState.memo.isNotBlank()) {
             ConfirmRow("Memo", uiState.memo)
         }
@@ -213,12 +244,13 @@ private fun ConfirmContent(
                 modifier = Modifier.weight(1f),
                 shape = RoundedCornerShape(12.dp)
             ) {
-                Text("Cancel")
+                Text("Cancel", color = GreetingText)
             }
             Button(
                 onClick = onConfirm,
                 modifier = Modifier.weight(1f),
-                shape = RoundedCornerShape(12.dp)
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = XionOrange)
             ) {
                 Text("Confirm")
             }
@@ -236,12 +268,9 @@ private fun LoadingContent() {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        CircularProgressIndicator(modifier = Modifier.size(48.dp))
+        CircularProgressIndicator(modifier = Modifier.size(48.dp), color = XionOrange)
         Spacer(modifier = Modifier.height(16.dp))
-        Text(
-            text = "Broadcasting transaction...",
-            style = MaterialTheme.typography.bodyLarge
-        )
+        Text("Broadcasting transaction...", fontSize = 16.sp, color = GreetingText)
         Spacer(modifier = Modifier.height(32.dp))
     }
 }
@@ -265,40 +294,32 @@ private fun SuccessContent(
         Icon(
             Icons.Default.CheckCircle,
             contentDescription = "Success",
-            tint = MaterialTheme.colorScheme.primary,
+            tint = XionGreen,
             modifier = Modifier.size(64.dp)
         )
         Spacer(modifier = Modifier.height(12.dp))
         Text(
             text = "Transaction Sent!",
-            style = MaterialTheme.typography.headlineMedium,
-            fontWeight = FontWeight.Bold
+            fontSize = 20.sp,
+            fontWeight = FontWeight.Bold,
+            color = GreetingText
         )
         Spacer(modifier = Modifier.height(20.dp))
 
-        // Transaction details card
         Card(
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceVariant
-            ),
+            colors = CardDefaults.cardColors(containerColor = ScreenBackground),
             shape = RoundedCornerShape(12.dp),
             modifier = Modifier.fillMaxWidth()
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
-                // Tx Hash row
-                Text(
-                    text = "Tx Hash",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                Text("Tx Hash", fontSize = 12.sp, fontWeight = FontWeight.Medium, color = SubtitleText)
                 Spacer(modifier = Modifier.height(4.dp))
-                Row(
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
                         text = txResult.txHash,
-                        style = MaterialTheme.typography.bodySmall,
+                        fontSize = 13.sp,
                         fontFamily = FontFamily.Monospace,
+                        color = GreetingText,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                         modifier = Modifier.weight(1f)
@@ -307,47 +328,17 @@ private fun SuccessContent(
                         onClick = { clipboard.setText(AnnotatedString(txResult.txHash)) },
                         modifier = Modifier.size(32.dp)
                     ) {
-                        Icon(
-                            Icons.Default.ContentCopy,
-                            contentDescription = "Copy",
-                            modifier = Modifier.size(16.dp)
-                        )
+                        Icon(Icons.Default.ContentCopy, contentDescription = "Copy", modifier = Modifier.size(16.dp), tint = SubtitleText)
                     }
                 }
 
-                HorizontalDivider(
-                    modifier = Modifier.padding(vertical = 12.dp),
-                    color = MaterialTheme.colorScheme.outlineVariant
-                )
+                HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp), color = SubtitleText.copy(alpha = 0.2f))
 
-                // Status
-                DetailRow(
-                    label = "Status",
-                    value = if (txResult.success) "Success" else "Failed",
-                    valueColor = if (txResult.success) {
-                        MaterialTheme.colorScheme.primary
-                    } else {
-                        MaterialTheme.colorScheme.error
-                    }
-                )
-
-                // Block Height
-                DetailRow(
-                    label = "Block Height",
-                    value = numberFormat.format(txResult.height)
-                )
-
-                // Gas Used
-                DetailRow(
-                    label = "Gas Used",
-                    value = numberFormat.format(txResult.gasUsed.toLongOrNull() ?: 0)
-                )
-
-                // Gas Wanted
-                DetailRow(
-                    label = "Gas Wanted",
-                    value = numberFormat.format(txResult.gasWanted.toLongOrNull() ?: 0)
-                )
+                DetailRow("Status", if (txResult.success) "Success" else "Failed",
+                    valueColor = if (txResult.success) XionGreen else XionRed)
+                DetailRow("Block Height", numberFormat.format(txResult.height))
+                DetailRow("Gas Used", numberFormat.format(txResult.gasUsed.toLongOrNull() ?: 0))
+                DetailRow("Gas Wanted", numberFormat.format(txResult.gasWanted.toLongOrNull() ?: 0))
             }
         }
 
@@ -356,9 +347,10 @@ private fun SuccessContent(
         Button(
             onClick = onDone,
             shape = RoundedCornerShape(12.dp),
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            colors = ButtonDefaults.buttonColors(containerColor = XionOrange)
         ) {
-            Text("Done")
+            Text("Done", fontWeight = FontWeight.SemiBold)
         }
         Spacer(modifier = Modifier.height(32.dp))
     }
@@ -368,7 +360,7 @@ private fun SuccessContent(
 private fun DetailRow(
     label: String,
     value: String,
-    valueColor: androidx.compose.ui.graphics.Color = MaterialTheme.colorScheme.onSurface
+    valueColor: androidx.compose.ui.graphics.Color = GreetingText
 ) {
     Row(
         modifier = Modifier
@@ -376,17 +368,8 @@ private fun DetailRow(
             .padding(vertical = 6.dp),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-        Text(
-            text = value,
-            style = MaterialTheme.typography.bodyMedium,
-            fontWeight = FontWeight.Medium,
-            color = valueColor
-        )
+        Text(label, fontSize = 13.sp, color = SubtitleText)
+        Text(value, fontSize = 13.sp, fontWeight = FontWeight.Medium, color = valueColor)
     }
 }
 
@@ -398,14 +381,7 @@ private fun ConfirmRow(label: String, value: String) {
             .padding(vertical = 8.dp),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-        Text(
-            text = value,
-            style = MaterialTheme.typography.bodyMedium
-        )
+        Text(label, fontSize = 14.sp, color = SubtitleText)
+        Text(value, fontSize = 14.sp, color = GreetingText)
     }
 }

@@ -15,7 +15,7 @@ enum Constants {
     static let derivationPath = "m/44'/118'/0'/0/0"
 
     // Session / Abstraxion
-    static let treasuryAddress = envString("XION_TREASURY_ADDRESS") ?? "xion1sm3qp7kdqkkqgq5sdze6fjvk02a9psqqht2s575kdw06y4prlqcqhqa0mj"
+    static let treasuryAddress = envString("XION_TREASURY_ADDRESS") ?? "xion1rytzathz8y2r58lj26ls3z90tn475qdtpet58nc98v0mur78g4yqvm44qk"
     static let oauthClientId = envString("XION_OAUTH_CLIENT_ID") ?? ""
     static let oauthAuthorizationEndpoint = envString("XION_OAUTH_AUTHORIZATION_ENDPOINT") ?? "https://auth.testnet.burnt.com/"
     static let sessionGrantDurationSeconds: Int64 = 86400

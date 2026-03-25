@@ -131,7 +131,8 @@ app.post("/plaid/link-token", async (req, res) => {
     const data = await braleRequest(
       "POST",
       `/accounts/${BRALE_ACCOUNT_ID}/plaid/link_token`,
-      { legal_name, email_address, phone_number, date_of_birth }
+      { legal_name, email_address, phone_number, date_of_birth },
+      true // idempotent
     );
     res.json(data);
   } catch (err) {
@@ -153,7 +154,8 @@ app.post("/plaid/register", async (req, res) => {
           "ach_credit",
           "same_day_ach_credit",
         ],
-      }
+      },
+      true // idempotent
     );
     res.json(data);
   } catch (err) {
@@ -233,10 +235,15 @@ app.post("/transfers", async (req, res) => {
     if (violation) {
       return res.status(400).json({ error: violation });
     }
+    // Inject brand (controls ACH bank statement name) server-side
+    const body = {
+      ...req.body,
+      brand: req.body.brand || { account_id: BRALE_ACCOUNT_ID },
+    };
     const data = await braleRequest(
       "POST",
       `/accounts/${BRALE_ACCOUNT_ID}/transfers`,
-      req.body,
+      body,
       true // idempotent
     );
     res.json(data);

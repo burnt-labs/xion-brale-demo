@@ -15,10 +15,16 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+enum class SendToken(val displayName: String, val denom: String) {
+    XION("XION", Constants.COIN_DENOM),
+    SBC("SBC", Constants.BRALE_SBC_ON_CHAIN_DENOM);
+}
+
 data class SendUiState(
     val recipient: String = "",
     val amount: String = "",
     val memo: String = "",
+    val selectedToken: SendToken = SendToken.XION,
     val recipientError: String? = null,
     val amountError: String? = null,
     val isFormValid: Boolean = false,
@@ -62,6 +68,10 @@ class SendViewModel @Inject constructor(
         _uiState.update { it.copy(memo = value) }
     }
 
+    fun selectToken(token: SendToken) {
+        _uiState.update { it.copy(selectedToken = token) }
+    }
+
     private fun validateForm(recipient: String, amount: String): Boolean {
         return recipient.startsWith(Constants.ADDRESS_PREFIX) &&
             recipient.length >= 39 &&
@@ -74,7 +84,12 @@ class SendViewModel @Inject constructor(
 
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
-            when (val result = repository.send(state.recipient, microAmount, state.memo)) {
+            when (val result = repository.send(
+                toAddress = state.recipient,
+                amount = microAmount,
+                memo = state.memo,
+                denom = state.selectedToken.denom
+            )) {
                 is Result.Success -> {
                     _uiState.update {
                         it.copy(isLoading = false, txResult = result.data)

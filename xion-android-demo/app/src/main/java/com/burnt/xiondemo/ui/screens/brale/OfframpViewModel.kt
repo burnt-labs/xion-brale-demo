@@ -87,7 +87,7 @@ class OfframpViewModel @Inject constructor(
             val state = _uiState.value
             val bankId = state.bankAddressId ?: return@launch
             val custodial = state.custodialAddress ?: return@launch
-            val custodialWallet = custodial.walletAddress ?: run {
+            val custodialWallet = custodial.address ?: run {
                 _uiState.value = state.copy(error = "No custodial deposit address found")
                 return@launch
             }

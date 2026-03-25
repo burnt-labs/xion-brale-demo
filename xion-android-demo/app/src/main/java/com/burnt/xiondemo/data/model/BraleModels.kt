@@ -12,20 +12,20 @@ data class BraleAddress(
     val id: String,
     val name: String? = null,
     val type: String? = null,
-    @SerialName("wallet_address") val walletAddress: String? = null,
+    val address: String? = null,
     val status: String? = null,
     @SerialName("transfer_types") val transferTypes: List<String> = emptyList()
 )
 
 @Serializable
 data class AddressListResponse(
-    val data: List<BraleAddress> = emptyList()
+    val addresses: List<BraleAddress> = emptyList()
 )
 
 @Serializable
 data class CreateAddressRequest(
     val name: String,
-    @SerialName("wallet_address") val walletAddress: String? = null,
+    val address: String? = null,
     @SerialName("transfer_types") val transferTypes: List<String>
 )
 
@@ -60,7 +60,7 @@ data class BraleTransfer(
 
 @Serializable
 data class TransferListResponse(
-    val data: List<BraleTransfer> = emptyList()
+    val transfers: List<BraleTransfer> = emptyList()
 )
 
 @Serializable

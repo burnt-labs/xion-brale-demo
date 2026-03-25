@@ -134,6 +134,12 @@ class XionRepositoryImpl @Inject constructor(
         mobDataSource.getBalance(state.metaAccountAddress, Constants.COIN_DENOM)
     }
 
+    override suspend fun getSbcBalance(): Result<BalanceInfo> = Result.runCatching {
+        val state = _walletState.value as? WalletState.Connected
+            ?: throw IllegalStateException("Wallet not connected")
+        mobDataSource.getBalance(state.metaAccountAddress, Constants.BRALE_SBC_ON_CHAIN_DENOM)
+    }
+
     override suspend fun getBlockHeight(): Result<Long> = Result.runCatching {
         mobDataSource.getHeight()
     }
@@ -141,11 +147,12 @@ class XionRepositoryImpl @Inject constructor(
     override suspend fun send(
         toAddress: String,
         amount: String,
-        memo: String
+        memo: String,
+        denom: String
     ): Result<TransactionResult> = withGrantRecovery {
         val state = _walletState.value as? WalletState.Connected
             ?: throw IllegalStateException("Wallet not connected")
-        val coins = listOf(Coin(denom = Constants.COIN_DENOM, amount = amount))
+        val coins = listOf(Coin(denom = denom, amount = amount))
         val result = mobDataSource.send(
             toAddress = toAddress,
             coins = coins,

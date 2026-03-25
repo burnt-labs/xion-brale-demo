@@ -31,6 +31,9 @@ object Constants {
     val BRALE_PROXY_URL = BuildConfig.BRALE_PROXY_URL
     val BRALE_TRANSFER_TYPE = BuildConfig.BRALE_TRANSFER_TYPE
     val BRALE_STABLECOIN_DENOM = BuildConfig.BRALE_STABLECOIN_DENOM
+    val BRALE_SBC_ON_CHAIN_DENOM = BuildConfig.BRALE_SBC_ON_CHAIN_DENOM
+    const val SBC_DISPLAY_DENOM = "SBC"
+    const val SBC_DECIMALS = 6
     const val BRALE_ACH_DEBIT_TYPE = "ach_debit"
     const val BRALE_ACH_CREDIT_TYPE = "same_day_ach_credit"
     const val BRALE_FIAT_VALUE_TYPE = "USD"

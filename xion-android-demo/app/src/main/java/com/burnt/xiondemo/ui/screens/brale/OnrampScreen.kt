@@ -1,16 +1,20 @@
 package com.burnt.xiondemo.ui.screens.brale
 
+import android.app.Activity
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -18,7 +22,12 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.burnt.xiondemo.ui.components.ErrorBanner
 import com.burnt.xiondemo.ui.theme.*
+import com.plaid.link.OpenPlaidLink
+import com.plaid.link.configuration.LinkTokenConfiguration
+import com.plaid.link.result.LinkExit
+import com.plaid.link.result.LinkSuccess
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun OnrampScreen(
     onDone: () -> Unit,
@@ -26,27 +35,68 @@ fun OnrampScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
-    Box(modifier = Modifier.fillMaxWidth()) {
-        when (uiState.step) {
-            OnrampStep.FORM -> OnrampForm(uiState, viewModel, onDone)
-            OnrampStep.LINKING_BANK -> LinkingBankContent(uiState)
-            OnrampStep.PROCESSING -> ProcessingContent()
-            OnrampStep.STATUS -> TransferStatusContent(uiState, onDone, viewModel)
+    // Plaid Link launcher
+    val plaidLauncher = rememberLauncherForActivityResult(
+        contract = OpenPlaidLink()
+    ) { result ->
+        when (result) {
+            is LinkSuccess -> {
+                val publicToken = result.publicToken
+                viewModel.onPlaidSuccess(publicToken)
+            }
+            is LinkExit -> {
+                viewModel.onPlaidCancelled()
+            }
         }
+    }
 
-        ErrorBanner(
-            message = uiState.error,
-            onDismiss = { viewModel.clearError() },
-            modifier = Modifier.align(Alignment.TopCenter)
-        )
+    // Launch Plaid Link when we have a token
+    LaunchedEffect(uiState.plaidLinkToken) {
+        val token = uiState.plaidLinkToken ?: return@LaunchedEffect
+        val config = LinkTokenConfiguration.Builder()
+            .token(token)
+            .build()
+        plaidLauncher.launch(config)
+    }
+
+    Scaffold(
+        containerColor = ScreenBackground,
+        topBar = {
+            TopAppBar(
+                title = { Text("Buy Stablecoins", color = GreetingText) },
+                navigationIcon = {
+                    IconButton(onClick = onDone) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = GreetingText)
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = ScreenBackground)
+            )
+        }
+    ) { padding ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+        ) {
+            when (uiState.step) {
+                OnrampStep.FORM -> OnrampForm(uiState, viewModel)
+                OnrampStep.PROCESSING -> ProcessingContent()
+                OnrampStep.STATUS -> TransferStatusContent(uiState, onDone, viewModel)
+            }
+
+            ErrorBanner(
+                message = uiState.error,
+                onDismiss = { viewModel.clearError() },
+                modifier = Modifier.align(Alignment.TopCenter).padding(horizontal = 24.dp)
+            )
+        }
     }
 }
 
 @Composable
 private fun OnrampForm(
     uiState: OnrampUiState,
-    viewModel: OnrampViewModel,
-    onDone: () -> Unit
+    viewModel: OnrampViewModel
 ) {
     Column(
         modifier = Modifier
@@ -55,14 +105,8 @@ private fun OnrampForm(
             .padding(24.dp)
     ) {
         Text(
-            text = "Buy Stablecoins",
-            style = MaterialTheme.typography.headlineMedium,
-            fontWeight = FontWeight.Bold
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-        Text(
             text = "Convert USD from your bank account to stablecoins on Xion",
-            style = MaterialTheme.typography.bodyMedium,
+            fontSize = 14.sp,
             color = SubtitleText
         )
 
@@ -70,14 +114,9 @@ private fun OnrampForm(
 
         // Bank account status
         Card(
-            colors = CardDefaults.cardColors(
-                containerColor = if (uiState.bankLinked) {
-                    MaterialTheme.colorScheme.primaryContainer
-                } else {
-                    MaterialTheme.colorScheme.surfaceVariant
-                }
-            ),
-            shape = RoundedCornerShape(12.dp)
+            colors = CardDefaults.cardColors(containerColor = CardBackground),
+            shape = RoundedCornerShape(12.dp),
+            elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
         ) {
             Row(
                 modifier = Modifier
@@ -88,29 +127,37 @@ private fun OnrampForm(
                 Icon(
                     imageVector = if (uiState.bankLinked) Icons.Default.CheckCircle else Icons.Default.AccountBalance,
                     contentDescription = null,
-                    modifier = Modifier.size(24.dp)
+                    modifier = Modifier.size(24.dp),
+                    tint = if (uiState.bankLinked) XionGreen else SubtitleText
                 )
                 Spacer(modifier = Modifier.width(12.dp))
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = if (uiState.bankLinked) "Bank Account Linked" else "No Bank Account",
-                        fontWeight = FontWeight.Medium
+                        text = if (uiState.bankLinked) (uiState.bankName ?: "Bank Account Linked") else "No Bank Account",
+                        fontWeight = FontWeight.Medium,
+                        color = GreetingText
                     )
                     if (!uiState.bankLinked) {
                         Text(
-                            text = "Link your bank account to buy stablecoins",
-                            style = MaterialTheme.typography.bodySmall,
+                            text = "Link your bank account via Plaid to buy stablecoins",
+                            fontSize = 12.sp,
                             color = SubtitleText
                         )
                     }
                 }
                 if (!uiState.bankLinked) {
                     Button(
-                        onClick = { viewModel.requestPlaidLinkToken(name = "User", email = "") },
+                        onClick = { viewModel.requestPlaidLinkToken(name = "User", email = "user@example.com") },
                         shape = RoundedCornerShape(8.dp),
-                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
+                        colors = ButtonDefaults.buttonColors(containerColor = XionOrange),
+                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                        enabled = !uiState.isLoading
                     ) {
-                        Text("Link", fontSize = 13.sp)
+                        if (uiState.isLoading) {
+                            CircularProgressIndicator(modifier = Modifier.size(16.dp), color = CardBackground, strokeWidth = 2.dp)
+                        } else {
+                            Text("Link", fontSize = 13.sp)
+                        }
                     }
                 }
             }
@@ -122,49 +169,42 @@ private fun OnrampForm(
         OutlinedTextField(
             value = uiState.amount,
             onValueChange = { viewModel.updateAmount(it) },
-            label = { Text("Amount (USD)") },
-            placeholder = { Text("100.00") },
+            label = { Text("Amount (USD)", color = SubtitleText) },
+            placeholder = { Text("100.00", color = SubtitleText) },
             modifier = Modifier.fillMaxWidth(),
             isError = uiState.amountError != null,
             supportingText = uiState.amountError?.let { { Text(it) } },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
             singleLine = true,
             shape = RoundedCornerShape(12.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedTextColor = GreetingText,
+                unfocusedTextColor = GreetingText,
+                focusedBorderColor = XionOrange,
+                unfocusedBorderColor = SubtitleText.copy(alpha = 0.5f),
+                focusedLabelColor = XionOrange,
+                unfocusedLabelColor = SubtitleText,
+                cursorColor = XionOrange
+            ),
             leadingIcon = {
-                Text("$", fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                Text("$", fontWeight = FontWeight.Bold, fontSize = 18.sp, color = GreetingText)
             }
         )
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Fee info
+        // Fee info card
         Card(
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
-            shape = RoundedCornerShape(12.dp)
+            colors = CardDefaults.cardColors(containerColor = CardBackground),
+            shape = RoundedCornerShape(12.dp),
+            elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                    Text("You pay", style = MaterialTheme.typography.bodyMedium)
-                    Text(
-                        text = if (uiState.amount.isNotEmpty()) "\$${uiState.amount}" else "\$0.00",
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Medium
-                    )
-                }
+                DetailRow("You pay", if (uiState.amount.isNotEmpty()) "\$${uiState.amount}" else "\$0.00")
                 Spacer(modifier = Modifier.height(8.dp))
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                    Text("You receive", style = MaterialTheme.typography.bodyMedium)
-                    Text(
-                        text = if (uiState.amount.isNotEmpty()) "~${uiState.amount} SBC" else "—",
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Medium
-                    )
-                }
+                DetailRow("You receive", if (uiState.amount.isNotEmpty()) "~${uiState.amount} SBC" else "\u2014")
                 Spacer(modifier = Modifier.height(8.dp))
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                    Text("Method", style = MaterialTheme.typography.bodyMedium, color = SubtitleText)
-                    Text("ACH Debit", style = MaterialTheme.typography.bodyMedium, color = SubtitleText)
-                }
+                DetailRow("Method", "ACH Debit", valueColor = SubtitleText)
             }
         }
 
@@ -177,42 +217,7 @@ private fun OnrampForm(
             shape = RoundedCornerShape(12.dp),
             colors = ButtonDefaults.buttonColors(containerColor = XionOrange)
         ) {
-            Text("Buy Stablecoins")
-        }
-
-        Spacer(modifier = Modifier.height(32.dp))
-    }
-}
-
-@Composable
-private fun LinkingBankContent(uiState: OnrampUiState) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(48.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        if (uiState.isLoading) {
-            CircularProgressIndicator(modifier = Modifier.size(48.dp))
-            Spacer(modifier = Modifier.height(16.dp))
-            Text("Connecting to Plaid...", style = MaterialTheme.typography.bodyLarge)
-        } else if (uiState.plaidLinkToken != null) {
-            Icon(Icons.Default.AccountBalance, contentDescription = null, modifier = Modifier.size(48.dp))
-            Spacer(modifier = Modifier.height(16.dp))
-            Text("Plaid Link Ready", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = "Link token: ${uiState.plaidLinkToken.take(20)}...",
-                style = MaterialTheme.typography.bodySmall,
-                color = SubtitleText
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-            Text(
-                text = "Plaid Link SDK integration pending.\nFor now, test with the proxy API directly.",
-                style = MaterialTheme.typography.bodyMedium,
-                color = SubtitleText
-            )
+            Text("Buy Stablecoins", fontWeight = FontWeight.SemiBold)
         }
     }
 }
@@ -221,14 +226,20 @@ private fun LinkingBankContent(uiState: OnrampUiState) {
 private fun ProcessingContent() {
     Column(
         modifier = Modifier
-            .fillMaxWidth()
+            .fillMaxSize()
             .padding(48.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        CircularProgressIndicator(modifier = Modifier.size(48.dp))
+        CircularProgressIndicator(modifier = Modifier.size(48.dp), color = XionOrange)
         Spacer(modifier = Modifier.height(16.dp))
-        Text("Creating transfer...", style = MaterialTheme.typography.bodyLarge)
+        Text("Waiting for tokens...", fontSize = 16.sp, fontWeight = FontWeight.Medium, color = GreetingText)
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = "Checking your wallet for incoming stablecoins",
+            fontSize = 13.sp,
+            color = SubtitleText
+        )
     }
 }
 
@@ -238,7 +249,8 @@ private fun TransferStatusContent(
     onDone: () -> Unit,
     viewModel: OnrampViewModel
 ) {
-    val transfer = uiState.transfer ?: return
+    val transfer = uiState.transfer
+    val tokensReceived = uiState.tokensReceived
 
     Column(
         modifier = Modifier
@@ -247,43 +259,51 @@ private fun TransferStatusContent(
             .padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        val icon = when (transfer.status) {
-            "complete" -> Icons.Default.CheckCircle
-            "failed", "canceled" -> Icons.Default.Error
-            else -> Icons.Default.Pending
-        }
-        val tint = when (transfer.status) {
-            "complete" -> XionGreen
-            "failed", "canceled" -> XionRed
-            else -> XionOrange
-        }
-
-        Icon(icon, contentDescription = null, tint = tint, modifier = Modifier.size(64.dp))
+        Icon(
+            imageVector = if (tokensReceived) Icons.Default.CheckCircle else Icons.Default.Pending,
+            contentDescription = null,
+            tint = if (tokensReceived) XionGreen else XionOrange,
+            modifier = Modifier.size(64.dp)
+        )
         Spacer(modifier = Modifier.height(12.dp))
         Text(
-            text = when (transfer.status) {
-                "complete" -> "Purchase Complete!"
-                "failed" -> "Transfer Failed"
-                "canceled" -> "Transfer Canceled"
-                "processing" -> "Processing..."
-                else -> "Pending..."
-            },
-            style = MaterialTheme.typography.headlineMedium,
-            fontWeight = FontWeight.Bold
+            text = if (tokensReceived) "Tokens Received!" else "Transfer Submitted",
+            fontSize = 20.sp,
+            fontWeight = FontWeight.Bold,
+            color = GreetingText
         )
+        if (tokensReceived && uiState.receivedAmount != null) {
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = "${com.burnt.xiondemo.util.CoinFormatter.formatWithDenom(uiState.receivedAmount, "SBC")} added to your wallet",
+                fontSize = 14.sp,
+                color = SubtitleText
+            )
+        }
+        if (!tokensReceived) {
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = "Tokens are being minted. This may take a few minutes.",
+                fontSize = 13.sp,
+                color = SubtitleText
+            )
+        }
 
         Spacer(modifier = Modifier.height(20.dp))
 
-        Card(
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
-            shape = RoundedCornerShape(12.dp),
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                StatusRow("Transfer ID", transfer.id.take(12) + "...")
-                StatusRow("Amount", "\$${transfer.amount.value} ${transfer.amount.currency}")
-                StatusRow("Status", transfer.status.replaceFirstChar { it.uppercase() })
-                transfer.createdAt?.let { StatusRow("Created", it.take(19).replace("T", " ")) }
+        if (transfer != null) {
+            Card(
+                colors = CardDefaults.cardColors(containerColor = CardBackground),
+                shape = RoundedCornerShape(12.dp),
+                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    DetailRow("Transfer ID", transfer.id.take(12) + "...")
+                    DetailRow("Amount", "\$${transfer.amount.value} ${transfer.amount.currency}")
+                    DetailRow("Tokens", if (tokensReceived) "Received" else "Pending", valueColor = if (tokensReceived) XionGreen else XionOrange)
+                    transfer.createdAt?.let { DetailRow("Created", it.take(19).replace("T", " ")) }
+                }
             }
         }
 
@@ -295,24 +315,23 @@ private fun TransferStatusContent(
                 onDone()
             },
             shape = RoundedCornerShape(12.dp),
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            colors = ButtonDefaults.buttonColors(containerColor = XionOrange)
         ) {
-            Text("Done")
+            Text(if (tokensReceived) "Done" else "Close", fontWeight = FontWeight.SemiBold)
         }
-
-        Spacer(modifier = Modifier.height(32.dp))
     }
 }
 
 @Composable
-private fun StatusRow(label: String, value: String) {
+internal fun DetailRow(label: String, value: String, valueColor: androidx.compose.ui.graphics.Color = GreetingText) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 6.dp),
+            .padding(vertical = 4.dp),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Text(label, style = MaterialTheme.typography.bodyMedium, color = SubtitleText)
-        Text(value, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
+        Text(label, fontSize = 13.sp, color = SubtitleText)
+        Text(value, fontSize = 13.sp, fontWeight = FontWeight.Medium, color = valueColor)
     }
 }

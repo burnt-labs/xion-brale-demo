@@ -22,6 +22,7 @@ data class WalletUiState(
     val connectionType: String = "Unknown",
     val grantsActive: Boolean = true,
     val balance: String? = null,
+    val sbcBalance: String? = null,
     val isBalanceLoading: Boolean = false,
     val blockHeight: Long? = null,
     val chainId: String = Constants.CHAIN_ID,
@@ -87,6 +88,7 @@ class WalletViewModel @Inject constructor(
 
     fun refresh() {
         loadBalance()
+        loadSbcBalance()
         loadBlockHeight()
         loadRecentTransactions()
     }
@@ -105,6 +107,18 @@ class WalletViewModel @Inject constructor(
                         it.copy(isBalanceLoading = false, error = result.message)
                     }
                 }
+                is Result.Loading -> {}
+            }
+        }
+    }
+
+    private fun loadSbcBalance() {
+        viewModelScope.launch {
+            when (val result = repository.getSbcBalance()) {
+                is Result.Success -> {
+                    _uiState.update { it.copy(sbcBalance = result.data.amount) }
+                }
+                is Result.Error -> {} // Non-critical
                 is Result.Loading -> {}
             }
         }
