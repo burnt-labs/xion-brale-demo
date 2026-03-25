@@ -23,5 +23,6 @@ interface XionRepository {
     suspend fun getTx(txHash: String): Result<TransactionResult>
     suspend fun getRecentTransactions(address: String): Result<List<TransactionResult>>
 
+    fun appendTransaction(tx: TransactionResult)
     fun disconnect()
 }

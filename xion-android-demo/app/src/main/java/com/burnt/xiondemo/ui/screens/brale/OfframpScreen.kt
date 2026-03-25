@@ -100,7 +100,7 @@ private fun OfframpForm(
                 )
                 Spacer(modifier = Modifier.width(12.dp))
                 Text(
-                    text = if (uiState.bankLinked) "Bank Account Linked" else "Link a bank account first (use Buy flow)",
+                    text = if (uiState.bankLinked) (uiState.bankName ?: "Bank Account Linked") else "Link a bank account first (use Buy flow)",
                     fontWeight = FontWeight.Medium,
                     color = GreetingText
                 )
@@ -180,11 +180,11 @@ private fun DepositingContent() {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        CircularProgressIndicator(modifier = Modifier.size(48.dp), color = XionOrange)
+        CircularProgressIndicator(modifier = Modifier.size(48.dp), color = MintscanBlue)
         Spacer(modifier = Modifier.height(16.dp))
-        Text("Sending stablecoins to Brale...", fontSize = 16.sp, color = GreetingText)
+        Text("Sending stablecoins to Brale...", fontSize = 16.sp, fontWeight = FontWeight.Medium, color = GreetingText)
         Spacer(modifier = Modifier.height(8.dp))
-        Text("Broadcasting on-chain transaction", fontSize = 12.sp, color = SubtitleText)
+        Text("Broadcasting on-chain transaction", fontSize = 13.sp, color = SubtitleText)
     }
 }
 
@@ -195,9 +195,11 @@ private fun ProcessingOfframpContent() {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        CircularProgressIndicator(modifier = Modifier.size(48.dp), color = XionOrange)
+        CircularProgressIndicator(modifier = Modifier.size(48.dp), color = MintscanBlue)
         Spacer(modifier = Modifier.height(16.dp))
-        Text("Creating offramp transfer...", fontSize = 16.sp, color = GreetingText)
+        Text("Creating cash out transfer...", fontSize = 16.sp, fontWeight = FontWeight.Medium, color = GreetingText)
+        Spacer(modifier = Modifier.height(8.dp))
+        Text("Setting up ACH credit to your bank", fontSize = 13.sp, color = SubtitleText)
     }
 }
 
@@ -207,7 +209,7 @@ private fun OfframpStatusContent(
     onDone: () -> Unit,
     viewModel: OfframpViewModel
 ) {
-    val transfer = uiState.transfer ?: return
+    val hasError = uiState.error != null && !uiState.depositConfirmed
 
     Column(
         modifier = Modifier
@@ -216,31 +218,29 @@ private fun OfframpStatusContent(
             .padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        val icon = when (transfer.status) {
-            "complete" -> Icons.Default.CheckCircle
-            "failed", "canceled" -> Icons.Default.Error
-            else -> Icons.Default.Pending
-        }
-        val tint = when (transfer.status) {
-            "complete" -> XionGreen
-            "failed", "canceled" -> XionRed
-            else -> MintscanBlue
-        }
-
-        Icon(icon, contentDescription = null, tint = tint, modifier = Modifier.size(64.dp))
+        Icon(
+            imageVector = if (hasError) Icons.Default.Error else Icons.Default.CheckCircle,
+            contentDescription = null,
+            tint = if (hasError) XionRed else XionGreen,
+            modifier = Modifier.size(64.dp)
+        )
         Spacer(modifier = Modifier.height(12.dp))
         Text(
-            text = when (transfer.status) {
-                "complete" -> "Cash Out Complete!"
-                "failed" -> "Transfer Failed"
-                "canceled" -> "Transfer Canceled"
-                "processing" -> "Processing..."
-                else -> "Pending..."
-            },
+            text = if (hasError) "Cash Out Failed" else "Cash Out Submitted!",
             fontSize = 20.sp,
             fontWeight = FontWeight.Bold,
             color = GreetingText
         )
+        if (!hasError) {
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = "Your stablecoins have been sent to Brale. The USD will be deposited to your bank account within 1\u20133 business days via ACH.",
+                fontSize = 13.sp,
+                color = SubtitleText,
+                modifier = Modifier.padding(horizontal = 16.dp),
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+            )
+        }
 
         Spacer(modifier = Modifier.height(20.dp))
 
@@ -251,11 +251,15 @@ private fun OfframpStatusContent(
             modifier = Modifier.fillMaxWidth()
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
-                DetailRow("Transfer ID", transfer.id.take(12) + "...")
-                DetailRow("Amount", "\$${transfer.amount.value} ${transfer.amount.currency}")
-                DetailRow("Status", transfer.status.replaceFirstChar { it.uppercase() })
-                uiState.depositTxHash?.let { DetailRow("On-chain Tx", it.take(12) + "...") }
-                transfer.createdAt?.let { DetailRow("Created", it.take(19).replace("T", " ")) }
+                uiState.transfer?.let { transfer ->
+                    DetailRow("Transfer ID", transfer.id.take(12) + "...")
+                    DetailRow("Amount", "\$${transfer.amount.value} ${transfer.amount.currency}")
+                }
+                if (uiState.depositConfirmed) {
+                    DetailRow("On-chain Deposit", "Confirmed", valueColor = XionGreen)
+                }
+                DetailRow("Bank Transfer", "In Progress")
+                uiState.depositTxHash?.let { DetailRow("Tx Hash", it.take(16) + "...") }
             }
         }
 
@@ -268,7 +272,7 @@ private fun OfframpStatusContent(
             },
             shape = RoundedCornerShape(12.dp),
             modifier = Modifier.fillMaxWidth(),
-            colors = ButtonDefaults.buttonColors(containerColor = XionOrange)
+            colors = ButtonDefaults.buttonColors(containerColor = MintscanBlue)
         ) {
             Text("Done", fontWeight = FontWeight.SemiBold)
         }

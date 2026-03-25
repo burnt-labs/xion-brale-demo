@@ -243,9 +243,11 @@ class XionRepositoryImpl @Inject constructor(
                     if (messages.length() > 1) "$shortType +${messages.length() - 1}" else shortType
                 } else ""
 
-                // Extract amount and recipient from transfer events
+                // Extract amount, denom, and recipient from transfer events
                 var transferAmount = ""
+                var transferDenom = ""
                 var transferRecipient = ""
+                var transferSender = ""
                 val events = tx.optJSONArray("events")
                 if (events != null) {
                     for (e in 0 until events.length()) {
@@ -257,17 +259,30 @@ class XionRepositoryImpl @Inject constructor(
                                 val attr = attrs.getJSONObject(a)
                                 attrMap[attr.optString("key")] = attr.optString("value")
                             }
-                            // Match the transfer event relevant to this user
                             val sender = attrMap["sender"] ?: ""
                             val recipient = attrMap["recipient"] ?: ""
-                            val amount = attrMap["amount"] ?: ""
+                            val rawAmount = attrMap["amount"] ?: ""
                             if (sender == userAddress || recipient == userAddress) {
-                                transferAmount = amount.replace(Regex("[^0-9]"), "")
+                                // Parse "1200000factory/xion.../sbc" or "5000000uxion"
+                                // Extract leading digits as amount, rest as denom
+                                val match = Regex("^(\\d+)(.*)$").find(rawAmount)
+                                transferAmount = match?.groupValues?.get(1) ?: rawAmount.replace(Regex("[^0-9]"), "")
+                                transferDenom = match?.groupValues?.get(2) ?: ""
                                 transferRecipient = recipient
+                                transferSender = sender
                                 break
                             }
                         }
                     }
+                }
+
+                // Determine display-friendly tx type
+                val displayTxType = when {
+                    transferRecipient.startsWith("xion1amma") || transferRecipient.startsWith("xion1yymx") -> "Cash Out"
+                    transferSender.startsWith("xion1amma") || transferSender.startsWith("xion1yymx") -> "Buy SBC"
+                    transferDenom.contains("sbc", ignoreCase = true) -> "SBC Transfer"
+                    txType == "MsgExec" && transferAmount.isNotEmpty() -> "Send"
+                    else -> txType
                 }
 
                 TransactionResult(
@@ -279,12 +294,17 @@ class XionRepositoryImpl @Inject constructor(
                     rawLog = tx.optString("raw_log", ""),
                     timestamp = tx.optString("timestamp", ""),
                     fee = feeAmount,
-                    txType = txType,
+                    txType = displayTxType,
                     amount = transferAmount,
+                    amountDenom = if (transferDenom.contains("sbc", ignoreCase = true)) "SBC" else "XION",
                     recipient = transferRecipient
                 )
             }
         }
+    }
+
+    override fun appendTransaction(tx: TransactionResult) {
+        _transactionHistory.value = _transactionHistory.value + tx
     }
 
     override fun disconnect() {

@@ -14,5 +14,6 @@ data class TransactionResult(
     val fee: String = "",
     val txType: String = "",
     val amount: String = "",
+    val amountDenom: String = "",
     val recipient: String = ""
 )

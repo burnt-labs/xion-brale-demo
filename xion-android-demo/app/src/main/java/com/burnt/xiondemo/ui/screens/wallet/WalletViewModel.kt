@@ -139,13 +139,21 @@ class WalletViewModel @Inject constructor(
     private fun loadRecentTransactions() {
         viewModelScope.launch {
             val address = _uiState.value.address ?: return@launch
-            when (val result = repository.getRecentTransactions(address)) {
-                is Result.Success -> {
-                    _uiState.update { it.copy(transactions = result.data) }
-                }
-                is Result.Error -> {}
-                is Result.Loading -> {}
+            val onChainTxs = when (val result = repository.getRecentTransactions(address)) {
+                is Result.Success -> result.data
+                else -> emptyList()
             }
+            // Merge on-chain transactions with in-memory Brale transactions (Buy SBC, Cash Out)
+            val inMemoryTxs = repository.transactionHistory.value
+            val seen = mutableMapOf<String, TransactionResult>()
+            // On-chain first (has enriched data)
+            for (tx in onChainTxs) { seen[tx.txHash] = tx }
+            // In-memory adds new entries (Brale txs have unique IDs)
+            for (tx in inMemoryTxs) { if (tx.txHash !in seen) seen[tx.txHash] = tx }
+            val merged = seen.values.sortedByDescending {
+                if (it.height > 0) it.height else Long.MAX_VALUE // Brale entries (height=0) sort to top
+            }
+            _uiState.update { it.copy(transactions = merged) }
         }
     }
 

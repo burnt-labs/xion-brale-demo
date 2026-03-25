@@ -214,6 +214,22 @@ class OnrampViewModel @Inject constructor(
                             receivedAmount = received.toString(),
                             step = OnrampStep.STATUS
                         )
+                        // Add to transaction history
+                        xionRepository.appendTransaction(
+                            com.burnt.xiondemo.data.model.TransactionResult(
+                                txHash = _uiState.value.transfer?.id ?: "",
+                                success = true,
+                                gasUsed = "0",
+                                gasWanted = "0",
+                                height = 0,
+                                rawLog = "",
+                                txType = "Buy SBC",
+                                amount = received.toString(),
+                                recipient = "",
+                                fee = "0",
+                                timestamp = _uiState.value.transfer?.createdAt ?: ""
+                            )
+                        )
                         return@launch
                     }
                 } catch (_: Exception) {}

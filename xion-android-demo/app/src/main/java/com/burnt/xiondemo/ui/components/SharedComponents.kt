@@ -45,6 +45,7 @@ import com.burnt.xiondemo.ui.theme.GreetingText
 import com.burnt.xiondemo.ui.theme.SubtitleText
 import com.burnt.xiondemo.ui.theme.XionGreen
 import com.burnt.xiondemo.util.CoinFormatter
+import com.burnt.xiondemo.util.Constants
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -314,7 +315,7 @@ fun CompactTransactionRow(
 
         // Detail rows
         if (transaction.amount.isNotBlank()) {
-            TxDetailRow(label = "Amount", value = CoinFormatter.formatWithDenom(transaction.amount))
+            TxDetailRow(label = "Amount", value = CoinFormatter.formatWithDenom(transaction.amount, if (transaction.amountDenom.isNotBlank()) transaction.amountDenom else Constants.DISPLAY_DENOM))
         }
         if (transaction.recipient.isNotBlank()) {
             val shortRecipient = "${transaction.recipient.take(8)}...${transaction.recipient.takeLast(4)}"
