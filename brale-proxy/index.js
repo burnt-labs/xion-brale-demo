@@ -12,7 +12,29 @@ const {
   BRALE_API_URL = "https://api.brale.xyz",
   BRALE_AUTH_URL = "https://auth.brale.xyz",
   PORT = 3000,
+  // Comma-separated allowlist of transfer types. Transfers with types not
+  // in this list are rejected. Set to "*" to allow all (not recommended).
+  ALLOWED_TRANSFER_TYPES = "xion_testnet,ach_debit,ach_credit,same_day_ach_credit,rtp_credit",
 } = process.env;
+
+const allowedTypes = new Set(
+  ALLOWED_TRANSFER_TYPES === "*" ? [] : ALLOWED_TRANSFER_TYPES.split(",").map((t) => t.trim())
+);
+const enforceAllowlist = ALLOWED_TRANSFER_TYPES !== "*";
+
+// ---------------------------------------------------------------------------
+// Transfer type safety guard
+// ---------------------------------------------------------------------------
+
+function validateTransferTypes(body) {
+  if (!enforceAllowlist) return null;
+  for (const endpoint of [body?.source, body?.destination]) {
+    if (endpoint?.transfer_type && !allowedTypes.has(endpoint.transfer_type)) {
+      return `Transfer type "${endpoint.transfer_type}" is not allowed. Allowed: ${[...allowedTypes].join(", ")}`;
+    }
+  }
+  return null;
+}
 
 // ---------------------------------------------------------------------------
 // Token management — cache bearer token, refresh when expired
@@ -207,6 +229,10 @@ app.get("/addresses/:id/balance", async (req, res) => {
 // Create transfer (onramp or offramp)
 app.post("/transfers", async (req, res) => {
   try {
+    const violation = validateTransferTypes(req.body);
+    if (violation) {
+      return res.status(400).json({ error: violation });
+    }
     const data = await braleRequest(
       "POST",
       `/accounts/${BRALE_ACCOUNT_ID}/transfers`,

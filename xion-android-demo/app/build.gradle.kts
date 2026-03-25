@@ -26,7 +26,12 @@ android {
         buildConfigField("String", "XION_TREASURY_ADDRESS", "\"xion1sm3qp7kdqkkqgq5sdze6fjvk02a9psqqht2s575kdw06y4prlqcqhqa0mj\"")
         buildConfigField("String", "XION_OAUTH_CLIENT_ID", "\"\"")
         buildConfigField("String", "XION_OAUTH_AUTHORIZATION_ENDPOINT", "\"https://auth.testnet.burnt.com/\"")
-        buildConfigField("String", "BRALE_PROXY_URL", "\"http://10.0.2.127:3000/\"")
+
+        // Brale onramp/offramp — 10.0.2.2 is the Android emulator host loopback.
+        // For physical device testing, replace with your machine's LAN IP or deployed URL.
+        buildConfigField("String", "BRALE_PROXY_URL", "\"http://10.0.2.2:3000/\"")
+        buildConfigField("String", "BRALE_TRANSFER_TYPE", "\"xion_testnet\"")
+        buildConfigField("String", "BRALE_STABLECOIN_DENOM", "\"SBC\"")
     }
 
     buildTypes {

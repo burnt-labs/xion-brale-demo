@@ -41,14 +41,14 @@ final class MobSigningService: MobSigningServiceProtocol {
                         rpcEndpoint: Constants.rpcUrl,
                         grpcEndpoint: nil,
                         addressPrefix: Constants.addressPrefix,
-                        coinType: 118,
+                        coinType: Constants.coinType,
                         gasPrice: Constants.gasPrice
                     )
 
                     let newSigner = try Signer.fromMnemonic(
                         mnemonic: mnemonic,
                         addressPrefix: Constants.addressPrefix,
-                        derivationPath: "m/44'/118'/0'/0/0"
+                        derivationPath: Constants.derivationPath
                     )
 
                     // Retry once on transient cold-start failure

@@ -71,13 +71,13 @@ class OnrampViewModel @Inject constructor(
                 && state.bankLinked
         }
 
-    fun requestPlaidLinkToken() {
+    fun requestPlaidLinkToken(name: String, email: String) {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, error = null, step = OnrampStep.LINKING_BANK)
             try {
                 val response = braleRepository.createPlaidLinkToken(
-                    name = "Demo User",
-                    email = "demo@example.com"
+                    name = name,
+                    email = email
                 )
                 _uiState.value = _uiState.value.copy(
                     plaidLinkToken = response.linkToken,

@@ -106,7 +106,7 @@ private fun OnrampForm(
                 }
                 if (!uiState.bankLinked) {
                     Button(
-                        onClick = { viewModel.requestPlaidLinkToken() },
+                        onClick = { viewModel.requestPlaidLinkToken(name = "User", email = "") },
                         shape = RoundedCornerShape(8.dp),
                         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
                     ) {

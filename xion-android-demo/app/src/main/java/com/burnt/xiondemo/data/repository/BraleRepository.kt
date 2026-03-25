@@ -61,15 +61,15 @@ class BraleRepositoryImpl @Inject constructor(
     ): BraleTransfer {
         return api.createTransfer(
             CreateTransferRequest(
-                amount = BraleAmount(value = amount, currency = "USD"),
+                amount = BraleAmount(value = amount, currency = Constants.BRALE_FIAT_CURRENCY),
                 source = BraleTransferEndpoint(
                     addressId = bankAddressId,
-                    valueType = "USD",
-                    transferType = "ach_debit"
+                    valueType = Constants.BRALE_FIAT_VALUE_TYPE,
+                    transferType = Constants.BRALE_ACH_DEBIT_TYPE
                 ),
                 destination = BraleTransferEndpoint(
                     addressId = xionAddressId,
-                    valueType = "SBC",
+                    valueType = Constants.BRALE_STABLECOIN_DENOM,
                     transferType = Constants.BRALE_TRANSFER_TYPE
                 )
             )
@@ -83,16 +83,16 @@ class BraleRepositoryImpl @Inject constructor(
     ): BraleTransfer {
         return api.createTransfer(
             CreateTransferRequest(
-                amount = BraleAmount(value = amount, currency = "USD"),
+                amount = BraleAmount(value = amount, currency = Constants.BRALE_FIAT_CURRENCY),
                 source = BraleTransferEndpoint(
                     addressId = custodialAddressId,
-                    valueType = "SBC",
+                    valueType = Constants.BRALE_STABLECOIN_DENOM,
                     transferType = Constants.BRALE_TRANSFER_TYPE
                 ),
                 destination = BraleTransferEndpoint(
                     addressId = bankAddressId,
-                    valueType = "USD",
-                    transferType = "same_day_ach_credit"
+                    valueType = Constants.BRALE_FIAT_VALUE_TYPE,
+                    transferType = Constants.BRALE_ACH_CREDIT_TYPE
                 )
             )
         )

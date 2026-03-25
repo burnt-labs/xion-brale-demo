@@ -27,10 +27,14 @@ object Constants {
     const val SAMPLE_CONTRACT_ADDRESS = ""
     const val SAMPLE_CONTRACT_MSG = """{"increment": {}}"""
 
-    // Brale
+    // Brale — all values from BuildConfig so developers can override per environment
     val BRALE_PROXY_URL = BuildConfig.BRALE_PROXY_URL
-    const val BRALE_TRANSFER_TYPE = "xion_testnet"
-    const val BRALE_STABLECOIN_DENOM = "SBC"
+    val BRALE_TRANSFER_TYPE = BuildConfig.BRALE_TRANSFER_TYPE
+    val BRALE_STABLECOIN_DENOM = BuildConfig.BRALE_STABLECOIN_DENOM
+    const val BRALE_ACH_DEBIT_TYPE = "ach_debit"
+    const val BRALE_ACH_CREDIT_TYPE = "same_day_ach_credit"
+    const val BRALE_FIAT_VALUE_TYPE = "USD"
+    const val BRALE_FIAT_CURRENCY = "USD"
 
     // Brale pref keys
     const val PREF_BRALE_BANK_ADDRESS_ID = "brale_bank_address_id"
