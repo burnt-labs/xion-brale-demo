@@ -9,6 +9,7 @@ final class WalletViewModel: ObservableObject {
     @Published var connectionType = "Unknown"
     @Published var grantsActive = true
     @Published var balance: String?
+    @Published var sbcBalance: String?
     @Published var isBalanceLoading = false
     @Published var blockHeight: Int64?
     @Published var chainId = Constants.chainId
@@ -37,6 +38,7 @@ final class WalletViewModel: ObservableObject {
 
     func refresh() {
         loadBalance()
+        loadSbcBalance()
         loadBlockHeight()
         loadTransactions()
     }
@@ -59,6 +61,17 @@ final class WalletViewModel: ObservableObject {
                 self.error = error.localizedDescription
             }
             isBalanceLoading = false
+        }
+    }
+
+    private func loadSbcBalance() {
+        Task {
+            do {
+                let info = try await repository.getSbcBalance()
+                sbcBalance = info.amount
+            } catch {
+                // Non-critical — SBC balance failure should not show error
+            }
         }
     }
 

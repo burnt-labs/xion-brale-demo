@@ -53,6 +53,15 @@ private struct FormContent: View {
                     .font(.system(size: 22, weight: .bold))
                     .padding(.bottom, 20)
 
+                // Token selector
+                Picker("Token", selection: $viewModel.selectedToken) {
+                    ForEach(SendToken.allCases, id: \.self) { token in
+                        Text(token.rawValue).tag(token)
+                    }
+                }
+                .pickerStyle(.segmented)
+                .padding(.bottom, 16)
+
                 // Recipient
                 SendTextField(
                     label: "Recipient Address",
@@ -79,7 +88,7 @@ private struct FormContent: View {
 
                 // Amount
                 SendTextField(
-                    label: "Amount (XION)",
+                    label: "Amount (\(viewModel.selectedToken.rawValue))",
                     placeholder: "0.0",
                     text: Binding(
                         get: { viewModel.amount },
@@ -151,7 +160,8 @@ private struct ConfirmContent: View {
                 .padding(.bottom, 16)
 
             ConfirmRow(label: "To", value: viewModel.recipient)
-            ConfirmRow(label: "Amount", value: "\(viewModel.amount) XION")
+            ConfirmRow(label: "Token", value: viewModel.selectedToken.rawValue)
+            ConfirmRow(label: "Amount", value: "\(viewModel.amount) \(viewModel.selectedToken.rawValue)")
             if !viewModel.memo.isEmpty {
                 ConfirmRow(label: "Memo", value: viewModel.memo)
             }

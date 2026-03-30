@@ -26,15 +26,22 @@ final class XionRepositoryImpl: XionRepositoryProtocol {
         return try await mobService.getBalance(address: address, denom: Constants.coinDenom)
     }
 
+    func getSbcBalance() async throws -> BalanceInfo {
+        guard let address = sessionManager.walletState.metaAccountAddress else {
+            throw RepositoryError.notConnected
+        }
+        return try await mobService.getBalance(address: address, denom: Constants.braleSbcOnChainDenom)
+    }
+
     func getBlockHeight() async throws -> Int64 {
         try await mobService.getHeight()
     }
 
-    func send(toAddress: String, amount: String, memo: String) async throws -> TransactionResult {
+    func send(toAddress: String, amount: String, memo: String, denom: String = Constants.coinDenom) async throws -> TransactionResult {
         let state = sessionManager.walletState
         guard state.isConnected else { throw RepositoryError.notConnected }
 
-        let coins = [Coin(denom: Constants.coinDenom, amount: amount)]
+        let coins = [Coin(denom: denom, amount: amount)]
         let result = try await withGrantRecovery {
             try await self.mobService.send(
                 toAddress: toAddress,
@@ -87,6 +94,11 @@ final class XionRepositoryImpl: XionRepositoryProtocol {
             .sorted { $0.height > $1.height }
             .prefix(3)
             .map { $0 }
+    }
+
+    @MainActor
+    func appendTransaction(_ tx: TransactionResult) {
+        sessionManager.appendTransaction(tx)
     }
 
     @MainActor

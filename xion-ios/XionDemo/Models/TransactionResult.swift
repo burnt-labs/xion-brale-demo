@@ -13,5 +13,6 @@ struct TransactionResult: Identifiable, Codable {
     var fee: String = ""
     var txType: String = ""
     var amount: String = ""
+    var amountDenom: String = ""
     var recipient: String = ""
 }

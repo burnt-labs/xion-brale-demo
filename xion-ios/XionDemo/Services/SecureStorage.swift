@@ -46,6 +46,26 @@ final class SecureStorage {
         return Int64(value) ?? 0
     }
 
+    // MARK: - Brale Address IDs
+
+    func saveBraleBankAddressId(_ addressId: String) {
+        save(key: Constants.keychainBraleBankAddressId, value: addressId)
+    }
+
+    func getBraleBankAddressId() -> String? {
+        load(key: Constants.keychainBraleBankAddressId)
+    }
+
+    func saveBraleXionAddressId(_ addressId: String) {
+        save(key: Constants.keychainBraleXionAddressId, value: addressId)
+    }
+
+    func getBraleXionAddressId() -> String? {
+        load(key: Constants.keychainBraleXionAddressId)
+    }
+
+    // MARK: - Bulk Operations
+
     func saveSessionData(
         sessionMnemonic: String,
         metaAccountAddress: String,
@@ -64,7 +84,9 @@ final class SecureStorage {
             Constants.keychainMetaAccountAddress,
             Constants.keychainSessionKeyAddress,
             Constants.keychainTreasuryAddress,
-            Constants.keychainSessionExpiry
+            Constants.keychainSessionExpiry,
+            Constants.keychainBraleBankAddressId,
+            Constants.keychainBraleXionAddressId
         ]
         for key in keys {
             delete(key: key)

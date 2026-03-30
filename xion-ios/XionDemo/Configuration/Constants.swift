@@ -28,6 +28,13 @@ enum Constants {
     static let braleProxyUrl = envString("BRALE_PROXY_URL") ?? "http://localhost:3000/"
     static let braleTransferType = "xion_testnet"
     static let braleStablecoinDenom = "SBC"
+    static let braleSbcOnChainDenom = "factory/xion17grq736740r70awldugfs3mls3stu9haewctv2/sbc"
+    static let braleAchDebitType = "ach_debit"
+    static let braleAchCreditType = "same_day_ach_credit"
+    static let braleFiatValueType = "USD"
+    static let braleFiatCurrency = "USD"
+    static let sbcDisplayDenom = "SBC"
+    static let sbcDecimals = 6
 
     // Keychain
     static let keychainService = "com.burnt.xiondemo.ios"
@@ -36,6 +43,9 @@ enum Constants {
     static let keychainSessionKeyAddress = "session_key_address"
     static let keychainTreasuryAddress = "treasury_address"
     static let keychainSessionExpiry = "session_expiry"
+    // Brale keychain keys
+    static let keychainBraleBankAddressId = "brale_bank_address_id"
+    static let keychainBraleXionAddressId = "brale_xion_address_id"
 
     // Sample contract for demo
     static let sampleContractAddress = ""

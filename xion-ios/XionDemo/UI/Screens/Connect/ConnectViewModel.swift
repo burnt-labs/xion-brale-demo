@@ -51,6 +51,20 @@ final class ConnectViewModel: ObservableObject {
         error = nil
     }
 
+    func retryRestore() {
+        Task {
+            isLoading = true
+            error = nil
+            let restored = await repository.restoreSession()
+            if restored {
+                isConnected = true
+            } else {
+                error = "Session restore failed"
+            }
+            isLoading = false
+        }
+    }
+
     private func handleStateChange(_ state: WalletState) {
         switch state {
         case .connected:

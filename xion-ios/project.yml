@@ -16,6 +16,9 @@ packages:
     path: vendor/uncommon-crypto
   Bip39:
     path: vendor/bip39
+  LinkKit:
+    url: https://github.com/plaid/plaid-link-ios
+    from: "5.6.0"
 
 targets:
   XionDemo:
@@ -29,6 +32,8 @@ targets:
     dependencies:
       - package: Bip39
         product: Bip39
+      - package: LinkKit
+        product: LinkKit
       - framework: XionDemo/Frameworks/libmob.xcframework
     settings:
       base:

@@ -36,7 +36,7 @@ struct CompactTransactionRow: View {
 
             // Detail rows
             if !transaction.amount.isEmpty {
-                TxDetailRow(label: "Amount", value: CoinFormatter.formatWithDenom(transaction.amount))
+                TxDetailRow(label: "Amount", value: CoinFormatter.formatWithDenom(transaction.amount, denom: amountDisplayDenom))
             }
             if !transaction.recipient.isEmpty {
                 TxDetailRow(label: "To", value: shortRecipient)
@@ -49,6 +49,26 @@ struct CompactTransactionRow: View {
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 14)
+    }
+
+    /// Determine the display denom based on amountDenom field or Brale transaction type
+    private var amountDisplayDenom: String {
+        // If the transaction carries an explicit amountDenom, use it
+        if !transaction.amountDenom.isEmpty {
+            if transaction.amountDenom.lowercased().contains("sbc") {
+                return Constants.sbcDisplayDenom
+            }
+            return Constants.displayDenom
+        }
+        // Detect Buy SBC / Cash Out by txType or Brale custodial address prefix
+        let txType = transaction.txType.lowercased()
+        if txType.contains("buy sbc") || txType.contains("cash out") {
+            return Constants.sbcDisplayDenom
+        }
+        if transaction.recipient.hasPrefix("xion1amma") {
+            return Constants.sbcDisplayDenom
+        }
+        return Constants.displayDenom
     }
 
     private var shortHash: String {

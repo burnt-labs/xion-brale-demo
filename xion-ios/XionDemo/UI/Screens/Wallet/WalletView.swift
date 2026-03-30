@@ -4,6 +4,8 @@ struct WalletView: View {
     @ObservedObject var viewModel: WalletViewModel
     let onNavigateToContract: () -> Void
     let onNavigateToHistory: () -> Void
+    let onNavigateToOnramp: () -> Void
+    let onNavigateToOfframp: () -> Void
     let onDisconnected: () -> Void
 
     @State private var showSendSheet = false
@@ -14,20 +16,23 @@ struct WalletView: View {
         sendViewModel: SendViewModel,
         onNavigateToContract: @escaping () -> Void,
         onNavigateToHistory: @escaping () -> Void,
+        onNavigateToOnramp: @escaping () -> Void,
+        onNavigateToOfframp: @escaping () -> Void,
         onDisconnected: @escaping () -> Void
     ) {
         self.viewModel = viewModel
         self._sendViewModel = StateObject(wrappedValue: sendViewModel)
         self.onNavigateToContract = onNavigateToContract
         self.onNavigateToHistory = onNavigateToHistory
+        self.onNavigateToOnramp = onNavigateToOnramp
+        self.onNavigateToOfframp = onNavigateToOfframp
         self.onDisconnected = onDisconnected
     }
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 0) {
-                Spacer().frame(height: 48)
-
+        List {
+            // Use a single Section with no header to get clean list appearance
+            Section {
                 // Header row: Disconnect | Address + Copy
                 if let address = viewModel.address {
                     let shortAddress = "\(address.prefix(8))...\(address.suffix(4))"
@@ -41,6 +46,7 @@ struct WalletView: View {
                             }
                             .foregroundStyle(.red)
                         }
+                        .buttonStyle(.plain)
 
                         Spacer()
 
@@ -56,9 +62,12 @@ struct WalletView: View {
                                     .font(.system(size: 14))
                                     .foregroundStyle(Color.subtitleText)
                             }
+                            .buttonStyle(.plain)
                             .frame(width: 32, height: 32)
                         }
                     }
+                    .listRowBackground(Color.screenBackground)
+                    .listRowSeparator(.hidden)
                 }
 
                 // Grant status warnings
@@ -75,7 +84,8 @@ struct WalletView: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .background(Color.red.opacity(0.1))
                     .clipShape(RoundedRectangle(cornerRadius: 8))
-                    .padding(.top, 12)
+                    .listRowBackground(Color.screenBackground)
+                    .listRowSeparator(.hidden)
                 }
 
                 if viewModel.sessionExpiryWarning {
@@ -91,10 +101,11 @@ struct WalletView: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .background(Color.orange.opacity(0.1))
                     .clipShape(RoundedRectangle(cornerRadius: 8))
-                    .padding(.top, 8)
+                    .listRowBackground(Color.screenBackground)
+                    .listRowSeparator(.hidden)
                 }
 
-                // Balance card
+                // XION Balance card
                 VStack(alignment: .leading, spacing: 8) {
                     Text("Available Balance")
                         .font(.system(size: 14))
@@ -115,7 +126,29 @@ struct WalletView: View {
                 .background(Color.cardBackground)
                 .clipShape(RoundedRectangle(cornerRadius: 20))
                 .shadow(color: Color.cardShadow, radius: 2, y: 1)
-                .padding(.top, 20)
+                .listRowBackground(Color.screenBackground)
+                .listRowSeparator(.hidden)
+                .listRowInsets(EdgeInsets(top: 10, leading: 24, bottom: 0, trailing: 24))
+
+                // SBC Stablecoin Balance card
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Stablecoin Balance")
+                        .font(.system(size: 14))
+                        .foregroundStyle(Color.subtitleText)
+
+                    Text(viewModel.sbcBalance.map { CoinFormatter.formatWithDenom($0, denom: Constants.sbcDisplayDenom) } ?? "\u{2014}")
+                        .font(.system(size: 22, weight: .bold))
+                        .foregroundStyle(Color.greetingText)
+                        .lineLimit(1)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(24)
+                .background(Color.cardBackground)
+                .clipShape(RoundedRectangle(cornerRadius: 20))
+                .shadow(color: Color.cardShadow, radius: 2, y: 1)
+                .listRowBackground(Color.screenBackground)
+                .listRowSeparator(.hidden)
+                .listRowInsets(EdgeInsets(top: 12, leading: 24, bottom: 0, trailing: 24))
 
                 // Send Tokens button
                 Button(action: { showSendSheet = true }) {
@@ -131,13 +164,54 @@ struct WalletView: View {
                     .foregroundStyle(.white)
                     .clipShape(RoundedRectangle(cornerRadius: 12))
                 }
-                .padding(.top, 24)
+                .buttonStyle(.plain)
+                .listRowBackground(Color.screenBackground)
+                .listRowSeparator(.hidden)
+                .listRowInsets(EdgeInsets(top: 24, leading: 24, bottom: 0, trailing: 24))
+
+                // Buy and Cash Out buttons side-by-side
+                HStack(spacing: 12) {
+                    Button(action: onNavigateToOnramp) {
+                        HStack(spacing: 6) {
+                            Image(systemName: "plus.circle.fill")
+                                .font(.system(size: 16))
+                            Text("Buy")
+                                .font(.system(size: 16, weight: .semibold))
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 14)
+                        .background(Color.xionGreen)
+                        .foregroundStyle(.white)
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                    }
+                    .buttonStyle(.plain)
+
+                    Button(action: onNavigateToOfframp) {
+                        HStack(spacing: 6) {
+                            Image(systemName: "banknote.fill")
+                                .font(.system(size: 16))
+                            Text("Cash Out")
+                                .font(.system(size: 16, weight: .semibold))
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 14)
+                        .background(Color.mintscanBlue)
+                        .foregroundStyle(.white)
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                    }
+                    .buttonStyle(.plain)
+                }
+                .listRowBackground(Color.screenBackground)
+                .listRowSeparator(.hidden)
+                .listRowInsets(EdgeInsets(top: 12, leading: 24, bottom: 0, trailing: 24))
 
                 // Recent Transactions header
                 Text("Recent Transactions")
                     .font(.system(size: 18, weight: .semibold))
                     .foregroundStyle(Color.greetingText)
-                    .padding(.top, 24)
+                    .listRowBackground(Color.screenBackground)
+                    .listRowSeparator(.hidden)
+                    .listRowInsets(EdgeInsets(top: 24, leading: 24, bottom: 0, trailing: 24))
 
                 // Transaction card
                 VStack(spacing: 0) {
@@ -161,7 +235,9 @@ struct WalletView: View {
                 .background(Color.cardBackground)
                 .clipShape(RoundedRectangle(cornerRadius: 16))
                 .shadow(color: Color.cardShadow, radius: 2, y: 1)
-                .padding(.top, 12)
+                .listRowBackground(Color.screenBackground)
+                .listRowSeparator(.hidden)
+                .listRowInsets(EdgeInsets(top: 12, leading: 24, bottom: 0, trailing: 24))
 
                 // View on Mintscan link
                 if let address = viewModel.address {
@@ -175,7 +251,10 @@ struct WalletView: View {
                             .foregroundStyle(Color.mintscanBlue)
                             .frame(maxWidth: .infinity)
                     }
-                    .padding(.top, 12)
+                    .buttonStyle(.plain)
+                    .listRowBackground(Color.screenBackground)
+                    .listRowSeparator(.hidden)
+                    .listRowInsets(EdgeInsets(top: 12, leading: 24, bottom: 0, trailing: 24))
                 }
 
                 // Error banner
@@ -184,14 +263,20 @@ struct WalletView: View {
                     onDismiss: viewModel.clearError,
                     onRetry: { viewModel.refresh() }
                 )
-                .padding(.top, 32)
-
-                Spacer().frame(height: 16)
+                .listRowBackground(Color.screenBackground)
+                .listRowSeparator(.hidden)
+                .listRowInsets(EdgeInsets(top: 32, leading: 24, bottom: 24, trailing: 24))
             }
-            .padding(.horizontal, 24)
-            .padding(.bottom, 24)
         }
+        .listStyle(.plain)
         .background(Color.screenBackground)
+        .scrollContentBackground(.hidden)
+        .refreshable {
+            viewModel.refresh()
+        }
+        .onAppear {
+            viewModel.refresh()
+        }
         .onChange(of: viewModel.isDisconnected) { disconnected in
             if disconnected { onDisconnected() }
         }

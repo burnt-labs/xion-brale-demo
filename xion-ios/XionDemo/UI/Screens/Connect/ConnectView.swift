@@ -58,7 +58,7 @@ struct ConnectView: View {
 
             // Error banner
             VStack {
-                ErrorBanner(message: viewModel.error, onDismiss: viewModel.clearError)
+                ErrorBanner(message: viewModel.error, onDismiss: viewModel.clearError, onRetry: viewModel.retryRestore)
                     .padding(.horizontal, 16)
                     .padding(.top, 8)
                 Spacer()

@@ -4,6 +4,8 @@ enum Route: Hashable {
     case wallet
     case contract
     case history
+    case onramp
+    case offramp
 }
 
 struct AppNavigation: View {
@@ -20,6 +22,8 @@ struct AppNavigation: View {
                     sendViewModel: SendViewModel(repository: container.repository),
                     onNavigateToContract: { path.append(Route.contract) },
                     onNavigateToHistory: { path.append(Route.history) },
+                    onNavigateToOnramp: { path.append(Route.onramp) },
+                    onNavigateToOfframp: { path.append(Route.offramp) },
                     onDisconnected: { isConnected = false }
                 )
                 .navigationDestination(for: Route.self) { route in
@@ -28,6 +32,25 @@ struct AppNavigation: View {
                         ContractView(viewModel: ContractViewModel(repository: container.repository))
                     case .history:
                         HistoryView(viewModel: HistoryViewModel(repository: container.repository))
+                    case .onramp:
+                        OnrampView(
+                            viewModel: OnrampViewModel(
+                                braleRepository: container.braleRepository,
+                                xionRepository: container.repository,
+                                secureStorage: container.secureStorage,
+                                plaidLinkService: container.plaidLinkService
+                            ),
+                            onDone: { path.removeLast() }
+                        )
+                    case .offramp:
+                        OfframpView(
+                            viewModel: OfframpViewModel(
+                                braleRepository: container.braleRepository,
+                                xionRepository: container.repository,
+                                secureStorage: container.secureStorage
+                            ),
+                            onDone: { path.removeLast() }
+                        )
                     case .wallet:
                         EmptyView()
                     }

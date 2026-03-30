@@ -1,11 +1,24 @@
 import Foundation
 
+enum SendToken: String, CaseIterable {
+    case xion = "XION"
+    case sbc = "SBC"
+
+    var denom: String {
+        switch self {
+        case .xion: return Constants.coinDenom
+        case .sbc: return Constants.braleSbcOnChainDenom
+        }
+    }
+}
+
 @MainActor
 final class SendViewModel: ObservableObject {
 
     @Published var recipient = ""
     @Published var amount = ""
     @Published var memo = ""
+    @Published var selectedToken: SendToken = .xion
     @Published var recipientError: String?
     @Published var amountError: String?
     @Published var isLoading = false
@@ -70,7 +83,8 @@ final class SendViewModel: ObservableObject {
                 let result = try await repository.send(
                     toAddress: recipient,
                     amount: microAmount,
-                    memo: memo
+                    memo: memo,
+                    denom: selectedToken.denom
                 )
                 txResult = result
             } catch {
@@ -88,6 +102,7 @@ final class SendViewModel: ObservableObject {
         recipient = ""
         amount = ""
         memo = ""
+        selectedToken = .xion
         recipientError = nil
         amountError = nil
         isLoading = false

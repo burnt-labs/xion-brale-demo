@@ -7,6 +7,9 @@ final class AppContainer: ObservableObject {
     let oauthService: OAuthService
     let sessionManager: SessionManager
     let repository: XionRepositoryProtocol
+    let braleService: BraleProxyService
+    let braleRepository: BraleRepositoryProtocol
+    let plaidLinkService: PlaidLinkService
 
     init() {
         secureStorage = SecureStorage()
@@ -23,5 +26,12 @@ final class AppContainer: ObservableObject {
             sessionManager: sessionManager,
             mobService: mobService
         )
+
+        braleService = BraleProxyService()
+        braleRepository = BraleRepositoryImpl(
+            braleService: braleService,
+            secureStorage: secureStorage
+        )
+        plaidLinkService = PlaidLinkService()
     }
 }

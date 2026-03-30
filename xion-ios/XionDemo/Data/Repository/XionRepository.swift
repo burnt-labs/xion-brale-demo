@@ -6,10 +6,18 @@ protocol XionRepositoryProtocol {
     func connect() async throws -> String
     func restoreSession() async -> Bool
     func getBalance() async throws -> BalanceInfo
+    func getSbcBalance() async throws -> BalanceInfo
     func getBlockHeight() async throws -> Int64
-    func send(toAddress: String, amount: String, memo: String) async throws -> TransactionResult
+    func send(toAddress: String, amount: String, memo: String, denom: String) async throws -> TransactionResult
     func executeContract(contractAddress: String, msg: String, funds: String?) async throws -> TransactionResult
     func getTx(txHash: String) async throws -> TransactionResult
     func getRecentTransactions(address: String) async throws -> [TransactionResult]
+    @MainActor func appendTransaction(_ tx: TransactionResult)
     @MainActor func disconnect()
+}
+
+extension XionRepositoryProtocol {
+    func send(toAddress: String, amount: String, memo: String) async throws -> TransactionResult {
+        try await send(toAddress: toAddress, amount: amount, memo: memo, denom: Constants.coinDenom)
+    }
 }
