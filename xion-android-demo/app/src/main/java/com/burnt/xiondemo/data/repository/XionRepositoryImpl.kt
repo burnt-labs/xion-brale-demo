@@ -43,7 +43,7 @@ class XionRepositoryImpl @Inject constructor(
         _walletState.value = WalletState.Connecting(ConnectionStep.GENERATING_SESSION_KEY)
 
         val sessionMnemonic = Bip39.generateMnemonic()
-        val sessionKeyAddress = mobDataSource.createClientWithSigner(sessionMnemonic)
+        val sessionKeyAddress = mobDataSource.createSigner(sessionMnemonic)
 
         pendingSessionMnemonic = sessionMnemonic
         pendingSessionKeyAddress = sessionKeyAddress
@@ -65,14 +65,21 @@ class XionRepositoryImpl @Inject constructor(
 
         _walletState.value = WalletState.Connecting(ConnectionStep.SETTING_UP_GRANTS)
 
+        val expiresAt = System.currentTimeMillis() / 1000 + Constants.SESSION_GRANT_DURATION_SECONDS
+
+        // Upgrade client to session mode — granter/feeGranter are now handled internally
+        mobDataSource.upgradeToSessionClient(
+            metaAccountAddress = metaAccountAddress,
+            treasuryAddress = Constants.TREASURY_ADDRESS,
+            sessionExpiresAt = expiresAt
+        )
+
         secureStorage.saveSessionData(
             sessionMnemonic = sessionMnemonic,
             metaAccountAddress = metaAccountAddress,
             sessionKeyAddress = sessionKeyAddress,
             treasuryAddress = Constants.TREASURY_ADDRESS
         )
-
-        val expiresAt = System.currentTimeMillis() / 1000 + Constants.SESSION_GRANT_DURATION_SECONDS
         secureStorage.saveSessionExpiry(expiresAt)
 
         _walletState.value = WalletState.Connected(
@@ -111,7 +118,14 @@ class XionRepositoryImpl @Inject constructor(
 
         _walletState.value = WalletState.Connecting(ConnectionStep.GENERATING_SESSION_KEY)
 
-        mobDataSource.createClientWithSigner(sessionMnemonic)
+        mobDataSource.createSigner(sessionMnemonic)
+
+        // Upgrade to session client so granter/feeGranter are handled internally
+        mobDataSource.upgradeToSessionClient(
+            metaAccountAddress = metaAccountAddress,
+            treasuryAddress = treasuryAddress,
+            sessionExpiresAt = expiresAt
+        )
 
         _walletState.value = WalletState.Connected(
             metaAccountAddress = metaAccountAddress,
@@ -150,14 +164,12 @@ class XionRepositoryImpl @Inject constructor(
         memo: String,
         denom: String
     ): Result<TransactionResult> = withGrantRecovery {
-        val state = _walletState.value as? WalletState.Connected
+        _walletState.value as? WalletState.Connected
             ?: throw IllegalStateException("Wallet not connected")
         val coins = listOf(Coin(denom = denom, amount = amount))
         val result = mobDataSource.send(
             toAddress = toAddress,
             coins = coins,
-            granter = state.metaAccountAddress,
-            feeGranter = state.treasuryAddress,
             memo = memo.ifBlank { null }
         )
         val confirmed = if (result.success) {
@@ -174,15 +186,13 @@ class XionRepositoryImpl @Inject constructor(
         msg: String,
         funds: String?
     ): Result<TransactionResult> = withGrantRecovery {
-        val state = _walletState.value as? WalletState.Connected
+        _walletState.value as? WalletState.Connected
             ?: throw IllegalStateException("Wallet not connected")
         val fundsCoins = funds?.let { listOf(Coin(denom = Constants.COIN_DENOM, amount = it)) } ?: emptyList()
         val result = mobDataSource.executeContract(
             contractAddress = contractAddress,
             msg = msg.toByteArray(),
             funds = fundsCoins,
-            granter = state.metaAccountAddress,
-            feeGranter = state.treasuryAddress,
             memo = null
         )
         val confirmed = if (result.success) {

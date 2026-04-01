@@ -611,6 +611,68 @@ internal open class UniffiForeignFutureResultVoid(
 internal interface UniffiForeignFutureCompleteVoid : com.sun.jna.Callback {
     fun callback(`callbackData`: Long,`result`: UniffiForeignFutureResultVoid.UniffiByValue,)
 }
+internal interface UniffiCallbackInterfaceCryptoSignerMethod0 : com.sun.jna.Callback {
+    fun callback(`uniffiHandle`: Long,`uniffiOutReturn`: RustBuffer,uniffiCallStatus: UniffiRustCallStatus,)
+}
+internal interface UniffiCallbackInterfaceCryptoSignerMethod1 : com.sun.jna.Callback {
+    fun callback(`uniffiHandle`: Long,`uniffiOutReturn`: RustBuffer,uniffiCallStatus: UniffiRustCallStatus,)
+}
+internal interface UniffiCallbackInterfaceCryptoSignerMethod2 : com.sun.jna.Callback {
+    fun callback(`uniffiHandle`: Long,`uniffiOutReturn`: RustBuffer,uniffiCallStatus: UniffiRustCallStatus,)
+}
+internal interface UniffiCallbackInterfaceCryptoSignerMethod3 : com.sun.jna.Callback {
+    fun callback(`uniffiHandle`: Long,`message`: RustBuffer.ByValue,`uniffiOutReturn`: RustBuffer,uniffiCallStatus: UniffiRustCallStatus,)
+}
+internal interface UniffiCallbackInterfaceHttpTransportMethod0 : com.sun.jna.Callback {
+    fun callback(`uniffiHandle`: Long,`url`: RustBuffer.ByValue,`body`: RustBuffer.ByValue,`uniffiOutReturn`: RustBuffer,uniffiCallStatus: UniffiRustCallStatus,)
+}
+@Structure.FieldOrder("uniffiFree", "uniffiClone", "address", "publicKey", "addressPrefix", "signBytes")
+internal open class UniffiVTableCallbackInterfaceCryptoSigner(
+    @JvmField internal var `uniffiFree`: UniffiCallbackInterfaceFree? = null,
+    @JvmField internal var `uniffiClone`: UniffiCallbackInterfaceClone? = null,
+    @JvmField internal var `address`: UniffiCallbackInterfaceCryptoSignerMethod0? = null,
+    @JvmField internal var `publicKey`: UniffiCallbackInterfaceCryptoSignerMethod1? = null,
+    @JvmField internal var `addressPrefix`: UniffiCallbackInterfaceCryptoSignerMethod2? = null,
+    @JvmField internal var `signBytes`: UniffiCallbackInterfaceCryptoSignerMethod3? = null,
+) : Structure() {
+    class UniffiByValue(
+        `uniffiFree`: UniffiCallbackInterfaceFree? = null,
+        `uniffiClone`: UniffiCallbackInterfaceClone? = null,
+        `address`: UniffiCallbackInterfaceCryptoSignerMethod0? = null,
+        `publicKey`: UniffiCallbackInterfaceCryptoSignerMethod1? = null,
+        `addressPrefix`: UniffiCallbackInterfaceCryptoSignerMethod2? = null,
+        `signBytes`: UniffiCallbackInterfaceCryptoSignerMethod3? = null,
+    ): UniffiVTableCallbackInterfaceCryptoSigner(`uniffiFree`,`uniffiClone`,`address`,`publicKey`,`addressPrefix`,`signBytes`,), Structure.ByValue
+
+   internal fun uniffiSetValue(other: UniffiVTableCallbackInterfaceCryptoSigner) {
+        `uniffiFree` = other.`uniffiFree`
+        `uniffiClone` = other.`uniffiClone`
+        `address` = other.`address`
+        `publicKey` = other.`publicKey`
+        `addressPrefix` = other.`addressPrefix`
+        `signBytes` = other.`signBytes`
+    }
+
+}
+@Structure.FieldOrder("uniffiFree", "uniffiClone", "post")
+internal open class UniffiVTableCallbackInterfaceHttpTransport(
+    @JvmField internal var `uniffiFree`: UniffiCallbackInterfaceFree? = null,
+    @JvmField internal var `uniffiClone`: UniffiCallbackInterfaceClone? = null,
+    @JvmField internal var `post`: UniffiCallbackInterfaceHttpTransportMethod0? = null,
+) : Structure() {
+    class UniffiByValue(
+        `uniffiFree`: UniffiCallbackInterfaceFree? = null,
+        `uniffiClone`: UniffiCallbackInterfaceClone? = null,
+        `post`: UniffiCallbackInterfaceHttpTransportMethod0? = null,
+    ): UniffiVTableCallbackInterfaceHttpTransport(`uniffiFree`,`uniffiClone`,`post`,), Structure.ByValue
+
+   internal fun uniffiSetValue(other: UniffiVTableCallbackInterfaceHttpTransport) {
+        `uniffiFree` = other.`uniffiFree`
+        `uniffiClone` = other.`uniffiClone`
+        `post` = other.`post`
+    }
+
+}
 
 // A JNA Library to expose the extern-C FFI definitions.
 // This is an implementation detail which will be called internally by the public API.
@@ -636,6 +698,14 @@ internal object IntegrityCheckingUniffiLib {
     }
     external fun uniffi_mob_checksum_method_client_attach_signer(
     ): Short
+    external fun uniffi_mob_checksum_method_client_build_execute_contract_message(
+    ): Short
+    external fun uniffi_mob_checksum_method_client_build_instantiate_contract_message(
+    ): Short
+    external fun uniffi_mob_checksum_method_client_build_send_message(
+    ): Short
+    external fun uniffi_mob_checksum_method_client_build_store_code_message(
+    ): Short
     external fun uniffi_mob_checksum_method_client_execute_contract(
     ): Short
     external fun uniffi_mob_checksum_method_client_get_account(
@@ -650,23 +720,91 @@ internal object IntegrityCheckingUniffiLib {
     ): Short
     external fun uniffi_mob_checksum_method_client_get_tx(
     ): Short
+    external fun uniffi_mob_checksum_method_client_has_grants(
+    ): Short
+    external fun uniffi_mob_checksum_method_client_instantiate_contract(
+    ): Short
     external fun uniffi_mob_checksum_method_client_is_synced(
+    ): Short
+    external fun uniffi_mob_checksum_method_client_query_contract_smart(
     ): Short
     external fun uniffi_mob_checksum_method_client_send(
     ): Short
-    external fun uniffi_mob_checksum_method_signer_address(
+    external fun uniffi_mob_checksum_method_client_sign_and_broadcast_multi(
     ): Short
-    external fun uniffi_mob_checksum_method_signer_address_prefix(
+    external fun uniffi_mob_checksum_method_client_store_code(
     ): Short
-    external fun uniffi_mob_checksum_method_signer_public_key_hex(
+    external fun uniffi_mob_checksum_method_cryptosigner_address(
     ): Short
-    external fun uniffi_mob_checksum_method_signer_sign_bytes(
+    external fun uniffi_mob_checksum_method_cryptosigner_public_key(
+    ): Short
+    external fun uniffi_mob_checksum_method_cryptosigner_address_prefix(
+    ): Short
+    external fun uniffi_mob_checksum_method_cryptosigner_sign_bytes(
+    ): Short
+    external fun uniffi_mob_checksum_method_httptransport_post(
+    ): Short
+    external fun uniffi_mob_checksum_method_mobsessionmanager_activate(
+    ): Short
+    external fun uniffi_mob_checksum_method_mobsessionmanager_client(
+    ): Short
+    external fun uniffi_mob_checksum_method_mobsessionmanager_deactivate(
+    ): Short
+    external fun uniffi_mob_checksum_method_mobsessionmanager_export_session(
+    ): Short
+    external fun uniffi_mob_checksum_method_mobsessionmanager_generate_session_key(
+    ): Short
+    external fun uniffi_mob_checksum_method_mobsessionmanager_grantee_address(
+    ): Short
+    external fun uniffi_mob_checksum_method_mobsessionmanager_granter_address(
+    ): Short
+    external fun uniffi_mob_checksum_method_mobsessionmanager_is_active(
+    ): Short
+    external fun uniffi_mob_checksum_method_mobsessionmanager_metadata(
+    ): Short
+    external fun uniffi_mob_checksum_method_mobsessionmanager_public_key_hex(
+    ): Short
+    external fun uniffi_mob_checksum_method_mobsessionmanager_sign_bytes(
+    ): Short
+    external fun uniffi_mob_checksum_method_rustsigner_address(
+    ): Short
+    external fun uniffi_mob_checksum_method_rustsigner_address_prefix(
+    ): Short
+    external fun uniffi_mob_checksum_method_rustsigner_public_key_hex(
+    ): Short
+    external fun uniffi_mob_checksum_method_rustsigner_sign_bytes(
+    ): Short
+    external fun uniffi_mob_checksum_method_sessionsigner_grantee_address(
+    ): Short
+    external fun uniffi_mob_checksum_method_sessionsigner_granter_address(
+    ): Short
+    external fun uniffi_mob_checksum_method_sessionsigner_is_expired(
+    ): Short
+    external fun uniffi_mob_checksum_method_sessionsigner_metadata(
+    ): Short
+    external fun uniffi_mob_checksum_method_sessionsigner_public_key_hex(
+    ): Short
+    external fun uniffi_mob_checksum_method_sessionsigner_remaining_seconds(
     ): Short
     external fun uniffi_mob_checksum_constructor_client_new(
     ): Short
+    external fun uniffi_mob_checksum_constructor_client_new_with_crypto_signer(
+    ): Short
+    external fun uniffi_mob_checksum_constructor_client_new_with_session_crypto_signer(
+    ): Short
+    external fun uniffi_mob_checksum_constructor_client_new_with_session_signer(
+    ): Short
     external fun uniffi_mob_checksum_constructor_client_new_with_signer(
     ): Short
-    external fun uniffi_mob_checksum_constructor_signer_from_mnemonic(
+    external fun uniffi_mob_checksum_constructor_mobsessionmanager_new(
+    ): Short
+    external fun uniffi_mob_checksum_constructor_mobsessionmanager_restore(
+    ): Short
+    external fun uniffi_mob_checksum_constructor_rustsigner_from_mnemonic(
+    ): Short
+    external fun uniffi_mob_checksum_constructor_sessionsigner_from_private_key(
+    ): Short
+    external fun uniffi_mob_checksum_constructor_sessionsigner_new(
     ): Short
     external fun ffi_mob_uniffi_contract_version(
     ): Int
@@ -684,156 +822,254 @@ internal object UniffiLib {
 
     init {
         Native.register(UniffiLib::class.java, findLibraryName(componentName = "mob"))
+        uniffiCallbackInterfaceCryptoSigner.register(this)
+        uniffiCallbackInterfaceHttpTransport.register(this)
         
     }
     external fun uniffi_mob_fn_clone_client(`handle`: Long,uniffi_out_err: UniffiRustCallStatus, 
-    ): Long
-    external fun uniffi_mob_fn_free_client(`handle`: Long,uniffi_out_err: UniffiRustCallStatus, 
-    ): Unit
-    external fun uniffi_mob_fn_constructor_client_new(`config`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
-    ): Long
-    external fun uniffi_mob_fn_constructor_client_new_with_signer(`config`: RustBuffer.ByValue,`signer`: Long,uniffi_out_err: UniffiRustCallStatus, 
-    ): Long
-    external fun uniffi_mob_fn_method_client_attach_signer(`ptr`: Long,`signer`: Long,uniffi_out_err: UniffiRustCallStatus, 
-    ): Unit
-    external fun uniffi_mob_fn_method_client_execute_contract(`ptr`: Long,`contractAddress`: RustBuffer.ByValue,`msg`: RustBuffer.ByValue,`funds`: RustBuffer.ByValue,`granter`: RustBuffer.ByValue,`feeGranter`: RustBuffer.ByValue,`memo`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
-    ): RustBuffer.ByValue
-    external fun uniffi_mob_fn_method_client_get_account(`ptr`: Long,`address`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
-    ): RustBuffer.ByValue
-    external fun uniffi_mob_fn_method_client_get_all_balances(`ptr`: Long,`address`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
-    ): RustBuffer.ByValue
-    external fun uniffi_mob_fn_method_client_get_balance(`ptr`: Long,`address`: RustBuffer.ByValue,`denom`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
-    ): RustBuffer.ByValue
-    external fun uniffi_mob_fn_method_client_get_chain_id(`ptr`: Long,uniffi_out_err: UniffiRustCallStatus, 
-    ): RustBuffer.ByValue
-    external fun uniffi_mob_fn_method_client_get_height(`ptr`: Long,uniffi_out_err: UniffiRustCallStatus, 
-    ): Long
-    external fun uniffi_mob_fn_method_client_get_tx(`ptr`: Long,`hash`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
-    ): RustBuffer.ByValue
-    external fun uniffi_mob_fn_method_client_is_synced(`ptr`: Long,uniffi_out_err: UniffiRustCallStatus, 
-    ): Byte
-    external fun uniffi_mob_fn_method_client_send(`ptr`: Long,`toAddress`: RustBuffer.ByValue,`amount`: RustBuffer.ByValue,`granter`: RustBuffer.ByValue,`feeGranter`: RustBuffer.ByValue,`memo`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
-    ): RustBuffer.ByValue
-    external fun uniffi_mob_fn_clone_signer(`handle`: Long,uniffi_out_err: UniffiRustCallStatus, 
-    ): Long
-    external fun uniffi_mob_fn_free_signer(`handle`: Long,uniffi_out_err: UniffiRustCallStatus, 
-    ): Unit
-    external fun uniffi_mob_fn_constructor_signer_from_mnemonic(`mnemonic`: RustBuffer.ByValue,`addressPrefix`: RustBuffer.ByValue,`derivationPath`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
-    ): Long
-    external fun uniffi_mob_fn_method_signer_address(`ptr`: Long,uniffi_out_err: UniffiRustCallStatus, 
-    ): RustBuffer.ByValue
-    external fun uniffi_mob_fn_method_signer_address_prefix(`ptr`: Long,uniffi_out_err: UniffiRustCallStatus, 
-    ): RustBuffer.ByValue
-    external fun uniffi_mob_fn_method_signer_public_key_hex(`ptr`: Long,uniffi_out_err: UniffiRustCallStatus, 
-    ): RustBuffer.ByValue
-    external fun uniffi_mob_fn_method_signer_sign_bytes(`ptr`: Long,`message`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
-    ): RustBuffer.ByValue
-    external fun ffi_mob_rustbuffer_alloc(`size`: Long,uniffi_out_err: UniffiRustCallStatus, 
-    ): RustBuffer.ByValue
-    external fun ffi_mob_rustbuffer_from_bytes(`bytes`: ForeignBytes.ByValue,uniffi_out_err: UniffiRustCallStatus, 
-    ): RustBuffer.ByValue
-    external fun ffi_mob_rustbuffer_free(`buf`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
-    ): Unit
-    external fun ffi_mob_rustbuffer_reserve(`buf`: RustBuffer.ByValue,`additional`: Long,uniffi_out_err: UniffiRustCallStatus, 
-    ): RustBuffer.ByValue
-    external fun ffi_mob_rust_future_poll_u8(`handle`: Long,`callback`: UniffiRustFutureContinuationCallback,`callbackData`: Long,
-    ): Unit
-    external fun ffi_mob_rust_future_cancel_u8(`handle`: Long,
-    ): Unit
-    external fun ffi_mob_rust_future_free_u8(`handle`: Long,
-    ): Unit
-    external fun ffi_mob_rust_future_complete_u8(`handle`: Long,uniffi_out_err: UniffiRustCallStatus, 
-    ): Byte
-    external fun ffi_mob_rust_future_poll_i8(`handle`: Long,`callback`: UniffiRustFutureContinuationCallback,`callbackData`: Long,
-    ): Unit
-    external fun ffi_mob_rust_future_cancel_i8(`handle`: Long,
-    ): Unit
-    external fun ffi_mob_rust_future_free_i8(`handle`: Long,
-    ): Unit
-    external fun ffi_mob_rust_future_complete_i8(`handle`: Long,uniffi_out_err: UniffiRustCallStatus, 
-    ): Byte
-    external fun ffi_mob_rust_future_poll_u16(`handle`: Long,`callback`: UniffiRustFutureContinuationCallback,`callbackData`: Long,
-    ): Unit
-    external fun ffi_mob_rust_future_cancel_u16(`handle`: Long,
-    ): Unit
-    external fun ffi_mob_rust_future_free_u16(`handle`: Long,
-    ): Unit
-    external fun ffi_mob_rust_future_complete_u16(`handle`: Long,uniffi_out_err: UniffiRustCallStatus, 
-    ): Short
-    external fun ffi_mob_rust_future_poll_i16(`handle`: Long,`callback`: UniffiRustFutureContinuationCallback,`callbackData`: Long,
-    ): Unit
-    external fun ffi_mob_rust_future_cancel_i16(`handle`: Long,
-    ): Unit
-    external fun ffi_mob_rust_future_free_i16(`handle`: Long,
-    ): Unit
-    external fun ffi_mob_rust_future_complete_i16(`handle`: Long,uniffi_out_err: UniffiRustCallStatus, 
-    ): Short
-    external fun ffi_mob_rust_future_poll_u32(`handle`: Long,`callback`: UniffiRustFutureContinuationCallback,`callbackData`: Long,
-    ): Unit
-    external fun ffi_mob_rust_future_cancel_u32(`handle`: Long,
-    ): Unit
-    external fun ffi_mob_rust_future_free_u32(`handle`: Long,
-    ): Unit
-    external fun ffi_mob_rust_future_complete_u32(`handle`: Long,uniffi_out_err: UniffiRustCallStatus, 
-    ): Int
-    external fun ffi_mob_rust_future_poll_i32(`handle`: Long,`callback`: UniffiRustFutureContinuationCallback,`callbackData`: Long,
-    ): Unit
-    external fun ffi_mob_rust_future_cancel_i32(`handle`: Long,
-    ): Unit
-    external fun ffi_mob_rust_future_free_i32(`handle`: Long,
-    ): Unit
-    external fun ffi_mob_rust_future_complete_i32(`handle`: Long,uniffi_out_err: UniffiRustCallStatus, 
-    ): Int
-    external fun ffi_mob_rust_future_poll_u64(`handle`: Long,`callback`: UniffiRustFutureContinuationCallback,`callbackData`: Long,
-    ): Unit
-    external fun ffi_mob_rust_future_cancel_u64(`handle`: Long,
-    ): Unit
-    external fun ffi_mob_rust_future_free_u64(`handle`: Long,
-    ): Unit
-    external fun ffi_mob_rust_future_complete_u64(`handle`: Long,uniffi_out_err: UniffiRustCallStatus, 
-    ): Long
-    external fun ffi_mob_rust_future_poll_i64(`handle`: Long,`callback`: UniffiRustFutureContinuationCallback,`callbackData`: Long,
-    ): Unit
-    external fun ffi_mob_rust_future_cancel_i64(`handle`: Long,
-    ): Unit
-    external fun ffi_mob_rust_future_free_i64(`handle`: Long,
-    ): Unit
-    external fun ffi_mob_rust_future_complete_i64(`handle`: Long,uniffi_out_err: UniffiRustCallStatus, 
-    ): Long
-    external fun ffi_mob_rust_future_poll_f32(`handle`: Long,`callback`: UniffiRustFutureContinuationCallback,`callbackData`: Long,
-    ): Unit
-    external fun ffi_mob_rust_future_cancel_f32(`handle`: Long,
-    ): Unit
-    external fun ffi_mob_rust_future_free_f32(`handle`: Long,
-    ): Unit
-    external fun ffi_mob_rust_future_complete_f32(`handle`: Long,uniffi_out_err: UniffiRustCallStatus, 
-    ): Float
-    external fun ffi_mob_rust_future_poll_f64(`handle`: Long,`callback`: UniffiRustFutureContinuationCallback,`callbackData`: Long,
-    ): Unit
-    external fun ffi_mob_rust_future_cancel_f64(`handle`: Long,
-    ): Unit
-    external fun ffi_mob_rust_future_free_f64(`handle`: Long,
-    ): Unit
-    external fun ffi_mob_rust_future_complete_f64(`handle`: Long,uniffi_out_err: UniffiRustCallStatus, 
-    ): Double
-    external fun ffi_mob_rust_future_poll_rust_buffer(`handle`: Long,`callback`: UniffiRustFutureContinuationCallback,`callbackData`: Long,
-    ): Unit
-    external fun ffi_mob_rust_future_cancel_rust_buffer(`handle`: Long,
-    ): Unit
-    external fun ffi_mob_rust_future_free_rust_buffer(`handle`: Long,
-    ): Unit
-    external fun ffi_mob_rust_future_complete_rust_buffer(`handle`: Long,uniffi_out_err: UniffiRustCallStatus, 
-    ): RustBuffer.ByValue
-    external fun ffi_mob_rust_future_poll_void(`handle`: Long,`callback`: UniffiRustFutureContinuationCallback,`callbackData`: Long,
-    ): Unit
-    external fun ffi_mob_rust_future_cancel_void(`handle`: Long,
-    ): Unit
-    external fun ffi_mob_rust_future_free_void(`handle`: Long,
-    ): Unit
-    external fun ffi_mob_rust_future_complete_void(`handle`: Long,uniffi_out_err: UniffiRustCallStatus, 
-    ): Unit
+): Long
+external fun uniffi_mob_fn_free_client(`handle`: Long,uniffi_out_err: UniffiRustCallStatus, 
+): Unit
+external fun uniffi_mob_fn_constructor_client_new(`config`: RustBuffer.ByValue,`transport`: Long,uniffi_out_err: UniffiRustCallStatus, 
+): Long
+external fun uniffi_mob_fn_constructor_client_new_with_crypto_signer(`config`: RustBuffer.ByValue,`signer`: Long,`transport`: Long,uniffi_out_err: UniffiRustCallStatus, 
+): Long
+external fun uniffi_mob_fn_constructor_client_new_with_session_crypto_signer(`config`: RustBuffer.ByValue,`signer`: Long,`metadata`: RustBuffer.ByValue,`transport`: Long,uniffi_out_err: UniffiRustCallStatus, 
+): Long
+external fun uniffi_mob_fn_constructor_client_new_with_session_signer(`config`: RustBuffer.ByValue,`signer`: Long,`metadata`: RustBuffer.ByValue,`transport`: Long,uniffi_out_err: UniffiRustCallStatus, 
+): Long
+external fun uniffi_mob_fn_constructor_client_new_with_signer(`config`: RustBuffer.ByValue,`signer`: Long,`transport`: Long,uniffi_out_err: UniffiRustCallStatus, 
+): Long
+external fun uniffi_mob_fn_method_client_attach_signer(`ptr`: Long,`signer`: Long,uniffi_out_err: UniffiRustCallStatus, 
+): Unit
+external fun uniffi_mob_fn_method_client_build_execute_contract_message(`ptr`: Long,`contractAddress`: RustBuffer.ByValue,`msg`: RustBuffer.ByValue,`funds`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+): RustBuffer.ByValue
+external fun uniffi_mob_fn_method_client_build_instantiate_contract_message(`ptr`: Long,`admin`: RustBuffer.ByValue,`codeId`: Long,`label`: RustBuffer.ByValue,`msg`: RustBuffer.ByValue,`funds`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+): RustBuffer.ByValue
+external fun uniffi_mob_fn_method_client_build_send_message(`ptr`: Long,`toAddress`: RustBuffer.ByValue,`amount`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+): RustBuffer.ByValue
+external fun uniffi_mob_fn_method_client_build_store_code_message(`ptr`: Long,`wasmByteCode`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+): RustBuffer.ByValue
+external fun uniffi_mob_fn_method_client_execute_contract(`ptr`: Long,`contractAddress`: RustBuffer.ByValue,`msg`: RustBuffer.ByValue,`funds`: RustBuffer.ByValue,`memo`: RustBuffer.ByValue,`gasLimit`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+): RustBuffer.ByValue
+external fun uniffi_mob_fn_method_client_get_account(`ptr`: Long,`address`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+): RustBuffer.ByValue
+external fun uniffi_mob_fn_method_client_get_all_balances(`ptr`: Long,`address`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+): RustBuffer.ByValue
+external fun uniffi_mob_fn_method_client_get_balance(`ptr`: Long,`address`: RustBuffer.ByValue,`denom`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+): RustBuffer.ByValue
+external fun uniffi_mob_fn_method_client_get_chain_id(`ptr`: Long,uniffi_out_err: UniffiRustCallStatus, 
+): RustBuffer.ByValue
+external fun uniffi_mob_fn_method_client_get_height(`ptr`: Long,uniffi_out_err: UniffiRustCallStatus, 
+): Long
+external fun uniffi_mob_fn_method_client_get_tx(`ptr`: Long,`hash`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+): RustBuffer.ByValue
+external fun uniffi_mob_fn_method_client_has_grants(`ptr`: Long,`granter`: RustBuffer.ByValue,`grantee`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+): Byte
+external fun uniffi_mob_fn_method_client_instantiate_contract(`ptr`: Long,`admin`: RustBuffer.ByValue,`codeId`: Long,`label`: RustBuffer.ByValue,`msg`: RustBuffer.ByValue,`funds`: RustBuffer.ByValue,`memo`: RustBuffer.ByValue,`gasLimit`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+): RustBuffer.ByValue
+external fun uniffi_mob_fn_method_client_is_synced(`ptr`: Long,uniffi_out_err: UniffiRustCallStatus, 
+): Byte
+external fun uniffi_mob_fn_method_client_query_contract_smart(`ptr`: Long,`contractAddress`: RustBuffer.ByValue,`queryMsg`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+): RustBuffer.ByValue
+external fun uniffi_mob_fn_method_client_send(`ptr`: Long,`toAddress`: RustBuffer.ByValue,`amount`: RustBuffer.ByValue,`memo`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+): RustBuffer.ByValue
+external fun uniffi_mob_fn_method_client_sign_and_broadcast_multi(`ptr`: Long,`messages`: RustBuffer.ByValue,`memo`: RustBuffer.ByValue,`gasLimit`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+): RustBuffer.ByValue
+external fun uniffi_mob_fn_method_client_store_code(`ptr`: Long,`wasmByteCode`: RustBuffer.ByValue,`memo`: RustBuffer.ByValue,`gasLimit`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+): RustBuffer.ByValue
+external fun uniffi_mob_fn_clone_cryptosigner(`handle`: Long,uniffi_out_err: UniffiRustCallStatus, 
+): Long
+external fun uniffi_mob_fn_free_cryptosigner(`handle`: Long,uniffi_out_err: UniffiRustCallStatus, 
+): Unit
+external fun uniffi_mob_fn_init_callback_vtable_cryptosigner(`vtable`: UniffiVTableCallbackInterfaceCryptoSigner,
+): Unit
+external fun uniffi_mob_fn_method_cryptosigner_address(`ptr`: Long,uniffi_out_err: UniffiRustCallStatus, 
+): RustBuffer.ByValue
+external fun uniffi_mob_fn_method_cryptosigner_public_key(`ptr`: Long,uniffi_out_err: UniffiRustCallStatus, 
+): RustBuffer.ByValue
+external fun uniffi_mob_fn_method_cryptosigner_address_prefix(`ptr`: Long,uniffi_out_err: UniffiRustCallStatus, 
+): RustBuffer.ByValue
+external fun uniffi_mob_fn_method_cryptosigner_sign_bytes(`ptr`: Long,`message`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+): RustBuffer.ByValue
+external fun uniffi_mob_fn_clone_httptransport(`handle`: Long,uniffi_out_err: UniffiRustCallStatus, 
+): Long
+external fun uniffi_mob_fn_free_httptransport(`handle`: Long,uniffi_out_err: UniffiRustCallStatus, 
+): Unit
+external fun uniffi_mob_fn_init_callback_vtable_httptransport(`vtable`: UniffiVTableCallbackInterfaceHttpTransport,
+): Unit
+external fun uniffi_mob_fn_method_httptransport_post(`ptr`: Long,`url`: RustBuffer.ByValue,`body`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+): RustBuffer.ByValue
+external fun uniffi_mob_fn_clone_mobsessionmanager(`handle`: Long,uniffi_out_err: UniffiRustCallStatus, 
+): Long
+external fun uniffi_mob_fn_free_mobsessionmanager(`handle`: Long,uniffi_out_err: UniffiRustCallStatus, 
+): Unit
+external fun uniffi_mob_fn_constructor_mobsessionmanager_new(`addressPrefix`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+): Long
+external fun uniffi_mob_fn_constructor_mobsessionmanager_restore(`data`: RustBuffer.ByValue,`config`: RustBuffer.ByValue,`transport`: Long,uniffi_out_err: UniffiRustCallStatus, 
+): Long
+external fun uniffi_mob_fn_method_mobsessionmanager_activate(`ptr`: Long,`metadata`: RustBuffer.ByValue,`config`: RustBuffer.ByValue,`transport`: Long,uniffi_out_err: UniffiRustCallStatus, 
+): Unit
+external fun uniffi_mob_fn_method_mobsessionmanager_client(`ptr`: Long,uniffi_out_err: UniffiRustCallStatus, 
+): Long
+external fun uniffi_mob_fn_method_mobsessionmanager_deactivate(`ptr`: Long,uniffi_out_err: UniffiRustCallStatus, 
+): Unit
+external fun uniffi_mob_fn_method_mobsessionmanager_export_session(`ptr`: Long,uniffi_out_err: UniffiRustCallStatus, 
+): RustBuffer.ByValue
+external fun uniffi_mob_fn_method_mobsessionmanager_generate_session_key(`ptr`: Long,uniffi_out_err: UniffiRustCallStatus, 
+): RustBuffer.ByValue
+external fun uniffi_mob_fn_method_mobsessionmanager_grantee_address(`ptr`: Long,uniffi_out_err: UniffiRustCallStatus, 
+): RustBuffer.ByValue
+external fun uniffi_mob_fn_method_mobsessionmanager_granter_address(`ptr`: Long,uniffi_out_err: UniffiRustCallStatus, 
+): RustBuffer.ByValue
+external fun uniffi_mob_fn_method_mobsessionmanager_is_active(`ptr`: Long,uniffi_out_err: UniffiRustCallStatus, 
+): Byte
+external fun uniffi_mob_fn_method_mobsessionmanager_metadata(`ptr`: Long,uniffi_out_err: UniffiRustCallStatus, 
+): RustBuffer.ByValue
+external fun uniffi_mob_fn_method_mobsessionmanager_public_key_hex(`ptr`: Long,uniffi_out_err: UniffiRustCallStatus, 
+): RustBuffer.ByValue
+external fun uniffi_mob_fn_method_mobsessionmanager_sign_bytes(`ptr`: Long,`message`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+): RustBuffer.ByValue
+external fun uniffi_mob_fn_clone_rustsigner(`handle`: Long,uniffi_out_err: UniffiRustCallStatus, 
+): Long
+external fun uniffi_mob_fn_free_rustsigner(`handle`: Long,uniffi_out_err: UniffiRustCallStatus, 
+): Unit
+external fun uniffi_mob_fn_constructor_rustsigner_from_mnemonic(`mnemonic`: RustBuffer.ByValue,`addressPrefix`: RustBuffer.ByValue,`derivationPath`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+): Long
+external fun uniffi_mob_fn_method_rustsigner_address(`ptr`: Long,uniffi_out_err: UniffiRustCallStatus, 
+): RustBuffer.ByValue
+external fun uniffi_mob_fn_method_rustsigner_address_prefix(`ptr`: Long,uniffi_out_err: UniffiRustCallStatus, 
+): RustBuffer.ByValue
+external fun uniffi_mob_fn_method_rustsigner_public_key_hex(`ptr`: Long,uniffi_out_err: UniffiRustCallStatus, 
+): RustBuffer.ByValue
+external fun uniffi_mob_fn_method_rustsigner_sign_bytes(`ptr`: Long,`message`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+): RustBuffer.ByValue
+external fun uniffi_mob_fn_clone_sessionsigner(`handle`: Long,uniffi_out_err: UniffiRustCallStatus, 
+): Long
+external fun uniffi_mob_fn_free_sessionsigner(`handle`: Long,uniffi_out_err: UniffiRustCallStatus, 
+): Unit
+external fun uniffi_mob_fn_constructor_sessionsigner_from_private_key(`privateKey`: RustBuffer.ByValue,`addressPrefix`: RustBuffer.ByValue,`granterAddress`: RustBuffer.ByValue,`durationSeconds`: Long,uniffi_out_err: UniffiRustCallStatus, 
+): Long
+external fun uniffi_mob_fn_constructor_sessionsigner_new(`sessionKey`: Long,`metadata`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+): Long
+external fun uniffi_mob_fn_method_sessionsigner_grantee_address(`ptr`: Long,uniffi_out_err: UniffiRustCallStatus, 
+): RustBuffer.ByValue
+external fun uniffi_mob_fn_method_sessionsigner_granter_address(`ptr`: Long,uniffi_out_err: UniffiRustCallStatus, 
+): RustBuffer.ByValue
+external fun uniffi_mob_fn_method_sessionsigner_is_expired(`ptr`: Long,uniffi_out_err: UniffiRustCallStatus, 
+): Byte
+external fun uniffi_mob_fn_method_sessionsigner_metadata(`ptr`: Long,uniffi_out_err: UniffiRustCallStatus, 
+): RustBuffer.ByValue
+external fun uniffi_mob_fn_method_sessionsigner_public_key_hex(`ptr`: Long,uniffi_out_err: UniffiRustCallStatus, 
+): RustBuffer.ByValue
+external fun uniffi_mob_fn_method_sessionsigner_remaining_seconds(`ptr`: Long,uniffi_out_err: UniffiRustCallStatus, 
+): Long
+external fun ffi_mob_rustbuffer_alloc(`size`: Long,uniffi_out_err: UniffiRustCallStatus, 
+): RustBuffer.ByValue
+external fun ffi_mob_rustbuffer_from_bytes(`bytes`: ForeignBytes.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+): RustBuffer.ByValue
+external fun ffi_mob_rustbuffer_free(`buf`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+): Unit
+external fun ffi_mob_rustbuffer_reserve(`buf`: RustBuffer.ByValue,`additional`: Long,uniffi_out_err: UniffiRustCallStatus, 
+): RustBuffer.ByValue
+external fun ffi_mob_rust_future_poll_u8(`handle`: Long,`callback`: UniffiRustFutureContinuationCallback,`callbackData`: Long,
+): Unit
+external fun ffi_mob_rust_future_cancel_u8(`handle`: Long,
+): Unit
+external fun ffi_mob_rust_future_free_u8(`handle`: Long,
+): Unit
+external fun ffi_mob_rust_future_complete_u8(`handle`: Long,uniffi_out_err: UniffiRustCallStatus, 
+): Byte
+external fun ffi_mob_rust_future_poll_i8(`handle`: Long,`callback`: UniffiRustFutureContinuationCallback,`callbackData`: Long,
+): Unit
+external fun ffi_mob_rust_future_cancel_i8(`handle`: Long,
+): Unit
+external fun ffi_mob_rust_future_free_i8(`handle`: Long,
+): Unit
+external fun ffi_mob_rust_future_complete_i8(`handle`: Long,uniffi_out_err: UniffiRustCallStatus, 
+): Byte
+external fun ffi_mob_rust_future_poll_u16(`handle`: Long,`callback`: UniffiRustFutureContinuationCallback,`callbackData`: Long,
+): Unit
+external fun ffi_mob_rust_future_cancel_u16(`handle`: Long,
+): Unit
+external fun ffi_mob_rust_future_free_u16(`handle`: Long,
+): Unit
+external fun ffi_mob_rust_future_complete_u16(`handle`: Long,uniffi_out_err: UniffiRustCallStatus, 
+): Short
+external fun ffi_mob_rust_future_poll_i16(`handle`: Long,`callback`: UniffiRustFutureContinuationCallback,`callbackData`: Long,
+): Unit
+external fun ffi_mob_rust_future_cancel_i16(`handle`: Long,
+): Unit
+external fun ffi_mob_rust_future_free_i16(`handle`: Long,
+): Unit
+external fun ffi_mob_rust_future_complete_i16(`handle`: Long,uniffi_out_err: UniffiRustCallStatus, 
+): Short
+external fun ffi_mob_rust_future_poll_u32(`handle`: Long,`callback`: UniffiRustFutureContinuationCallback,`callbackData`: Long,
+): Unit
+external fun ffi_mob_rust_future_cancel_u32(`handle`: Long,
+): Unit
+external fun ffi_mob_rust_future_free_u32(`handle`: Long,
+): Unit
+external fun ffi_mob_rust_future_complete_u32(`handle`: Long,uniffi_out_err: UniffiRustCallStatus, 
+): Int
+external fun ffi_mob_rust_future_poll_i32(`handle`: Long,`callback`: UniffiRustFutureContinuationCallback,`callbackData`: Long,
+): Unit
+external fun ffi_mob_rust_future_cancel_i32(`handle`: Long,
+): Unit
+external fun ffi_mob_rust_future_free_i32(`handle`: Long,
+): Unit
+external fun ffi_mob_rust_future_complete_i32(`handle`: Long,uniffi_out_err: UniffiRustCallStatus, 
+): Int
+external fun ffi_mob_rust_future_poll_u64(`handle`: Long,`callback`: UniffiRustFutureContinuationCallback,`callbackData`: Long,
+): Unit
+external fun ffi_mob_rust_future_cancel_u64(`handle`: Long,
+): Unit
+external fun ffi_mob_rust_future_free_u64(`handle`: Long,
+): Unit
+external fun ffi_mob_rust_future_complete_u64(`handle`: Long,uniffi_out_err: UniffiRustCallStatus, 
+): Long
+external fun ffi_mob_rust_future_poll_i64(`handle`: Long,`callback`: UniffiRustFutureContinuationCallback,`callbackData`: Long,
+): Unit
+external fun ffi_mob_rust_future_cancel_i64(`handle`: Long,
+): Unit
+external fun ffi_mob_rust_future_free_i64(`handle`: Long,
+): Unit
+external fun ffi_mob_rust_future_complete_i64(`handle`: Long,uniffi_out_err: UniffiRustCallStatus, 
+): Long
+external fun ffi_mob_rust_future_poll_f32(`handle`: Long,`callback`: UniffiRustFutureContinuationCallback,`callbackData`: Long,
+): Unit
+external fun ffi_mob_rust_future_cancel_f32(`handle`: Long,
+): Unit
+external fun ffi_mob_rust_future_free_f32(`handle`: Long,
+): Unit
+external fun ffi_mob_rust_future_complete_f32(`handle`: Long,uniffi_out_err: UniffiRustCallStatus, 
+): Float
+external fun ffi_mob_rust_future_poll_f64(`handle`: Long,`callback`: UniffiRustFutureContinuationCallback,`callbackData`: Long,
+): Unit
+external fun ffi_mob_rust_future_cancel_f64(`handle`: Long,
+): Unit
+external fun ffi_mob_rust_future_free_f64(`handle`: Long,
+): Unit
+external fun ffi_mob_rust_future_complete_f64(`handle`: Long,uniffi_out_err: UniffiRustCallStatus, 
+): Double
+external fun ffi_mob_rust_future_poll_rust_buffer(`handle`: Long,`callback`: UniffiRustFutureContinuationCallback,`callbackData`: Long,
+): Unit
+external fun ffi_mob_rust_future_cancel_rust_buffer(`handle`: Long,
+): Unit
+external fun ffi_mob_rust_future_free_rust_buffer(`handle`: Long,
+): Unit
+external fun ffi_mob_rust_future_complete_rust_buffer(`handle`: Long,uniffi_out_err: UniffiRustCallStatus, 
+): RustBuffer.ByValue
+external fun ffi_mob_rust_future_poll_void(`handle`: Long,`callback`: UniffiRustFutureContinuationCallback,`callbackData`: Long,
+): Unit
+external fun ffi_mob_rust_future_cancel_void(`handle`: Long,
+): Unit
+external fun ffi_mob_rust_future_free_void(`handle`: Long,
+): Unit
+external fun ffi_mob_rust_future_complete_void(`handle`: Long,uniffi_out_err: UniffiRustCallStatus, 
+): Unit
+
     
-        
 }
 
 private fun uniffiCheckContractApiVersion(lib: IntegrityCheckingUniffiLib) {
@@ -847,10 +1083,22 @@ private fun uniffiCheckContractApiVersion(lib: IntegrityCheckingUniffiLib) {
 }
 @Suppress("UNUSED_PARAMETER")
 private fun uniffiCheckApiChecksums(lib: IntegrityCheckingUniffiLib) {
-    if (lib.uniffi_mob_checksum_method_client_attach_signer() != 52997.toShort()) {
+    if (lib.uniffi_mob_checksum_method_client_attach_signer() != 61507.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_mob_checksum_method_client_execute_contract() != 61272.toShort()) {
+    if (lib.uniffi_mob_checksum_method_client_build_execute_contract_message() != 30392.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_mob_checksum_method_client_build_instantiate_contract_message() != 33987.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_mob_checksum_method_client_build_send_message() != 64106.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_mob_checksum_method_client_build_store_code_message() != 20893.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_mob_checksum_method_client_execute_contract() != 20103.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_mob_checksum_method_client_get_account() != 2621.toShort()) {
@@ -871,31 +1119,133 @@ private fun uniffiCheckApiChecksums(lib: IntegrityCheckingUniffiLib) {
     if (lib.uniffi_mob_checksum_method_client_get_tx() != 58481.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
+    if (lib.uniffi_mob_checksum_method_client_has_grants() != 39626.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_mob_checksum_method_client_instantiate_contract() != 29694.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
     if (lib.uniffi_mob_checksum_method_client_is_synced() != 61050.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_mob_checksum_method_client_send() != 51319.toShort()) {
+    if (lib.uniffi_mob_checksum_method_client_query_contract_smart() != 3339.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_mob_checksum_method_signer_address() != 11665.toShort()) {
+    if (lib.uniffi_mob_checksum_method_client_send() != 9214.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_mob_checksum_method_signer_address_prefix() != 17461.toShort()) {
+    if (lib.uniffi_mob_checksum_method_client_sign_and_broadcast_multi() != 18544.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_mob_checksum_method_signer_public_key_hex() != 30197.toShort()) {
+    if (lib.uniffi_mob_checksum_method_client_store_code() != 6390.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_mob_checksum_method_signer_sign_bytes() != 10133.toShort()) {
+    if (lib.uniffi_mob_checksum_method_cryptosigner_address() != 26285.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_mob_checksum_constructor_client_new() != 24379.toShort()) {
+    if (lib.uniffi_mob_checksum_method_cryptosigner_public_key() != 63498.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_mob_checksum_constructor_client_new_with_signer() != 15565.toShort()) {
+    if (lib.uniffi_mob_checksum_method_cryptosigner_address_prefix() != 58975.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_mob_checksum_constructor_signer_from_mnemonic() != 23747.toShort()) {
+    if (lib.uniffi_mob_checksum_method_cryptosigner_sign_bytes() != 63030.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_mob_checksum_method_httptransport_post() != 8015.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_mob_checksum_method_mobsessionmanager_activate() != 32786.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_mob_checksum_method_mobsessionmanager_client() != 15880.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_mob_checksum_method_mobsessionmanager_deactivate() != 16087.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_mob_checksum_method_mobsessionmanager_export_session() != 9242.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_mob_checksum_method_mobsessionmanager_generate_session_key() != 61614.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_mob_checksum_method_mobsessionmanager_grantee_address() != 36116.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_mob_checksum_method_mobsessionmanager_granter_address() != 63047.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_mob_checksum_method_mobsessionmanager_is_active() != 58476.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_mob_checksum_method_mobsessionmanager_metadata() != 45912.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_mob_checksum_method_mobsessionmanager_public_key_hex() != 27541.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_mob_checksum_method_mobsessionmanager_sign_bytes() != 37567.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_mob_checksum_method_rustsigner_address() != 52484.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_mob_checksum_method_rustsigner_address_prefix() != 57581.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_mob_checksum_method_rustsigner_public_key_hex() != 48526.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_mob_checksum_method_rustsigner_sign_bytes() != 42215.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_mob_checksum_method_sessionsigner_grantee_address() != 6606.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_mob_checksum_method_sessionsigner_granter_address() != 22973.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_mob_checksum_method_sessionsigner_is_expired() != 51098.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_mob_checksum_method_sessionsigner_metadata() != 28392.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_mob_checksum_method_sessionsigner_public_key_hex() != 18161.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_mob_checksum_method_sessionsigner_remaining_seconds() != 37589.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_mob_checksum_constructor_client_new() != 41038.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_mob_checksum_constructor_client_new_with_crypto_signer() != 55426.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_mob_checksum_constructor_client_new_with_session_crypto_signer() != 7442.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_mob_checksum_constructor_client_new_with_session_signer() != 60220.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_mob_checksum_constructor_client_new_with_signer() != 24222.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_mob_checksum_constructor_mobsessionmanager_new() != 56485.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_mob_checksum_constructor_mobsessionmanager_restore() != 38886.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_mob_checksum_constructor_rustsigner_from_mnemonic() != 21154.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_mob_checksum_constructor_sessionsigner_from_private_key() != 47125.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_mob_checksum_constructor_sessionsigner_new() != 51254.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
 }
@@ -989,7 +1339,38 @@ object UniffiWithHandle
  *
  * @suppress
  * */
-object NoHandle
+object NoHandle// Magic number for the Rust proxy to call using the same mechanism as every other method,
+// to free the callback once it's dropped by Rust.
+internal const val IDX_CALLBACK_FREE = 0
+// Callback return codes
+internal const val UNIFFI_CALLBACK_SUCCESS = 0
+internal const val UNIFFI_CALLBACK_ERROR = 1
+internal const val UNIFFI_CALLBACK_UNEXPECTED_ERROR = 2
+
+/**
+ * @suppress
+ */
+public abstract class FfiConverterCallbackInterface<CallbackInterface: Any>: FfiConverter<CallbackInterface, Long> {
+    internal val handleMap = UniffiHandleMap<CallbackInterface>()
+
+    internal fun drop(handle: Long) {
+        handleMap.remove(handle)
+    }
+
+    override fun lift(value: Long): CallbackInterface {
+        return handleMap.get(value)
+    }
+
+    override fun read(buf: ByteBuffer) = lift(buf.getLong())
+
+    override fun lower(value: CallbackInterface) = handleMap.insert(value)
+
+    override fun allocationSize(value: CallbackInterface) = 8UL
+
+    override fun write(value: CallbackInterface, buf: ByteBuffer) {
+        buf.putLong(lower(value))
+    }
+}
 /**
  * The cleaner interface for Object finalization code to run.
  * This is the entry point to any implementation that we're using.
@@ -1322,22 +1703,41 @@ public object FfiConverterByteArray: FfiConverterRustBuffer<ByteArray> {
 //
 /**
  * RPC client for interacting with the blockchain
+ * Only available with "rpc-client" feature (default)
  */
 public interface ClientInterface {
     
     /**
      * Attach a signer to the client
+     *
+     * Note: This method is only available with the `rust-signer` feature.
      */
-    fun `attachSigner`(`signer`: Signer)
+    fun `attachSigner`(`signer`: RustSigner)
     
     /**
-     * Execute a CosmWasm contract (synchronous wrapper).
-     * Mirrors xion.js GranteeSignerClient behavior:
-     * - If `granter` is set, wraps MsgExecuteContract in MsgExec (authz),
-     * using the granter as the contract sender and the signer as the grantee.
-     * - If `fee_granter` is set, the fee granter (e.g. treasury) pays gas.
+     * Build an FFI-safe execute-contract message for use with `sign_and_broadcast_multi`.
      */
-    fun `executeContract`(`contractAddress`: kotlin.String, `msg`: kotlin.ByteArray, `funds`: List<Coin>, `granter`: kotlin.String?, `feeGranter`: kotlin.String?, `memo`: kotlin.String?): TxResponse
+    fun `buildExecuteContractMessage`(`contractAddress`: kotlin.String, `msg`: kotlin.ByteArray, `funds`: List<Coin>): Message
+    
+    /**
+     * Build an FFI-safe instantiate-contract message for use with `sign_and_broadcast_multi`.
+     */
+    fun `buildInstantiateContractMessage`(`admin`: kotlin.String?, `codeId`: kotlin.ULong, `label`: kotlin.String?, `msg`: kotlin.ByteArray, `funds`: List<Coin>): Message
+    
+    /**
+     * Build an FFI-safe send message for use with `sign_and_broadcast_multi`.
+     */
+    fun `buildSendMessage`(`toAddress`: kotlin.String, `amount`: List<Coin>): Message
+    
+    /**
+     * Build an FFI-safe store-code message for use with `sign_and_broadcast_multi`.
+     */
+    fun `buildStoreCodeMessage`(`wasmByteCode`: kotlin.ByteArray): Message
+    
+    /**
+     * Execute a CosmWasm contract (synchronous wrapper)
+     */
+    fun `executeContract`(`contractAddress`: kotlin.String, `msg`: kotlin.ByteArray, `funds`: List<Coin>, `memo`: kotlin.String?, `gasLimit`: kotlin.ULong?): TxResponse
     
     /**
      * Query account information (synchronous wrapper)
@@ -1370,22 +1770,46 @@ public interface ClientInterface {
     fun `getTx`(`hash`: kotlin.String): TxResponse
     
     /**
+     * Check whether authz grants exist between a granter and grantee.
+     */
+    fun `hasGrants`(`granter`: kotlin.String, `grantee`: kotlin.String): kotlin.Boolean
+    
+    /**
+     * Instantiate an uploaded CosmWasm contract (synchronous wrapper)
+     */
+    fun `instantiateContract`(`admin`: kotlin.String?, `codeId`: kotlin.ULong, `label`: kotlin.String?, `msg`: kotlin.ByteArray, `funds`: List<Coin>, `memo`: kotlin.String?, `gasLimit`: kotlin.ULong?): TxResponse
+    
+    /**
      * Check if the node is synced (synchronous wrapper)
      */
     fun `isSynced`(): kotlin.Boolean
     
     /**
-     * Send tokens to a recipient (synchronous wrapper).
-     * If `granter` is set, wraps MsgSend in MsgExec (authz).
-     * If `fee_granter` is set, that account pays gas.
+     * Query a CosmWasm smart contract (read-only, synchronous wrapper)
      */
-    fun `send`(`toAddress`: kotlin.String, `amount`: List<Coin>, `granter`: kotlin.String?, `feeGranter`: kotlin.String?, `memo`: kotlin.String?): TxResponse
+    fun `queryContractSmart`(`contractAddress`: kotlin.String, `queryMsg`: kotlin.ByteArray): kotlin.ByteArray
+    
+    /**
+     * Send tokens to a recipient (synchronous wrapper)
+     */
+    fun `send`(`toAddress`: kotlin.String, `amount`: List<Coin>, `memo`: kotlin.String?): TxResponse
+    
+    /**
+     * Sign and broadcast a transaction with multiple FFI-safe messages (synchronous wrapper)
+     */
+    fun `signAndBroadcastMulti`(`messages`: List<Message>, `memo`: kotlin.String?, `gasLimit`: kotlin.ULong?): TxResponse
+    
+    /**
+     * Store a CosmWasm contract (synchronous wrapper)
+     */
+    fun `storeCode`(`wasmByteCode`: kotlin.ByteArray, `memo`: kotlin.String?, `gasLimit`: kotlin.ULong?): TxResponse
     
     companion object
 }
 
 /**
  * RPC client for interacting with the blockchain
+ * Only available with "rpc-client" feature (default)
  */
 open class Client: Disposable, AutoCloseable, ClientInterface
 {
@@ -1414,12 +1838,12 @@ open class Client: Disposable, AutoCloseable, ClientInterface
     /**
      * Create a new RPC client (synchronous wrapper for FFI)
      */
-    constructor(`config`: ChainConfig) :
+    constructor(`config`: ChainConfig, `transport`: HttpTransport) :
         this(UniffiWithHandle, 
     uniffiRustCallWithError(MobException) { _status ->
     UniffiLib.uniffi_mob_fn_constructor_client_new(
     
-        FfiConverterTypeChainConfig.lower(`config`),_status)
+        FfiConverterTypeChainConfig.lower(`config`),FfiConverterTypeHttpTransport.lower(`transport`),_status)
 }
     )
 
@@ -1497,14 +1921,16 @@ open class Client: Disposable, AutoCloseable, ClientInterface
     
     /**
      * Attach a signer to the client
+     *
+     * Note: This method is only available with the `rust-signer` feature.
      */
-    @Throws(MobException::class)override fun `attachSigner`(`signer`: Signer)
+    @Throws(MobException::class)override fun `attachSigner`(`signer`: RustSigner)
         = 
     callWithHandle {
     uniffiRustCallWithError(MobException) { _status ->
     UniffiLib.uniffi_mob_fn_method_client_attach_signer(
         it,
-        FfiConverterTypeSigner.lower(`signer`),_status)
+        FfiConverterTypeRustSigner.lower(`signer`),_status)
 }
     }
     
@@ -1512,19 +1938,83 @@ open class Client: Disposable, AutoCloseable, ClientInterface
 
     
     /**
-     * Execute a CosmWasm contract (synchronous wrapper).
-     * Mirrors xion.js GranteeSignerClient behavior:
-     * - If `granter` is set, wraps MsgExecuteContract in MsgExec (authz),
-     * using the granter as the contract sender and the signer as the grantee.
-     * - If `fee_granter` is set, the fee granter (e.g. treasury) pays gas.
+     * Build an FFI-safe execute-contract message for use with `sign_and_broadcast_multi`.
      */
-    @Throws(MobException::class)override fun `executeContract`(`contractAddress`: kotlin.String, `msg`: kotlin.ByteArray, `funds`: List<Coin>, `granter`: kotlin.String?, `feeGranter`: kotlin.String?, `memo`: kotlin.String?): TxResponse {
+    @Throws(MobException::class)override fun `buildExecuteContractMessage`(`contractAddress`: kotlin.String, `msg`: kotlin.ByteArray, `funds`: List<Coin>): Message {
+            return FfiConverterTypeMessage.lift(
+    callWithHandle {
+    uniffiRustCallWithError(MobException) { _status ->
+    UniffiLib.uniffi_mob_fn_method_client_build_execute_contract_message(
+        it,
+        FfiConverterString.lower(`contractAddress`),FfiConverterByteArray.lower(`msg`),FfiConverterSequenceTypeCoin.lower(`funds`),_status)
+}
+    }
+    )
+    }
+    
+
+    
+    /**
+     * Build an FFI-safe instantiate-contract message for use with `sign_and_broadcast_multi`.
+     */
+    @Throws(MobException::class)override fun `buildInstantiateContractMessage`(`admin`: kotlin.String?, `codeId`: kotlin.ULong, `label`: kotlin.String?, `msg`: kotlin.ByteArray, `funds`: List<Coin>): Message {
+            return FfiConverterTypeMessage.lift(
+    callWithHandle {
+    uniffiRustCallWithError(MobException) { _status ->
+    UniffiLib.uniffi_mob_fn_method_client_build_instantiate_contract_message(
+        it,
+        FfiConverterOptionalString.lower(`admin`),FfiConverterULong.lower(`codeId`),FfiConverterOptionalString.lower(`label`),FfiConverterByteArray.lower(`msg`),FfiConverterSequenceTypeCoin.lower(`funds`),_status)
+}
+    }
+    )
+    }
+    
+
+    
+    /**
+     * Build an FFI-safe send message for use with `sign_and_broadcast_multi`.
+     */
+    @Throws(MobException::class)override fun `buildSendMessage`(`toAddress`: kotlin.String, `amount`: List<Coin>): Message {
+            return FfiConverterTypeMessage.lift(
+    callWithHandle {
+    uniffiRustCallWithError(MobException) { _status ->
+    UniffiLib.uniffi_mob_fn_method_client_build_send_message(
+        it,
+        FfiConverterString.lower(`toAddress`),FfiConverterSequenceTypeCoin.lower(`amount`),_status)
+}
+    }
+    )
+    }
+    
+
+    
+    /**
+     * Build an FFI-safe store-code message for use with `sign_and_broadcast_multi`.
+     */
+    @Throws(MobException::class)override fun `buildStoreCodeMessage`(`wasmByteCode`: kotlin.ByteArray): Message {
+            return FfiConverterTypeMessage.lift(
+    callWithHandle {
+    uniffiRustCallWithError(MobException) { _status ->
+    UniffiLib.uniffi_mob_fn_method_client_build_store_code_message(
+        it,
+        FfiConverterByteArray.lower(`wasmByteCode`),_status)
+}
+    }
+    )
+    }
+    
+
+    
+    /**
+     * Execute a CosmWasm contract (synchronous wrapper)
+     */
+    @Throws(MobException::class)override fun `executeContract`(`contractAddress`: kotlin.String, `msg`: kotlin.ByteArray, `funds`: List<Coin>, `memo`: kotlin.String?, `gasLimit`: kotlin.ULong?): TxResponse {
             return FfiConverterTypeTxResponse.lift(
     callWithHandle {
     uniffiRustCallWithError(MobException) { _status ->
     UniffiLib.uniffi_mob_fn_method_client_execute_contract(
         it,
-        FfiConverterString.lower(`contractAddress`),FfiConverterByteArray.lower(`msg`),FfiConverterSequenceTypeCoin.lower(`funds`),FfiConverterOptionalString.lower(`granter`),FfiConverterOptionalString.lower(`feeGranter`),FfiConverterOptionalString.lower(`memo`),_status)
+        FfiConverterString.lower(`contractAddress`),FfiConverterByteArray.lower(`msg`),FfiConverterSequenceTypeCoin.lower(`funds`),FfiConverterOptionalString.lower(`memo`),FfiConverterOptionalULong.lower(`gasLimit`),_status)
 }
     }
     )
@@ -1635,6 +2125,40 @@ open class Client: Disposable, AutoCloseable, ClientInterface
 
     
     /**
+     * Check whether authz grants exist between a granter and grantee.
+     */
+    @Throws(MobException::class)override fun `hasGrants`(`granter`: kotlin.String, `grantee`: kotlin.String): kotlin.Boolean {
+            return FfiConverterBoolean.lift(
+    callWithHandle {
+    uniffiRustCallWithError(MobException) { _status ->
+    UniffiLib.uniffi_mob_fn_method_client_has_grants(
+        it,
+        FfiConverterString.lower(`granter`),FfiConverterString.lower(`grantee`),_status)
+}
+    }
+    )
+    }
+    
+
+    
+    /**
+     * Instantiate an uploaded CosmWasm contract (synchronous wrapper)
+     */
+    @Throws(MobException::class)override fun `instantiateContract`(`admin`: kotlin.String?, `codeId`: kotlin.ULong, `label`: kotlin.String?, `msg`: kotlin.ByteArray, `funds`: List<Coin>, `memo`: kotlin.String?, `gasLimit`: kotlin.ULong?): TxResponse {
+            return FfiConverterTypeTxResponse.lift(
+    callWithHandle {
+    uniffiRustCallWithError(MobException) { _status ->
+    UniffiLib.uniffi_mob_fn_method_client_instantiate_contract(
+        it,
+        FfiConverterOptionalString.lower(`admin`),FfiConverterULong.lower(`codeId`),FfiConverterOptionalString.lower(`label`),FfiConverterByteArray.lower(`msg`),FfiConverterSequenceTypeCoin.lower(`funds`),FfiConverterOptionalString.lower(`memo`),FfiConverterOptionalULong.lower(`gasLimit`),_status)
+}
+    }
+    )
+    }
+    
+
+    
+    /**
      * Check if the node is synced (synchronous wrapper)
      */
     @Throws(MobException::class)override fun `isSynced`(): kotlin.Boolean {
@@ -1652,17 +2176,66 @@ open class Client: Disposable, AutoCloseable, ClientInterface
 
     
     /**
-     * Send tokens to a recipient (synchronous wrapper).
-     * If `granter` is set, wraps MsgSend in MsgExec (authz).
-     * If `fee_granter` is set, that account pays gas.
+     * Query a CosmWasm smart contract (read-only, synchronous wrapper)
      */
-    @Throws(MobException::class)override fun `send`(`toAddress`: kotlin.String, `amount`: List<Coin>, `granter`: kotlin.String?, `feeGranter`: kotlin.String?, `memo`: kotlin.String?): TxResponse {
+    @Throws(MobException::class)override fun `queryContractSmart`(`contractAddress`: kotlin.String, `queryMsg`: kotlin.ByteArray): kotlin.ByteArray {
+            return FfiConverterByteArray.lift(
+    callWithHandle {
+    uniffiRustCallWithError(MobException) { _status ->
+    UniffiLib.uniffi_mob_fn_method_client_query_contract_smart(
+        it,
+        FfiConverterString.lower(`contractAddress`),FfiConverterByteArray.lower(`queryMsg`),_status)
+}
+    }
+    )
+    }
+    
+
+    
+    /**
+     * Send tokens to a recipient (synchronous wrapper)
+     */
+    @Throws(MobException::class)override fun `send`(`toAddress`: kotlin.String, `amount`: List<Coin>, `memo`: kotlin.String?): TxResponse {
             return FfiConverterTypeTxResponse.lift(
     callWithHandle {
     uniffiRustCallWithError(MobException) { _status ->
     UniffiLib.uniffi_mob_fn_method_client_send(
         it,
-        FfiConverterString.lower(`toAddress`),FfiConverterSequenceTypeCoin.lower(`amount`),FfiConverterOptionalString.lower(`granter`),FfiConverterOptionalString.lower(`feeGranter`),FfiConverterOptionalString.lower(`memo`),_status)
+        FfiConverterString.lower(`toAddress`),FfiConverterSequenceTypeCoin.lower(`amount`),FfiConverterOptionalString.lower(`memo`),_status)
+}
+    }
+    )
+    }
+    
+
+    
+    /**
+     * Sign and broadcast a transaction with multiple FFI-safe messages (synchronous wrapper)
+     */
+    @Throws(MobException::class)override fun `signAndBroadcastMulti`(`messages`: List<Message>, `memo`: kotlin.String?, `gasLimit`: kotlin.ULong?): TxResponse {
+            return FfiConverterTypeTxResponse.lift(
+    callWithHandle {
+    uniffiRustCallWithError(MobException) { _status ->
+    UniffiLib.uniffi_mob_fn_method_client_sign_and_broadcast_multi(
+        it,
+        FfiConverterSequenceTypeMessage.lower(`messages`),FfiConverterOptionalString.lower(`memo`),FfiConverterOptionalULong.lower(`gasLimit`),_status)
+}
+    }
+    )
+    }
+    
+
+    
+    /**
+     * Store a CosmWasm contract (synchronous wrapper)
+     */
+    @Throws(MobException::class)override fun `storeCode`(`wasmByteCode`: kotlin.ByteArray, `memo`: kotlin.String?, `gasLimit`: kotlin.ULong?): TxResponse {
+            return FfiConverterTypeTxResponse.lift(
+    callWithHandle {
+    uniffiRustCallWithError(MobException) { _status ->
+    UniffiLib.uniffi_mob_fn_method_client_store_code(
+        it,
+        FfiConverterByteArray.lower(`wasmByteCode`),FfiConverterOptionalString.lower(`memo`),FfiConverterOptionalULong.lower(`gasLimit`),_status)
 }
     }
     )
@@ -1678,14 +2251,67 @@ open class Client: Disposable, AutoCloseable, ClientInterface
     companion object {
         
     /**
-     * Create a new RPC client with a signer attached (synchronous wrapper for FFI)
+     * Create a new RPC client with any CryptoSigner implementation attached.
+     *
+     * This accepts foreign (Swift/Kotlin/Python) CryptoSigner implementations,
+     * enabling platform-native cryptographic backends.
      */
-    @Throws(MobException::class) fun `newWithSigner`(`config`: ChainConfig, `signer`: Signer): Client {
+    @Throws(MobException::class) fun `newWithCryptoSigner`(`config`: ChainConfig, `signer`: CryptoSigner, `transport`: HttpTransport): Client {
+            return FfiConverterTypeClient.lift(
+    uniffiRustCallWithError(MobException) { _status ->
+    UniffiLib.uniffi_mob_fn_constructor_client_new_with_crypto_signer(
+    
+        FfiConverterTypeChainConfig.lower(`config`),FfiConverterTypeCryptoSigner.lower(`signer`),FfiConverterTypeHttpTransport.lower(`transport`),_status)
+}
+    )
+    }
+    
+
+        
+    /**
+     * Create a new RPC client with a session-aware CryptoSigner attached.
+     *
+     * This accepts foreign (Swift/Kotlin/Python) CryptoSigner implementations
+     * and applies session/authz semantics in Rust.
+     */
+    @Throws(MobException::class) fun `newWithSessionCryptoSigner`(`config`: ChainConfig, `signer`: CryptoSigner, `metadata`: SessionMetadata, `transport`: HttpTransport): Client {
+            return FfiConverterTypeClient.lift(
+    uniffiRustCallWithError(MobException) { _status ->
+    UniffiLib.uniffi_mob_fn_constructor_client_new_with_session_crypto_signer(
+    
+        FfiConverterTypeChainConfig.lower(`config`),FfiConverterTypeCryptoSigner.lower(`signer`),FfiConverterTypeSessionMetadata.lower(`metadata`),FfiConverterTypeHttpTransport.lower(`transport`),_status)
+}
+    )
+    }
+    
+
+        
+    /**
+     * Create a new RPC client with a RustSigner attached in session/authz mode.
+     */
+    @Throws(MobException::class) fun `newWithSessionSigner`(`config`: ChainConfig, `signer`: RustSigner, `metadata`: SessionMetadata, `transport`: HttpTransport): Client {
+            return FfiConverterTypeClient.lift(
+    uniffiRustCallWithError(MobException) { _status ->
+    UniffiLib.uniffi_mob_fn_constructor_client_new_with_session_signer(
+    
+        FfiConverterTypeChainConfig.lower(`config`),FfiConverterTypeRustSigner.lower(`signer`),FfiConverterTypeSessionMetadata.lower(`metadata`),FfiConverterTypeHttpTransport.lower(`transport`),_status)
+}
+    )
+    }
+    
+
+        
+    /**
+     * Create a new RPC client with a RustSigner attached (synchronous wrapper for FFI)
+     *
+     * Note: This constructor is only available with the `rust-signer` feature.
+     */
+    @Throws(MobException::class) fun `newWithSigner`(`config`: ChainConfig, `signer`: RustSigner, `transport`: HttpTransport): Client {
             return FfiConverterTypeClient.lift(
     uniffiRustCallWithError(MobException) { _status ->
     UniffiLib.uniffi_mob_fn_constructor_client_new_with_signer(
     
-        FfiConverterTypeChainConfig.lower(`config`),FfiConverterTypeSigner.lower(`signer`),_status)
+        FfiConverterTypeChainConfig.lower(`config`),FfiConverterTypeRustSigner.lower(`signer`),FfiConverterTypeHttpTransport.lower(`transport`),_status)
 }
     )
     }
@@ -1818,27 +2444,93 @@ public object FfiConverterTypeClient: FfiConverter<Client, Long> {
 
 //
 /**
- * A signer that manages keys and can sign transactions
+ * Trait for cryptographic signing operations
+ *
+ * This trait defines the core signing interface that can be implemented
+ * in Rust or in foreign languages (Python, Swift, Kotlin, etc.) to provide
+ * custom cryptographic implementations.
+ *
+ * # Requirements
+ *
+ * Implementations MUST:
+ * - Return compressed secp256k1 public keys (33 bytes, format: 0x02/0x03 + 32-byte X coordinate)
+ * - Sign SHA256 prehashed messages
+ * - Return normalized secp256k1 signatures (64 bytes, r||s in big-endian, low-S form)
+ * - Be thread-safe (Send + Sync)
+ *
+ * # Example
+ *
+ * ```rust,no_run
+ * use mob::{CryptoSigner, SignerError};
+ * use std::sync::Arc;
+ *
+ * struct MyCryptoSigner {
+ * address: String,
+ * pub_key: Vec<u8>,
+ * prefix: String,
+ * }
+ *
+ * impl CryptoSigner for MyCryptoSigner {
+ * fn address(&self) -> String {
+ * self.address.clone()
+ * }
+ *
+ * fn public_key(&self) -> Vec<u8> {
+ * self.pub_key.clone()
+ * }
+ *
+ * fn address_prefix(&self) -> String {
+ * self.prefix.clone()
+ * }
+ *
+ * fn sign_bytes(&self, message: Vec<u8>) -> std::result::Result<Vec<u8>, SignerError> {
+ * // Custom signing implementation
+ * Ok(vec![0u8; 64]) // Return 64-byte signature
+ * }
+ * }
+ * ```
  */
-public interface SignerInterface {
+public interface CryptoSigner {
     
     /**
-     * Get the signer's address
+     * Get the signer's bech32 address
+     *
+     * Returns the address string (e.g., "xion1abc...")
      */
     fun `address`(): kotlin.String
     
     /**
+     * Get the signer's compressed secp256k1 public key
+     *
+     * Returns 33 bytes in compressed format:
+     * - First byte: 0x02 (even Y) or 0x03 (odd Y)
+     * - Remaining 32 bytes: X coordinate
+     */
+    fun `publicKey`(): kotlin.ByteArray
+    
+    /**
      * Get the address prefix
+     *
+     * Returns the bech32 prefix (e.g., "xion")
      */
     fun `addressPrefix`(): kotlin.String
     
     /**
-     * Get the signer's public key as hex
-     */
-    fun `publicKeyHex`(): kotlin.String
-    
-    /**
-     * Sign arbitrary bytes
+     * Sign arbitrary bytes with secp256k1 ECDSA
+     *
+     * # Parameters
+     * - `message`: The message bytes to sign
+     *
+     * # Returns
+     * 64-byte signature in format: r (32 bytes) || s (32 bytes)
+     * - r and s are big-endian encoded
+     * - Signature MUST be normalized to low-S form (s <= curve_order / 2)
+     *
+     * # Implementation Notes
+     * 1. Hash the message with SHA256
+     * 2. Sign the hash with secp256k1 ECDSA
+     * 3. Normalize the signature to low-S form
+     * 4. Return r||s as 64 bytes
      */
     fun `signBytes`(`message`: kotlin.ByteArray): kotlin.ByteArray
     
@@ -1846,9 +2538,53 @@ public interface SignerInterface {
 }
 
 /**
- * A signer that manages keys and can sign transactions
+ * Trait for cryptographic signing operations
+ *
+ * This trait defines the core signing interface that can be implemented
+ * in Rust or in foreign languages (Python, Swift, Kotlin, etc.) to provide
+ * custom cryptographic implementations.
+ *
+ * # Requirements
+ *
+ * Implementations MUST:
+ * - Return compressed secp256k1 public keys (33 bytes, format: 0x02/0x03 + 32-byte X coordinate)
+ * - Sign SHA256 prehashed messages
+ * - Return normalized secp256k1 signatures (64 bytes, r||s in big-endian, low-S form)
+ * - Be thread-safe (Send + Sync)
+ *
+ * # Example
+ *
+ * ```rust,no_run
+ * use mob::{CryptoSigner, SignerError};
+ * use std::sync::Arc;
+ *
+ * struct MyCryptoSigner {
+ * address: String,
+ * pub_key: Vec<u8>,
+ * prefix: String,
+ * }
+ *
+ * impl CryptoSigner for MyCryptoSigner {
+ * fn address(&self) -> String {
+ * self.address.clone()
+ * }
+ *
+ * fn public_key(&self) -> Vec<u8> {
+ * self.pub_key.clone()
+ * }
+ *
+ * fn address_prefix(&self) -> String {
+ * self.prefix.clone()
+ * }
+ *
+ * fn sign_bytes(&self, message: Vec<u8>) -> std::result::Result<Vec<u8>, SignerError> {
+ * // Custom signing implementation
+ * Ok(vec![0u8; 64]) // Return 64-byte signature
+ * }
+ * }
+ * ```
  */
-open class Signer: Disposable, AutoCloseable, SignerInterface
+open class CryptoSignerImpl: Disposable, AutoCloseable, CryptoSigner
 {
 
     @Suppress("UNUSED_PARAMETER")
@@ -1927,7 +2663,7 @@ open class Signer: Disposable, AutoCloseable, SignerInterface
                 return;
             }
             uniffiRustCall { status ->
-                UniffiLib.uniffi_mob_fn_free_signer(handle, status)
+                UniffiLib.uniffi_mob_fn_free_cryptosigner(handle, status)
             }
         }
     }
@@ -1940,7 +2676,1370 @@ open class Signer: Disposable, AutoCloseable, SignerInterface
             throw InternalException("uniffiCloneHandle() called on NoHandle object");
         }
         return uniffiRustCall() { status ->
-            UniffiLib.uniffi_mob_fn_clone_signer(handle, status)
+            UniffiLib.uniffi_mob_fn_clone_cryptosigner(handle, status)
+        }
+    }
+
+    
+    /**
+     * Get the signer's bech32 address
+     *
+     * Returns the address string (e.g., "xion1abc...")
+     */override fun `address`(): kotlin.String {
+            return FfiConverterString.lift(
+    callWithHandle {
+    uniffiRustCall() { _status ->
+    UniffiLib.uniffi_mob_fn_method_cryptosigner_address(
+        it,
+        _status)
+}
+    }
+    )
+    }
+    
+
+    
+    /**
+     * Get the signer's compressed secp256k1 public key
+     *
+     * Returns 33 bytes in compressed format:
+     * - First byte: 0x02 (even Y) or 0x03 (odd Y)
+     * - Remaining 32 bytes: X coordinate
+     */override fun `publicKey`(): kotlin.ByteArray {
+            return FfiConverterByteArray.lift(
+    callWithHandle {
+    uniffiRustCall() { _status ->
+    UniffiLib.uniffi_mob_fn_method_cryptosigner_public_key(
+        it,
+        _status)
+}
+    }
+    )
+    }
+    
+
+    
+    /**
+     * Get the address prefix
+     *
+     * Returns the bech32 prefix (e.g., "xion")
+     */override fun `addressPrefix`(): kotlin.String {
+            return FfiConverterString.lift(
+    callWithHandle {
+    uniffiRustCall() { _status ->
+    UniffiLib.uniffi_mob_fn_method_cryptosigner_address_prefix(
+        it,
+        _status)
+}
+    }
+    )
+    }
+    
+
+    
+    /**
+     * Sign arbitrary bytes with secp256k1 ECDSA
+     *
+     * # Parameters
+     * - `message`: The message bytes to sign
+     *
+     * # Returns
+     * 64-byte signature in format: r (32 bytes) || s (32 bytes)
+     * - r and s are big-endian encoded
+     * - Signature MUST be normalized to low-S form (s <= curve_order / 2)
+     *
+     * # Implementation Notes
+     * 1. Hash the message with SHA256
+     * 2. Sign the hash with secp256k1 ECDSA
+     * 3. Normalize the signature to low-S form
+     * 4. Return r||s as 64 bytes
+     */
+    @Throws(SignerException::class)override fun `signBytes`(`message`: kotlin.ByteArray): kotlin.ByteArray {
+            return FfiConverterByteArray.lift(
+    callWithHandle {
+    uniffiRustCallWithError(SignerException) { _status ->
+    UniffiLib.uniffi_mob_fn_method_cryptosigner_sign_bytes(
+        it,
+        FfiConverterByteArray.lower(`message`),_status)
+}
+    }
+    )
+    }
+    
+
+    
+
+    
+
+
+    
+    
+    /**
+     * @suppress
+     */
+    companion object
+    
+}
+
+
+
+// Put the implementation in an object so we don't pollute the top-level namespace
+internal object uniffiCallbackInterfaceCryptoSigner {
+    internal object `address`: UniffiCallbackInterfaceCryptoSignerMethod0 {
+        override fun callback(`uniffiHandle`: Long,`uniffiOutReturn`: RustBuffer,uniffiCallStatus: UniffiRustCallStatus,) {
+            val uniffiObj = FfiConverterTypeCryptoSigner.handleMap.get(uniffiHandle)
+            val makeCall = { ->
+                uniffiObj.`address`(
+                )
+            }
+            val writeReturn = { value: kotlin.String -> uniffiOutReturn.setValue(FfiConverterString.lower(value)) }
+            uniffiTraitInterfaceCall(uniffiCallStatus, makeCall, writeReturn)
+        }
+    }
+    internal object `publicKey`: UniffiCallbackInterfaceCryptoSignerMethod1 {
+        override fun callback(`uniffiHandle`: Long,`uniffiOutReturn`: RustBuffer,uniffiCallStatus: UniffiRustCallStatus,) {
+            val uniffiObj = FfiConverterTypeCryptoSigner.handleMap.get(uniffiHandle)
+            val makeCall = { ->
+                uniffiObj.`publicKey`(
+                )
+            }
+            val writeReturn = { value: kotlin.ByteArray -> uniffiOutReturn.setValue(FfiConverterByteArray.lower(value)) }
+            uniffiTraitInterfaceCall(uniffiCallStatus, makeCall, writeReturn)
+        }
+    }
+    internal object `addressPrefix`: UniffiCallbackInterfaceCryptoSignerMethod2 {
+        override fun callback(`uniffiHandle`: Long,`uniffiOutReturn`: RustBuffer,uniffiCallStatus: UniffiRustCallStatus,) {
+            val uniffiObj = FfiConverterTypeCryptoSigner.handleMap.get(uniffiHandle)
+            val makeCall = { ->
+                uniffiObj.`addressPrefix`(
+                )
+            }
+            val writeReturn = { value: kotlin.String -> uniffiOutReturn.setValue(FfiConverterString.lower(value)) }
+            uniffiTraitInterfaceCall(uniffiCallStatus, makeCall, writeReturn)
+        }
+    }
+    internal object `signBytes`: UniffiCallbackInterfaceCryptoSignerMethod3 {
+        override fun callback(`uniffiHandle`: Long,`message`: RustBuffer.ByValue,`uniffiOutReturn`: RustBuffer,uniffiCallStatus: UniffiRustCallStatus,) {
+            val uniffiObj = FfiConverterTypeCryptoSigner.handleMap.get(uniffiHandle)
+            val makeCall = { ->
+                uniffiObj.`signBytes`(
+                    FfiConverterByteArray.lift(`message`),
+                )
+            }
+            val writeReturn = { value: kotlin.ByteArray -> uniffiOutReturn.setValue(FfiConverterByteArray.lower(value)) }
+            uniffiTraitInterfaceCallWithError(
+                uniffiCallStatus,
+                makeCall,
+                writeReturn,
+                { e: SignerException -> FfiConverterTypeSignerError.lower(e) }
+            )
+        }
+    }
+
+    internal object uniffiFree: UniffiCallbackInterfaceFree {
+        override fun callback(handle: Long) {
+            FfiConverterTypeCryptoSigner.handleMap.remove(handle)
+        }
+    }
+
+    internal object uniffiClone: UniffiCallbackInterfaceClone {
+        override fun callback(handle: Long): Long {
+            return FfiConverterTypeCryptoSigner.handleMap.clone(handle)
+        }
+    }
+
+    internal var vtable = UniffiVTableCallbackInterfaceCryptoSigner.UniffiByValue(
+        uniffiFree,
+        uniffiClone,
+        `address`,
+        `publicKey`,
+        `addressPrefix`,
+        `signBytes`,
+    )
+
+    // Registers the foreign callback with the Rust side.
+    // This method is generated for each callback interface.
+    internal fun register(lib: UniffiLib) {
+        lib.uniffi_mob_fn_init_callback_vtable_cryptosigner(vtable)
+    }
+}
+
+/**
+ * @suppress
+ */
+public object FfiConverterTypeCryptoSigner: FfiConverter<CryptoSigner, Long> {
+    internal val handleMap = UniffiHandleMap<CryptoSigner>()
+
+    override fun lower(value: CryptoSigner): Long {
+        if (value is CryptoSignerImpl) {
+             // Rust-implemented object.  Clone the handle and return it
+            return value.uniffiCloneHandle()
+         } else {
+            // Kotlin object, generate a new vtable handle and return that.
+            return handleMap.insert(value)
+         }
+    }
+
+    override fun lift(value: Long): CryptoSigner {
+        if ((value and 1.toLong()) == 0.toLong()) {
+            // Rust-generated handle, construct a new class that uses the handle to implement the
+            // interface
+            return CryptoSignerImpl(UniffiWithHandle, value)
+        } else {
+            // Kotlin-generated handle, get the object from the handle map
+            return handleMap.remove(value)
+        }
+    }
+
+    override fun read(buf: ByteBuffer): CryptoSigner {
+        return lift(buf.getLong())
+    }
+
+    override fun allocationSize(value: CryptoSigner) = 8UL
+
+    override fun write(value: CryptoSigner, buf: ByteBuffer) {
+        buf.putLong(lower(value))
+    }
+}
+
+
+// This template implements a class for working with a Rust struct via a handle
+// to the live Rust struct on the other side of the FFI.
+//
+// There's some subtlety here, because we have to be careful not to operate on a Rust
+// struct after it has been dropped, and because we must expose a public API for freeing
+// theq Kotlin wrapper object in lieu of reliable finalizers. The core requirements are:
+//
+//   * Each instance holds an opaque handle to the underlying Rust struct.
+//     Method calls need to read this handle from the object's state and pass it in to
+//     the Rust FFI.
+//
+//   * When an instance is no longer needed, its handle should be passed to a
+//     special destructor function provided by the Rust FFI, which will drop the
+//     underlying Rust struct.
+//
+//   * Given an instance, calling code is expected to call the special
+//     `destroy` method in order to free it after use, either by calling it explicitly
+//     or by using a higher-level helper like the `use` method. Failing to do so risks
+//     leaking the underlying Rust struct.
+//
+//   * We can't assume that calling code will do the right thing, and must be prepared
+//     to handle Kotlin method calls executing concurrently with or even after a call to
+//     `destroy`, and to handle multiple (possibly concurrent!) calls to `destroy`.
+//
+//   * We must never allow Rust code to operate on the underlying Rust struct after
+//     the destructor has been called, and must never call the destructor more than once.
+//     Doing so may trigger memory unsafety.
+//
+//   * To mitigate many of the risks of leaking memory and use-after-free unsafety, a `Cleaner`
+//     is implemented to call the destructor when the Kotlin object becomes unreachable.
+//     This is done in a background thread. This is not a panacea, and client code should be aware that
+//      1. the thread may starve if some there are objects that have poorly performing
+//     `drop` methods or do significant work in their `drop` methods.
+//      2. the thread is shared across the whole library. This can be tuned by using `android_cleaner = true`,
+//         or `android = true` in the [`kotlin` section of the `uniffi.toml` file](https://mozilla.github.io/uniffi-rs/kotlin/configuration.html).
+//
+// If we try to implement this with mutual exclusion on access to the handle, there is the
+// possibility of a race between a method call and a concurrent call to `destroy`:
+//
+//    * Thread A starts a method call, reads the value of the handle, but is interrupted
+//      before it can pass the handle over the FFI to Rust.
+//    * Thread B calls `destroy` and frees the underlying Rust struct.
+//    * Thread A resumes, passing the already-read handle value to Rust and triggering
+//      a use-after-free.
+//
+// One possible solution would be to use a `ReadWriteLock`, with each method call taking
+// a read lock (and thus allowed to run concurrently) and the special `destroy` method
+// taking a write lock (and thus blocking on live method calls). However, we aim not to
+// generate methods with any hidden blocking semantics, and a `destroy` method that might
+// block if called incorrectly seems to meet that bar.
+//
+// So, we achieve our goals by giving each instance an associated `AtomicLong` counter to track
+// the number of in-flight method calls, and an `AtomicBoolean` flag to indicate whether `destroy`
+// has been called. These are updated according to the following rules:
+//
+//    * The initial value of the counter is 1, indicating a live object with no in-flight calls.
+//      The initial value for the flag is false.
+//
+//    * At the start of each method call, we atomically check the counter.
+//      If it is 0 then the underlying Rust struct has already been destroyed and the call is aborted.
+//      If it is nonzero them we atomically increment it by 1 and proceed with the method call.
+//
+//    * At the end of each method call, we atomically decrement and check the counter.
+//      If it has reached zero then we destroy the underlying Rust struct.
+//
+//    * When `destroy` is called, we atomically flip the flag from false to true.
+//      If the flag was already true we silently fail.
+//      Otherwise we atomically decrement and check the counter.
+//      If it has reached zero then we destroy the underlying Rust struct.
+//
+// Astute readers may observe that this all sounds very similar to the way that Rust's `Arc<T>` works,
+// and indeed it is, with the addition of a flag to guard against multiple calls to `destroy`.
+//
+// The overall effect is that the underlying Rust struct is destroyed only when `destroy` has been
+// called *and* all in-flight method calls have completed, avoiding violating any of the expectations
+// of the underlying Rust code.
+//
+// This makes a cleaner a better alternative to _not_ calling `destroy()` as
+// and when the object is finished with, but the abstraction is not perfect: if the Rust object's `drop`
+// method is slow, and/or there are many objects to cleanup, and it's on a low end Android device, then the cleaner
+// thread may be starved, and the app will leak memory.
+//
+// In this case, `destroy`ing manually may be a better solution.
+//
+// The cleaner can live side by side with the manual calling of `destroy`. In the order of responsiveness, uniffi objects
+// with Rust peers are reclaimed:
+//
+// 1. By calling the `destroy` method of the object, which calls `rustObject.free()`. If that doesn't happen:
+// 2. When the object becomes unreachable, AND the Cleaner thread gets to call `rustObject.free()`. If the thread is starved then:
+// 3. The memory is reclaimed when the process terminates.
+//
+// [1] https://stackoverflow.com/questions/24376768/can-java-finalize-an-object-when-it-is-still-in-scope/24380219
+//
+
+
+//
+/**
+ * Trait for HTTP transport operations.
+ *
+ * Implement this in native code (Swift/Kotlin/Python) to use platform-native
+ * HTTP clients (URLSession, OkHttp, etc.) with their own TLS stacks.
+ *
+ * The transport is used by `NativeRpcClient` to send JSON-RPC requests
+ * to a Tendermint RPC endpoint.
+ */
+public interface HttpTransport {
+    
+    /**
+     * POST a JSON body to the given URL and return the response bytes.
+     *
+     * # Parameters
+     * - `url`: The full URL to POST to (e.g., "https://rpc.example.com:443")
+     * - `body`: The JSON-RPC request body as raw bytes
+     *
+     * # Returns
+     * The response body as raw bytes on success.
+     */
+    fun `post`(`url`: kotlin.String, `body`: kotlin.ByteArray): kotlin.ByteArray
+    
+    companion object
+}
+
+/**
+ * Trait for HTTP transport operations.
+ *
+ * Implement this in native code (Swift/Kotlin/Python) to use platform-native
+ * HTTP clients (URLSession, OkHttp, etc.) with their own TLS stacks.
+ *
+ * The transport is used by `NativeRpcClient` to send JSON-RPC requests
+ * to a Tendermint RPC endpoint.
+ */
+open class HttpTransportImpl: Disposable, AutoCloseable, HttpTransport
+{
+
+    @Suppress("UNUSED_PARAMETER")
+    /**
+     * @suppress
+     */
+    constructor(withHandle: UniffiWithHandle, handle: Long) {
+        this.handle = handle
+        this.cleanable = UniffiLib.CLEANER.register(this, UniffiCleanAction(handle))
+    }
+
+    /**
+     * @suppress
+     *
+     * This constructor can be used to instantiate a fake object. Only used for tests. Any
+     * attempt to actually use an object constructed this way will fail as there is no
+     * connected Rust object.
+     */
+    @Suppress("UNUSED_PARAMETER")
+    constructor(noHandle: NoHandle) {
+        this.handle = 0
+        this.cleanable = UniffiLib.CLEANER.register(this, UniffiCleanAction(handle))
+    }
+
+    protected val handle: Long
+    protected val cleanable: UniffiCleaner.Cleanable
+
+    private val wasDestroyed = AtomicBoolean(false)
+    private val callCounter = AtomicLong(1)
+
+    override fun destroy() {
+        // Only allow a single call to this method.
+        // TODO: maybe we should log a warning if called more than once?
+        if (this.wasDestroyed.compareAndSet(false, true)) {
+            // This decrement always matches the initial count of 1 given at creation time.
+            if (this.callCounter.decrementAndGet() == 0L) {
+                cleanable.clean()
+            }
+        }
+    }
+
+    @Synchronized
+    override fun close() {
+        this.destroy()
+    }
+
+    internal inline fun <R> callWithHandle(block: (handle: Long) -> R): R {
+        // Check and increment the call counter, to keep the object alive.
+        // This needs a compare-and-set retry loop in case of concurrent updates.
+        do {
+            val c = this.callCounter.get()
+            if (c == 0L) {
+                throw IllegalStateException("${this.javaClass.simpleName} object has already been destroyed")
+            }
+            if (c == Long.MAX_VALUE) {
+                throw IllegalStateException("${this.javaClass.simpleName} call counter would overflow")
+            }
+        } while (! this.callCounter.compareAndSet(c, c + 1L))
+        // Now we can safely do the method call without the handle being freed concurrently.
+        try {
+            return block(this.uniffiCloneHandle())
+        } finally {
+            // This decrement always matches the increment we performed above.
+            if (this.callCounter.decrementAndGet() == 0L) {
+                cleanable.clean()
+            }
+        }
+    }
+
+    // Use a static inner class instead of a closure so as not to accidentally
+    // capture `this` as part of the cleanable's action.
+    private class UniffiCleanAction(private val handle: Long) : Runnable {
+        override fun run() {
+            if (handle == 0.toLong()) {
+                // Fake object created with `NoHandle`, don't try to free.
+                return;
+            }
+            uniffiRustCall { status ->
+                UniffiLib.uniffi_mob_fn_free_httptransport(handle, status)
+            }
+        }
+    }
+
+    /**
+     * @suppress
+     */
+    fun uniffiCloneHandle(): Long {
+        if (handle == 0.toLong()) {
+            throw InternalException("uniffiCloneHandle() called on NoHandle object");
+        }
+        return uniffiRustCall() { status ->
+            UniffiLib.uniffi_mob_fn_clone_httptransport(handle, status)
+        }
+    }
+
+    
+    /**
+     * POST a JSON body to the given URL and return the response bytes.
+     *
+     * # Parameters
+     * - `url`: The full URL to POST to (e.g., "https://rpc.example.com:443")
+     * - `body`: The JSON-RPC request body as raw bytes
+     *
+     * # Returns
+     * The response body as raw bytes on success.
+     */
+    @Throws(TransportException::class)override fun `post`(`url`: kotlin.String, `body`: kotlin.ByteArray): kotlin.ByteArray {
+            return FfiConverterByteArray.lift(
+    callWithHandle {
+    uniffiRustCallWithError(TransportException) { _status ->
+    UniffiLib.uniffi_mob_fn_method_httptransport_post(
+        it,
+        FfiConverterString.lower(`url`),FfiConverterByteArray.lower(`body`),_status)
+}
+    }
+    )
+    }
+    
+
+    
+
+    
+
+
+    
+    
+    /**
+     * @suppress
+     */
+    companion object
+    
+}
+
+
+
+// Put the implementation in an object so we don't pollute the top-level namespace
+internal object uniffiCallbackInterfaceHttpTransport {
+    internal object `post`: UniffiCallbackInterfaceHttpTransportMethod0 {
+        override fun callback(`uniffiHandle`: Long,`url`: RustBuffer.ByValue,`body`: RustBuffer.ByValue,`uniffiOutReturn`: RustBuffer,uniffiCallStatus: UniffiRustCallStatus,) {
+            val uniffiObj = FfiConverterTypeHttpTransport.handleMap.get(uniffiHandle)
+            val makeCall = { ->
+                uniffiObj.`post`(
+                    FfiConverterString.lift(`url`),
+                    FfiConverterByteArray.lift(`body`),
+                )
+            }
+            val writeReturn = { value: kotlin.ByteArray -> uniffiOutReturn.setValue(FfiConverterByteArray.lower(value)) }
+            uniffiTraitInterfaceCallWithError(
+                uniffiCallStatus,
+                makeCall,
+                writeReturn,
+                { e: TransportException -> FfiConverterTypeTransportError.lower(e) }
+            )
+        }
+    }
+
+    internal object uniffiFree: UniffiCallbackInterfaceFree {
+        override fun callback(handle: Long) {
+            FfiConverterTypeHttpTransport.handleMap.remove(handle)
+        }
+    }
+
+    internal object uniffiClone: UniffiCallbackInterfaceClone {
+        override fun callback(handle: Long): Long {
+            return FfiConverterTypeHttpTransport.handleMap.clone(handle)
+        }
+    }
+
+    internal var vtable = UniffiVTableCallbackInterfaceHttpTransport.UniffiByValue(
+        uniffiFree,
+        uniffiClone,
+        `post`,
+    )
+
+    // Registers the foreign callback with the Rust side.
+    // This method is generated for each callback interface.
+    internal fun register(lib: UniffiLib) {
+        lib.uniffi_mob_fn_init_callback_vtable_httptransport(vtable)
+    }
+}
+
+/**
+ * @suppress
+ */
+public object FfiConverterTypeHttpTransport: FfiConverter<HttpTransport, Long> {
+    internal val handleMap = UniffiHandleMap<HttpTransport>()
+
+    override fun lower(value: HttpTransport): Long {
+        if (value is HttpTransportImpl) {
+             // Rust-implemented object.  Clone the handle and return it
+            return value.uniffiCloneHandle()
+         } else {
+            // Kotlin object, generate a new vtable handle and return that.
+            return handleMap.insert(value)
+         }
+    }
+
+    override fun lift(value: Long): HttpTransport {
+        if ((value and 1.toLong()) == 0.toLong()) {
+            // Rust-generated handle, construct a new class that uses the handle to implement the
+            // interface
+            return HttpTransportImpl(UniffiWithHandle, value)
+        } else {
+            // Kotlin-generated handle, get the object from the handle map
+            return handleMap.remove(value)
+        }
+    }
+
+    override fun read(buf: ByteBuffer): HttpTransport {
+        return lift(buf.getLong())
+    }
+
+    override fun allocationSize(value: HttpTransport) = 8UL
+
+    override fun write(value: HttpTransport, buf: ByteBuffer) {
+        buf.putLong(lower(value))
+    }
+}
+
+
+// This template implements a class for working with a Rust struct via a handle
+// to the live Rust struct on the other side of the FFI.
+//
+// There's some subtlety here, because we have to be careful not to operate on a Rust
+// struct after it has been dropped, and because we must expose a public API for freeing
+// theq Kotlin wrapper object in lieu of reliable finalizers. The core requirements are:
+//
+//   * Each instance holds an opaque handle to the underlying Rust struct.
+//     Method calls need to read this handle from the object's state and pass it in to
+//     the Rust FFI.
+//
+//   * When an instance is no longer needed, its handle should be passed to a
+//     special destructor function provided by the Rust FFI, which will drop the
+//     underlying Rust struct.
+//
+//   * Given an instance, calling code is expected to call the special
+//     `destroy` method in order to free it after use, either by calling it explicitly
+//     or by using a higher-level helper like the `use` method. Failing to do so risks
+//     leaking the underlying Rust struct.
+//
+//   * We can't assume that calling code will do the right thing, and must be prepared
+//     to handle Kotlin method calls executing concurrently with or even after a call to
+//     `destroy`, and to handle multiple (possibly concurrent!) calls to `destroy`.
+//
+//   * We must never allow Rust code to operate on the underlying Rust struct after
+//     the destructor has been called, and must never call the destructor more than once.
+//     Doing so may trigger memory unsafety.
+//
+//   * To mitigate many of the risks of leaking memory and use-after-free unsafety, a `Cleaner`
+//     is implemented to call the destructor when the Kotlin object becomes unreachable.
+//     This is done in a background thread. This is not a panacea, and client code should be aware that
+//      1. the thread may starve if some there are objects that have poorly performing
+//     `drop` methods or do significant work in their `drop` methods.
+//      2. the thread is shared across the whole library. This can be tuned by using `android_cleaner = true`,
+//         or `android = true` in the [`kotlin` section of the `uniffi.toml` file](https://mozilla.github.io/uniffi-rs/kotlin/configuration.html).
+//
+// If we try to implement this with mutual exclusion on access to the handle, there is the
+// possibility of a race between a method call and a concurrent call to `destroy`:
+//
+//    * Thread A starts a method call, reads the value of the handle, but is interrupted
+//      before it can pass the handle over the FFI to Rust.
+//    * Thread B calls `destroy` and frees the underlying Rust struct.
+//    * Thread A resumes, passing the already-read handle value to Rust and triggering
+//      a use-after-free.
+//
+// One possible solution would be to use a `ReadWriteLock`, with each method call taking
+// a read lock (and thus allowed to run concurrently) and the special `destroy` method
+// taking a write lock (and thus blocking on live method calls). However, we aim not to
+// generate methods with any hidden blocking semantics, and a `destroy` method that might
+// block if called incorrectly seems to meet that bar.
+//
+// So, we achieve our goals by giving each instance an associated `AtomicLong` counter to track
+// the number of in-flight method calls, and an `AtomicBoolean` flag to indicate whether `destroy`
+// has been called. These are updated according to the following rules:
+//
+//    * The initial value of the counter is 1, indicating a live object with no in-flight calls.
+//      The initial value for the flag is false.
+//
+//    * At the start of each method call, we atomically check the counter.
+//      If it is 0 then the underlying Rust struct has already been destroyed and the call is aborted.
+//      If it is nonzero them we atomically increment it by 1 and proceed with the method call.
+//
+//    * At the end of each method call, we atomically decrement and check the counter.
+//      If it has reached zero then we destroy the underlying Rust struct.
+//
+//    * When `destroy` is called, we atomically flip the flag from false to true.
+//      If the flag was already true we silently fail.
+//      Otherwise we atomically decrement and check the counter.
+//      If it has reached zero then we destroy the underlying Rust struct.
+//
+// Astute readers may observe that this all sounds very similar to the way that Rust's `Arc<T>` works,
+// and indeed it is, with the addition of a flag to guard against multiple calls to `destroy`.
+//
+// The overall effect is that the underlying Rust struct is destroyed only when `destroy` has been
+// called *and* all in-flight method calls have completed, avoiding violating any of the expectations
+// of the underlying Rust code.
+//
+// This makes a cleaner a better alternative to _not_ calling `destroy()` as
+// and when the object is finished with, but the abstraction is not perfect: if the Rust object's `drop`
+// method is slow, and/or there are many objects to cleanup, and it's on a low end Android device, then the cleaner
+// thread may be starved, and the app will leak memory.
+//
+// In this case, `destroy`ing manually may be a better solution.
+//
+// The cleaner can live side by side with the manual calling of `destroy`. In the order of responsiveness, uniffi objects
+// with Rust peers are reclaimed:
+//
+// 1. By calling the `destroy` method of the object, which calls `rustObject.free()`. If that doesn't happen:
+// 2. When the object becomes unreachable, AND the Cleaner thread gets to call `rustObject.free()`. If the thread is starved then:
+// 3. The memory is reclaimed when the process terminates.
+//
+// [1] https://stackoverflow.com/questions/24376768/can-java-finalize-an-object-when-it-is-still-in-scope/24380219
+//
+
+
+//
+/**
+ * Manages session key lifecycle: generation, activation, export/restore.
+ *
+ * This object is designed to be the single point of session management across
+ * all language bindings. The host is responsible only for persisting the opaque
+ * bytes returned by `export()` and passing them back to `restore()`.
+ *
+ * Typical flow:
+ * 1. `MobSessionManager::new("xion")` — create a manager
+ * 2. `generate_session_key()` — creates a random signer, returns address + pubkey
+ * 3. (host opens dashboard auth, gets granter address + expiry)
+ * 4. `activate(metadata, config)` — pairs the signer with a client
+ * 5. `export()` — host persists the returned bytes
+ * 6. Later: `MobSessionManager::restore(bytes, config)` — recreates everything
+ */
+public interface MobSessionManagerInterface {
+    
+    /**
+     * Activate the session after dashboard auth returns the grant details.
+     *
+     * Creates a `Client` with the session signer attached. After this call,
+     * `client()` returns a usable signing client.
+     */
+    fun `activate`(`metadata`: SessionMetadata, `config`: ChainConfig, `transport`: HttpTransport)
+    
+    /**
+     * Get the signing client. Returns an error if no session is active.
+     */
+    fun `client`(): Client
+    
+    /**
+     * Deactivate the current session, releasing the client and metadata.
+     *
+     * The signer and private key are also cleared. After this call,
+     * `is_active()` returns false and `client()` returns an error.
+     */
+    fun `deactivate`()
+    
+    /**
+     * Serialize the session state (private key + metadata) to an opaque byte blob.
+     *
+     * The host should persist these bytes (AsyncStorage, Keychain, etc.) and pass
+     * them to `restore()` on the next app launch.
+     */
+    fun `exportSession`(): kotlin.ByteArray
+    
+    /**
+     * Generate a random session key. Returns the address and public key hex.
+     *
+     * The private key is held in memory and included in `export()` output.
+     * Call this before opening dashboard auth — pass the returned address
+     * as the grantee.
+     */
+    fun `generateSessionKey`(): SignerInfo
+    
+    /**
+     * The grantee (session key) address.
+     */
+    fun `granteeAddress`(): kotlin.String?
+    
+    /**
+     * The granter (main account) address, if a session is active.
+     */
+    fun `granterAddress`(): kotlin.String?
+    
+    /**
+     * Whether a session is active (key generated, metadata set, not expired).
+     */
+    fun `isActive`(): kotlin.Boolean
+    
+    /**
+     * Get the session metadata, if active.
+     */
+    fun `metadata`(): SessionMetadata?
+    
+    /**
+     * The session key's public key as hex.
+     */
+    fun `publicKeyHex`(): kotlin.String?
+    
+    /**
+     * Sign arbitrary bytes with the session key.
+     *
+     * Useful for ADR-036 signArb or any off-chain signing that doesn't
+     * require a full transaction broadcast.
+     */
+    fun `signBytes`(`message`: kotlin.ByteArray): kotlin.ByteArray
+    
+    companion object
+}
+
+/**
+ * Manages session key lifecycle: generation, activation, export/restore.
+ *
+ * This object is designed to be the single point of session management across
+ * all language bindings. The host is responsible only for persisting the opaque
+ * bytes returned by `export()` and passing them back to `restore()`.
+ *
+ * Typical flow:
+ * 1. `MobSessionManager::new("xion")` — create a manager
+ * 2. `generate_session_key()` — creates a random signer, returns address + pubkey
+ * 3. (host opens dashboard auth, gets granter address + expiry)
+ * 4. `activate(metadata, config)` — pairs the signer with a client
+ * 5. `export()` — host persists the returned bytes
+ * 6. Later: `MobSessionManager::restore(bytes, config)` — recreates everything
+ */
+open class MobSessionManager: Disposable, AutoCloseable, MobSessionManagerInterface
+{
+
+    @Suppress("UNUSED_PARAMETER")
+    /**
+     * @suppress
+     */
+    constructor(withHandle: UniffiWithHandle, handle: Long) {
+        this.handle = handle
+        this.cleanable = UniffiLib.CLEANER.register(this, UniffiCleanAction(handle))
+    }
+
+    /**
+     * @suppress
+     *
+     * This constructor can be used to instantiate a fake object. Only used for tests. Any
+     * attempt to actually use an object constructed this way will fail as there is no
+     * connected Rust object.
+     */
+    @Suppress("UNUSED_PARAMETER")
+    constructor(noHandle: NoHandle) {
+        this.handle = 0
+        this.cleanable = UniffiLib.CLEANER.register(this, UniffiCleanAction(handle))
+    }
+    /**
+     * Create a new session manager for the given address prefix.
+     */
+    constructor(`addressPrefix`: kotlin.String) :
+        this(UniffiWithHandle, 
+    uniffiRustCall() { _status ->
+    UniffiLib.uniffi_mob_fn_constructor_mobsessionmanager_new(
+    
+        FfiConverterString.lower(`addressPrefix`),_status)
+}
+    )
+
+    protected val handle: Long
+    protected val cleanable: UniffiCleaner.Cleanable
+
+    private val wasDestroyed = AtomicBoolean(false)
+    private val callCounter = AtomicLong(1)
+
+    override fun destroy() {
+        // Only allow a single call to this method.
+        // TODO: maybe we should log a warning if called more than once?
+        if (this.wasDestroyed.compareAndSet(false, true)) {
+            // This decrement always matches the initial count of 1 given at creation time.
+            if (this.callCounter.decrementAndGet() == 0L) {
+                cleanable.clean()
+            }
+        }
+    }
+
+    @Synchronized
+    override fun close() {
+        this.destroy()
+    }
+
+    internal inline fun <R> callWithHandle(block: (handle: Long) -> R): R {
+        // Check and increment the call counter, to keep the object alive.
+        // This needs a compare-and-set retry loop in case of concurrent updates.
+        do {
+            val c = this.callCounter.get()
+            if (c == 0L) {
+                throw IllegalStateException("${this.javaClass.simpleName} object has already been destroyed")
+            }
+            if (c == Long.MAX_VALUE) {
+                throw IllegalStateException("${this.javaClass.simpleName} call counter would overflow")
+            }
+        } while (! this.callCounter.compareAndSet(c, c + 1L))
+        // Now we can safely do the method call without the handle being freed concurrently.
+        try {
+            return block(this.uniffiCloneHandle())
+        } finally {
+            // This decrement always matches the increment we performed above.
+            if (this.callCounter.decrementAndGet() == 0L) {
+                cleanable.clean()
+            }
+        }
+    }
+
+    // Use a static inner class instead of a closure so as not to accidentally
+    // capture `this` as part of the cleanable's action.
+    private class UniffiCleanAction(private val handle: Long) : Runnable {
+        override fun run() {
+            if (handle == 0.toLong()) {
+                // Fake object created with `NoHandle`, don't try to free.
+                return;
+            }
+            uniffiRustCall { status ->
+                UniffiLib.uniffi_mob_fn_free_mobsessionmanager(handle, status)
+            }
+        }
+    }
+
+    /**
+     * @suppress
+     */
+    fun uniffiCloneHandle(): Long {
+        if (handle == 0.toLong()) {
+            throw InternalException("uniffiCloneHandle() called on NoHandle object");
+        }
+        return uniffiRustCall() { status ->
+            UniffiLib.uniffi_mob_fn_clone_mobsessionmanager(handle, status)
+        }
+    }
+
+    
+    /**
+     * Activate the session after dashboard auth returns the grant details.
+     *
+     * Creates a `Client` with the session signer attached. After this call,
+     * `client()` returns a usable signing client.
+     */
+    @Throws(MobException::class)override fun `activate`(`metadata`: SessionMetadata, `config`: ChainConfig, `transport`: HttpTransport)
+        = 
+    callWithHandle {
+    uniffiRustCallWithError(MobException) { _status ->
+    UniffiLib.uniffi_mob_fn_method_mobsessionmanager_activate(
+        it,
+        FfiConverterTypeSessionMetadata.lower(`metadata`),FfiConverterTypeChainConfig.lower(`config`),FfiConverterTypeHttpTransport.lower(`transport`),_status)
+}
+    }
+    
+    
+
+    
+    /**
+     * Get the signing client. Returns an error if no session is active.
+     */
+    @Throws(MobException::class)override fun `client`(): Client {
+            return FfiConverterTypeClient.lift(
+    callWithHandle {
+    uniffiRustCallWithError(MobException) { _status ->
+    UniffiLib.uniffi_mob_fn_method_mobsessionmanager_client(
+        it,
+        _status)
+}
+    }
+    )
+    }
+    
+
+    
+    /**
+     * Deactivate the current session, releasing the client and metadata.
+     *
+     * The signer and private key are also cleared. After this call,
+     * `is_active()` returns false and `client()` returns an error.
+     */override fun `deactivate`()
+        = 
+    callWithHandle {
+    uniffiRustCall() { _status ->
+    UniffiLib.uniffi_mob_fn_method_mobsessionmanager_deactivate(
+        it,
+        _status)
+}
+    }
+    
+    
+
+    
+    /**
+     * Serialize the session state (private key + metadata) to an opaque byte blob.
+     *
+     * The host should persist these bytes (AsyncStorage, Keychain, etc.) and pass
+     * them to `restore()` on the next app launch.
+     */
+    @Throws(MobException::class)override fun `exportSession`(): kotlin.ByteArray {
+            return FfiConverterByteArray.lift(
+    callWithHandle {
+    uniffiRustCallWithError(MobException) { _status ->
+    UniffiLib.uniffi_mob_fn_method_mobsessionmanager_export_session(
+        it,
+        _status)
+}
+    }
+    )
+    }
+    
+
+    
+    /**
+     * Generate a random session key. Returns the address and public key hex.
+     *
+     * The private key is held in memory and included in `export()` output.
+     * Call this before opening dashboard auth — pass the returned address
+     * as the grantee.
+     */
+    @Throws(MobException::class)override fun `generateSessionKey`(): SignerInfo {
+            return FfiConverterTypeSignerInfo.lift(
+    callWithHandle {
+    uniffiRustCallWithError(MobException) { _status ->
+    UniffiLib.uniffi_mob_fn_method_mobsessionmanager_generate_session_key(
+        it,
+        _status)
+}
+    }
+    )
+    }
+    
+
+    
+    /**
+     * The grantee (session key) address.
+     */override fun `granteeAddress`(): kotlin.String? {
+            return FfiConverterOptionalString.lift(
+    callWithHandle {
+    uniffiRustCall() { _status ->
+    UniffiLib.uniffi_mob_fn_method_mobsessionmanager_grantee_address(
+        it,
+        _status)
+}
+    }
+    )
+    }
+    
+
+    
+    /**
+     * The granter (main account) address, if a session is active.
+     */override fun `granterAddress`(): kotlin.String? {
+            return FfiConverterOptionalString.lift(
+    callWithHandle {
+    uniffiRustCall() { _status ->
+    UniffiLib.uniffi_mob_fn_method_mobsessionmanager_granter_address(
+        it,
+        _status)
+}
+    }
+    )
+    }
+    
+
+    
+    /**
+     * Whether a session is active (key generated, metadata set, not expired).
+     */override fun `isActive`(): kotlin.Boolean {
+            return FfiConverterBoolean.lift(
+    callWithHandle {
+    uniffiRustCall() { _status ->
+    UniffiLib.uniffi_mob_fn_method_mobsessionmanager_is_active(
+        it,
+        _status)
+}
+    }
+    )
+    }
+    
+
+    
+    /**
+     * Get the session metadata, if active.
+     */override fun `metadata`(): SessionMetadata? {
+            return FfiConverterOptionalTypeSessionMetadata.lift(
+    callWithHandle {
+    uniffiRustCall() { _status ->
+    UniffiLib.uniffi_mob_fn_method_mobsessionmanager_metadata(
+        it,
+        _status)
+}
+    }
+    )
+    }
+    
+
+    
+    /**
+     * The session key's public key as hex.
+     */override fun `publicKeyHex`(): kotlin.String? {
+            return FfiConverterOptionalString.lift(
+    callWithHandle {
+    uniffiRustCall() { _status ->
+    UniffiLib.uniffi_mob_fn_method_mobsessionmanager_public_key_hex(
+        it,
+        _status)
+}
+    }
+    )
+    }
+    
+
+    
+    /**
+     * Sign arbitrary bytes with the session key.
+     *
+     * Useful for ADR-036 signArb or any off-chain signing that doesn't
+     * require a full transaction broadcast.
+     */
+    @Throws(MobException::class)override fun `signBytes`(`message`: kotlin.ByteArray): kotlin.ByteArray {
+            return FfiConverterByteArray.lift(
+    callWithHandle {
+    uniffiRustCallWithError(MobException) { _status ->
+    UniffiLib.uniffi_mob_fn_method_mobsessionmanager_sign_bytes(
+        it,
+        FfiConverterByteArray.lower(`message`),_status)
+}
+    }
+    )
+    }
+    
+
+    
+
+    
+
+
+    
+    companion object {
+        
+    /**
+     * Restore a session from previously exported bytes.
+     *
+     * Recreates the signer and client. Returns an error if the session is expired
+     * or the data is malformed.
+     */
+    @Throws(MobException::class) fun `restore`(`data`: kotlin.ByteArray, `config`: ChainConfig, `transport`: HttpTransport): MobSessionManager {
+            return FfiConverterTypeMobSessionManager.lift(
+    uniffiRustCallWithError(MobException) { _status ->
+    UniffiLib.uniffi_mob_fn_constructor_mobsessionmanager_restore(
+    
+        FfiConverterByteArray.lower(`data`),FfiConverterTypeChainConfig.lower(`config`),FfiConverterTypeHttpTransport.lower(`transport`),_status)
+}
+    )
+    }
+    
+
+        
+    }
+    
+}
+
+
+/**
+ * @suppress
+ */
+public object FfiConverterTypeMobSessionManager: FfiConverter<MobSessionManager, Long> {
+    override fun lower(value: MobSessionManager): Long {
+        return value.uniffiCloneHandle()
+    }
+
+    override fun lift(value: Long): MobSessionManager {
+        return MobSessionManager(UniffiWithHandle, value)
+    }
+
+    override fun read(buf: ByteBuffer): MobSessionManager {
+        return lift(buf.getLong())
+    }
+
+    override fun allocationSize(value: MobSessionManager) = 8UL
+
+    override fun write(value: MobSessionManager, buf: ByteBuffer) {
+        buf.putLong(lower(value))
+    }
+}
+
+
+// This template implements a class for working with a Rust struct via a handle
+// to the live Rust struct on the other side of the FFI.
+//
+// There's some subtlety here, because we have to be careful not to operate on a Rust
+// struct after it has been dropped, and because we must expose a public API for freeing
+// theq Kotlin wrapper object in lieu of reliable finalizers. The core requirements are:
+//
+//   * Each instance holds an opaque handle to the underlying Rust struct.
+//     Method calls need to read this handle from the object's state and pass it in to
+//     the Rust FFI.
+//
+//   * When an instance is no longer needed, its handle should be passed to a
+//     special destructor function provided by the Rust FFI, which will drop the
+//     underlying Rust struct.
+//
+//   * Given an instance, calling code is expected to call the special
+//     `destroy` method in order to free it after use, either by calling it explicitly
+//     or by using a higher-level helper like the `use` method. Failing to do so risks
+//     leaking the underlying Rust struct.
+//
+//   * We can't assume that calling code will do the right thing, and must be prepared
+//     to handle Kotlin method calls executing concurrently with or even after a call to
+//     `destroy`, and to handle multiple (possibly concurrent!) calls to `destroy`.
+//
+//   * We must never allow Rust code to operate on the underlying Rust struct after
+//     the destructor has been called, and must never call the destructor more than once.
+//     Doing so may trigger memory unsafety.
+//
+//   * To mitigate many of the risks of leaking memory and use-after-free unsafety, a `Cleaner`
+//     is implemented to call the destructor when the Kotlin object becomes unreachable.
+//     This is done in a background thread. This is not a panacea, and client code should be aware that
+//      1. the thread may starve if some there are objects that have poorly performing
+//     `drop` methods or do significant work in their `drop` methods.
+//      2. the thread is shared across the whole library. This can be tuned by using `android_cleaner = true`,
+//         or `android = true` in the [`kotlin` section of the `uniffi.toml` file](https://mozilla.github.io/uniffi-rs/kotlin/configuration.html).
+//
+// If we try to implement this with mutual exclusion on access to the handle, there is the
+// possibility of a race between a method call and a concurrent call to `destroy`:
+//
+//    * Thread A starts a method call, reads the value of the handle, but is interrupted
+//      before it can pass the handle over the FFI to Rust.
+//    * Thread B calls `destroy` and frees the underlying Rust struct.
+//    * Thread A resumes, passing the already-read handle value to Rust and triggering
+//      a use-after-free.
+//
+// One possible solution would be to use a `ReadWriteLock`, with each method call taking
+// a read lock (and thus allowed to run concurrently) and the special `destroy` method
+// taking a write lock (and thus blocking on live method calls). However, we aim not to
+// generate methods with any hidden blocking semantics, and a `destroy` method that might
+// block if called incorrectly seems to meet that bar.
+//
+// So, we achieve our goals by giving each instance an associated `AtomicLong` counter to track
+// the number of in-flight method calls, and an `AtomicBoolean` flag to indicate whether `destroy`
+// has been called. These are updated according to the following rules:
+//
+//    * The initial value of the counter is 1, indicating a live object with no in-flight calls.
+//      The initial value for the flag is false.
+//
+//    * At the start of each method call, we atomically check the counter.
+//      If it is 0 then the underlying Rust struct has already been destroyed and the call is aborted.
+//      If it is nonzero them we atomically increment it by 1 and proceed with the method call.
+//
+//    * At the end of each method call, we atomically decrement and check the counter.
+//      If it has reached zero then we destroy the underlying Rust struct.
+//
+//    * When `destroy` is called, we atomically flip the flag from false to true.
+//      If the flag was already true we silently fail.
+//      Otherwise we atomically decrement and check the counter.
+//      If it has reached zero then we destroy the underlying Rust struct.
+//
+// Astute readers may observe that this all sounds very similar to the way that Rust's `Arc<T>` works,
+// and indeed it is, with the addition of a flag to guard against multiple calls to `destroy`.
+//
+// The overall effect is that the underlying Rust struct is destroyed only when `destroy` has been
+// called *and* all in-flight method calls have completed, avoiding violating any of the expectations
+// of the underlying Rust code.
+//
+// This makes a cleaner a better alternative to _not_ calling `destroy()` as
+// and when the object is finished with, but the abstraction is not perfect: if the Rust object's `drop`
+// method is slow, and/or there are many objects to cleanup, and it's on a low end Android device, then the cleaner
+// thread may be starved, and the app will leak memory.
+//
+// In this case, `destroy`ing manually may be a better solution.
+//
+// The cleaner can live side by side with the manual calling of `destroy`. In the order of responsiveness, uniffi objects
+// with Rust peers are reclaimed:
+//
+// 1. By calling the `destroy` method of the object, which calls `rustObject.free()`. If that doesn't happen:
+// 2. When the object becomes unreachable, AND the Cleaner thread gets to call `rustObject.free()`. If the thread is starved then:
+// 3. The memory is reclaimed when the process terminates.
+//
+// [1] https://stackoverflow.com/questions/24376768/can-java-finalize-an-object-when-it-is-still-in-scope/24380219
+//
+
+
+//
+/**
+ * Pure Rust implementation of the CryptoSigner trait
+ *
+ * This signer uses Rust's k256 and bip32 libraries for all cryptographic operations.
+ * It implements BIP39 mnemonic support and BIP32 hierarchical deterministic key derivation.
+ */
+public interface RustSignerInterface {
+    
+    /**
+     * Get the signer's address
+     */
+    fun `address`(): kotlin.String
+    
+    /**
+     * Get the address prefix
+     */
+    fun `addressPrefix`(): kotlin.String
+    
+    /**
+     * Get the signer's public key as hex
+     */
+    fun `publicKeyHex`(): kotlin.String
+    
+    /**
+     * Sign arbitrary bytes
+     */
+    fun `signBytes`(`message`: kotlin.ByteArray): kotlin.ByteArray
+    
+    companion object
+}
+
+/**
+ * Pure Rust implementation of the CryptoSigner trait
+ *
+ * This signer uses Rust's k256 and bip32 libraries for all cryptographic operations.
+ * It implements BIP39 mnemonic support and BIP32 hierarchical deterministic key derivation.
+ */
+open class RustSigner: Disposable, AutoCloseable, RustSignerInterface
+{
+
+    @Suppress("UNUSED_PARAMETER")
+    /**
+     * @suppress
+     */
+    constructor(withHandle: UniffiWithHandle, handle: Long) {
+        this.handle = handle
+        this.cleanable = UniffiLib.CLEANER.register(this, UniffiCleanAction(handle))
+    }
+
+    /**
+     * @suppress
+     *
+     * This constructor can be used to instantiate a fake object. Only used for tests. Any
+     * attempt to actually use an object constructed this way will fail as there is no
+     * connected Rust object.
+     */
+    @Suppress("UNUSED_PARAMETER")
+    constructor(noHandle: NoHandle) {
+        this.handle = 0
+        this.cleanable = UniffiLib.CLEANER.register(this, UniffiCleanAction(handle))
+    }
+
+    protected val handle: Long
+    protected val cleanable: UniffiCleaner.Cleanable
+
+    private val wasDestroyed = AtomicBoolean(false)
+    private val callCounter = AtomicLong(1)
+
+    override fun destroy() {
+        // Only allow a single call to this method.
+        // TODO: maybe we should log a warning if called more than once?
+        if (this.wasDestroyed.compareAndSet(false, true)) {
+            // This decrement always matches the initial count of 1 given at creation time.
+            if (this.callCounter.decrementAndGet() == 0L) {
+                cleanable.clean()
+            }
+        }
+    }
+
+    @Synchronized
+    override fun close() {
+        this.destroy()
+    }
+
+    internal inline fun <R> callWithHandle(block: (handle: Long) -> R): R {
+        // Check and increment the call counter, to keep the object alive.
+        // This needs a compare-and-set retry loop in case of concurrent updates.
+        do {
+            val c = this.callCounter.get()
+            if (c == 0L) {
+                throw IllegalStateException("${this.javaClass.simpleName} object has already been destroyed")
+            }
+            if (c == Long.MAX_VALUE) {
+                throw IllegalStateException("${this.javaClass.simpleName} call counter would overflow")
+            }
+        } while (! this.callCounter.compareAndSet(c, c + 1L))
+        // Now we can safely do the method call without the handle being freed concurrently.
+        try {
+            return block(this.uniffiCloneHandle())
+        } finally {
+            // This decrement always matches the increment we performed above.
+            if (this.callCounter.decrementAndGet() == 0L) {
+                cleanable.clean()
+            }
+        }
+    }
+
+    // Use a static inner class instead of a closure so as not to accidentally
+    // capture `this` as part of the cleanable's action.
+    private class UniffiCleanAction(private val handle: Long) : Runnable {
+        override fun run() {
+            if (handle == 0.toLong()) {
+                // Fake object created with `NoHandle`, don't try to free.
+                return;
+            }
+            uniffiRustCall { status ->
+                UniffiLib.uniffi_mob_fn_free_rustsigner(handle, status)
+            }
+        }
+    }
+
+    /**
+     * @suppress
+     */
+    fun uniffiCloneHandle(): Long {
+        if (handle == 0.toLong()) {
+            throw InternalException("uniffiCloneHandle() called on NoHandle object");
+        }
+        return uniffiRustCall() { status ->
+            UniffiLib.uniffi_mob_fn_clone_rustsigner(handle, status)
         }
     }
 
@@ -1951,7 +4050,7 @@ open class Signer: Disposable, AutoCloseable, SignerInterface
             return FfiConverterString.lift(
     callWithHandle {
     uniffiRustCall() { _status ->
-    UniffiLib.uniffi_mob_fn_method_signer_address(
+    UniffiLib.uniffi_mob_fn_method_rustsigner_address(
         it,
         _status)
 }
@@ -1967,7 +4066,7 @@ open class Signer: Disposable, AutoCloseable, SignerInterface
             return FfiConverterString.lift(
     callWithHandle {
     uniffiRustCall() { _status ->
-    UniffiLib.uniffi_mob_fn_method_signer_address_prefix(
+    UniffiLib.uniffi_mob_fn_method_rustsigner_address_prefix(
         it,
         _status)
 }
@@ -1983,7 +4082,7 @@ open class Signer: Disposable, AutoCloseable, SignerInterface
             return FfiConverterString.lift(
     callWithHandle {
     uniffiRustCall() { _status ->
-    UniffiLib.uniffi_mob_fn_method_signer_public_key_hex(
+    UniffiLib.uniffi_mob_fn_method_rustsigner_public_key_hex(
         it,
         _status)
 }
@@ -2000,7 +4099,7 @@ open class Signer: Disposable, AutoCloseable, SignerInterface
             return FfiConverterByteArray.lift(
     callWithHandle {
     uniffiRustCallWithError(MobException) { _status ->
-    UniffiLib.uniffi_mob_fn_method_signer_sign_bytes(
+    UniffiLib.uniffi_mob_fn_method_rustsigner_sign_bytes(
         it,
         FfiConverterByteArray.lower(`message`),_status)
 }
@@ -2020,10 +4119,10 @@ open class Signer: Disposable, AutoCloseable, SignerInterface
     /**
      * Create a new signer from a mnemonic phrase
      */
-    @Throws(MobException::class) fun `fromMnemonic`(`mnemonic`: kotlin.String, `addressPrefix`: kotlin.String, `derivationPath`: kotlin.String?): Signer {
-            return FfiConverterTypeSigner.lift(
+    @Throws(MobException::class) fun `fromMnemonic`(`mnemonic`: kotlin.String, `addressPrefix`: kotlin.String, `derivationPath`: kotlin.String?): RustSigner {
+            return FfiConverterTypeRustSigner.lift(
     uniffiRustCallWithError(MobException) { _status ->
-    UniffiLib.uniffi_mob_fn_constructor_signer_from_mnemonic(
+    UniffiLib.uniffi_mob_fn_constructor_rustsigner_from_mnemonic(
     
         FfiConverterString.lower(`mnemonic`),FfiConverterString.lower(`addressPrefix`),FfiConverterOptionalString.lower(`derivationPath`),_status)
 }
@@ -2040,22 +4139,429 @@ open class Signer: Disposable, AutoCloseable, SignerInterface
 /**
  * @suppress
  */
-public object FfiConverterTypeSigner: FfiConverter<Signer, Long> {
-    override fun lower(value: Signer): Long {
+public object FfiConverterTypeRustSigner: FfiConverter<RustSigner, Long> {
+    override fun lower(value: RustSigner): Long {
         return value.uniffiCloneHandle()
     }
 
-    override fun lift(value: Long): Signer {
-        return Signer(UniffiWithHandle, value)
+    override fun lift(value: Long): RustSigner {
+        return RustSigner(UniffiWithHandle, value)
     }
 
-    override fun read(buf: ByteBuffer): Signer {
+    override fun read(buf: ByteBuffer): RustSigner {
         return lift(buf.getLong())
     }
 
-    override fun allocationSize(value: Signer) = 8UL
+    override fun allocationSize(value: RustSigner) = 8UL
 
-    override fun write(value: Signer, buf: ByteBuffer) {
+    override fun write(value: RustSigner, buf: ByteBuffer) {
+        buf.putLong(lower(value))
+    }
+}
+
+
+// This template implements a class for working with a Rust struct via a handle
+// to the live Rust struct on the other side of the FFI.
+//
+// There's some subtlety here, because we have to be careful not to operate on a Rust
+// struct after it has been dropped, and because we must expose a public API for freeing
+// theq Kotlin wrapper object in lieu of reliable finalizers. The core requirements are:
+//
+//   * Each instance holds an opaque handle to the underlying Rust struct.
+//     Method calls need to read this handle from the object's state and pass it in to
+//     the Rust FFI.
+//
+//   * When an instance is no longer needed, its handle should be passed to a
+//     special destructor function provided by the Rust FFI, which will drop the
+//     underlying Rust struct.
+//
+//   * Given an instance, calling code is expected to call the special
+//     `destroy` method in order to free it after use, either by calling it explicitly
+//     or by using a higher-level helper like the `use` method. Failing to do so risks
+//     leaking the underlying Rust struct.
+//
+//   * We can't assume that calling code will do the right thing, and must be prepared
+//     to handle Kotlin method calls executing concurrently with or even after a call to
+//     `destroy`, and to handle multiple (possibly concurrent!) calls to `destroy`.
+//
+//   * We must never allow Rust code to operate on the underlying Rust struct after
+//     the destructor has been called, and must never call the destructor more than once.
+//     Doing so may trigger memory unsafety.
+//
+//   * To mitigate many of the risks of leaking memory and use-after-free unsafety, a `Cleaner`
+//     is implemented to call the destructor when the Kotlin object becomes unreachable.
+//     This is done in a background thread. This is not a panacea, and client code should be aware that
+//      1. the thread may starve if some there are objects that have poorly performing
+//     `drop` methods or do significant work in their `drop` methods.
+//      2. the thread is shared across the whole library. This can be tuned by using `android_cleaner = true`,
+//         or `android = true` in the [`kotlin` section of the `uniffi.toml` file](https://mozilla.github.io/uniffi-rs/kotlin/configuration.html).
+//
+// If we try to implement this with mutual exclusion on access to the handle, there is the
+// possibility of a race between a method call and a concurrent call to `destroy`:
+//
+//    * Thread A starts a method call, reads the value of the handle, but is interrupted
+//      before it can pass the handle over the FFI to Rust.
+//    * Thread B calls `destroy` and frees the underlying Rust struct.
+//    * Thread A resumes, passing the already-read handle value to Rust and triggering
+//      a use-after-free.
+//
+// One possible solution would be to use a `ReadWriteLock`, with each method call taking
+// a read lock (and thus allowed to run concurrently) and the special `destroy` method
+// taking a write lock (and thus blocking on live method calls). However, we aim not to
+// generate methods with any hidden blocking semantics, and a `destroy` method that might
+// block if called incorrectly seems to meet that bar.
+//
+// So, we achieve our goals by giving each instance an associated `AtomicLong` counter to track
+// the number of in-flight method calls, and an `AtomicBoolean` flag to indicate whether `destroy`
+// has been called. These are updated according to the following rules:
+//
+//    * The initial value of the counter is 1, indicating a live object with no in-flight calls.
+//      The initial value for the flag is false.
+//
+//    * At the start of each method call, we atomically check the counter.
+//      If it is 0 then the underlying Rust struct has already been destroyed and the call is aborted.
+//      If it is nonzero them we atomically increment it by 1 and proceed with the method call.
+//
+//    * At the end of each method call, we atomically decrement and check the counter.
+//      If it has reached zero then we destroy the underlying Rust struct.
+//
+//    * When `destroy` is called, we atomically flip the flag from false to true.
+//      If the flag was already true we silently fail.
+//      Otherwise we atomically decrement and check the counter.
+//      If it has reached zero then we destroy the underlying Rust struct.
+//
+// Astute readers may observe that this all sounds very similar to the way that Rust's `Arc<T>` works,
+// and indeed it is, with the addition of a flag to guard against multiple calls to `destroy`.
+//
+// The overall effect is that the underlying Rust struct is destroyed only when `destroy` has been
+// called *and* all in-flight method calls have completed, avoiding violating any of the expectations
+// of the underlying Rust code.
+//
+// This makes a cleaner a better alternative to _not_ calling `destroy()` as
+// and when the object is finished with, but the abstraction is not perfect: if the Rust object's `drop`
+// method is slow, and/or there are many objects to cleanup, and it's on a low end Android device, then the cleaner
+// thread may be starved, and the app will leak memory.
+//
+// In this case, `destroy`ing manually may be a better solution.
+//
+// The cleaner can live side by side with the manual calling of `destroy`. In the order of responsiveness, uniffi objects
+// with Rust peers are reclaimed:
+//
+// 1. By calling the `destroy` method of the object, which calls `rustObject.free()`. If that doesn't happen:
+// 2. When the object becomes unreachable, AND the Cleaner thread gets to call `rustObject.free()`. If the thread is starved then:
+// 3. The memory is reclaimed when the process terminates.
+//
+// [1] https://stackoverflow.com/questions/24376768/can-java-finalize-an-object-when-it-is-still-in-scope/24380219
+//
+
+
+//
+/**
+ * A session signer that wraps messages in MsgExec (Authz) for session key usage
+ *
+ * This works with any implementation of CryptoSigner, allowing language-specific
+ * cryptographic implementations while automatically wrapping all messages in authz.
+ */
+public interface SessionSignerInterface {
+    
+    /**
+     * Get the grantee address (the session key address)
+     */
+    fun `granteeAddress`(): kotlin.String
+    
+    /**
+     * Get the granter address (the main account)
+     */
+    fun `granterAddress`(): kotlin.String
+    
+    /**
+     * Check if session is expired
+     */
+    fun `isExpired`(): kotlin.Boolean
+    
+    /**
+     * Get session metadata
+     */
+    fun `metadata`(): SessionMetadata
+    
+    /**
+     * Get the session key's public key as hex
+     */
+    fun `publicKeyHex`(): kotlin.String
+    
+    /**
+     * Get remaining session time in seconds
+     */
+    fun `remainingSeconds`(): kotlin.ULong
+    
+    companion object
+}
+
+/**
+ * A session signer that wraps messages in MsgExec (Authz) for session key usage
+ *
+ * This works with any implementation of CryptoSigner, allowing language-specific
+ * cryptographic implementations while automatically wrapping all messages in authz.
+ */
+open class SessionSigner: Disposable, AutoCloseable, SessionSignerInterface
+{
+
+    @Suppress("UNUSED_PARAMETER")
+    /**
+     * @suppress
+     */
+    constructor(withHandle: UniffiWithHandle, handle: Long) {
+        this.handle = handle
+        this.cleanable = UniffiLib.CLEANER.register(this, UniffiCleanAction(handle))
+    }
+
+    /**
+     * @suppress
+     *
+     * This constructor can be used to instantiate a fake object. Only used for tests. Any
+     * attempt to actually use an object constructed this way will fail as there is no
+     * connected Rust object.
+     */
+    @Suppress("UNUSED_PARAMETER")
+    constructor(noHandle: NoHandle) {
+        this.handle = 0
+        this.cleanable = UniffiLib.CLEANER.register(this, UniffiCleanAction(handle))
+    }
+    /**
+     * Create a new session signer from a RustSigner and metadata
+     *
+     * # Parameters
+     * - `session_key`: RustSigner instance
+     * - `metadata`: Session metadata with expiration and granter info
+     *
+     * Note: This constructor is only available with the `rust-signer` feature for FFI.
+     * Rust code can use `with_signer()` to accept any CryptoSigner implementation.
+     */
+    constructor(`sessionKey`: RustSigner, `metadata`: SessionMetadata) :
+        this(UniffiWithHandle, 
+    uniffiRustCallWithError(MobException) { _status ->
+    UniffiLib.uniffi_mob_fn_constructor_sessionsigner_new(
+    
+        FfiConverterTypeRustSigner.lower(`sessionKey`),FfiConverterTypeSessionMetadata.lower(`metadata`),_status)
+}
+    )
+
+    protected val handle: Long
+    protected val cleanable: UniffiCleaner.Cleanable
+
+    private val wasDestroyed = AtomicBoolean(false)
+    private val callCounter = AtomicLong(1)
+
+    override fun destroy() {
+        // Only allow a single call to this method.
+        // TODO: maybe we should log a warning if called more than once?
+        if (this.wasDestroyed.compareAndSet(false, true)) {
+            // This decrement always matches the initial count of 1 given at creation time.
+            if (this.callCounter.decrementAndGet() == 0L) {
+                cleanable.clean()
+            }
+        }
+    }
+
+    @Synchronized
+    override fun close() {
+        this.destroy()
+    }
+
+    internal inline fun <R> callWithHandle(block: (handle: Long) -> R): R {
+        // Check and increment the call counter, to keep the object alive.
+        // This needs a compare-and-set retry loop in case of concurrent updates.
+        do {
+            val c = this.callCounter.get()
+            if (c == 0L) {
+                throw IllegalStateException("${this.javaClass.simpleName} object has already been destroyed")
+            }
+            if (c == Long.MAX_VALUE) {
+                throw IllegalStateException("${this.javaClass.simpleName} call counter would overflow")
+            }
+        } while (! this.callCounter.compareAndSet(c, c + 1L))
+        // Now we can safely do the method call without the handle being freed concurrently.
+        try {
+            return block(this.uniffiCloneHandle())
+        } finally {
+            // This decrement always matches the increment we performed above.
+            if (this.callCounter.decrementAndGet() == 0L) {
+                cleanable.clean()
+            }
+        }
+    }
+
+    // Use a static inner class instead of a closure so as not to accidentally
+    // capture `this` as part of the cleanable's action.
+    private class UniffiCleanAction(private val handle: Long) : Runnable {
+        override fun run() {
+            if (handle == 0.toLong()) {
+                // Fake object created with `NoHandle`, don't try to free.
+                return;
+            }
+            uniffiRustCall { status ->
+                UniffiLib.uniffi_mob_fn_free_sessionsigner(handle, status)
+            }
+        }
+    }
+
+    /**
+     * @suppress
+     */
+    fun uniffiCloneHandle(): Long {
+        if (handle == 0.toLong()) {
+            throw InternalException("uniffiCloneHandle() called on NoHandle object");
+        }
+        return uniffiRustCall() { status ->
+            UniffiLib.uniffi_mob_fn_clone_sessionsigner(handle, status)
+        }
+    }
+
+    
+    /**
+     * Get the grantee address (the session key address)
+     */override fun `granteeAddress`(): kotlin.String {
+            return FfiConverterString.lift(
+    callWithHandle {
+    uniffiRustCall() { _status ->
+    UniffiLib.uniffi_mob_fn_method_sessionsigner_grantee_address(
+        it,
+        _status)
+}
+    }
+    )
+    }
+    
+
+    
+    /**
+     * Get the granter address (the main account)
+     */override fun `granterAddress`(): kotlin.String {
+            return FfiConverterString.lift(
+    callWithHandle {
+    uniffiRustCall() { _status ->
+    UniffiLib.uniffi_mob_fn_method_sessionsigner_granter_address(
+        it,
+        _status)
+}
+    }
+    )
+    }
+    
+
+    
+    /**
+     * Check if session is expired
+     */override fun `isExpired`(): kotlin.Boolean {
+            return FfiConverterBoolean.lift(
+    callWithHandle {
+    uniffiRustCall() { _status ->
+    UniffiLib.uniffi_mob_fn_method_sessionsigner_is_expired(
+        it,
+        _status)
+}
+    }
+    )
+    }
+    
+
+    
+    /**
+     * Get session metadata
+     */override fun `metadata`(): SessionMetadata {
+            return FfiConverterTypeSessionMetadata.lift(
+    callWithHandle {
+    uniffiRustCall() { _status ->
+    UniffiLib.uniffi_mob_fn_method_sessionsigner_metadata(
+        it,
+        _status)
+}
+    }
+    )
+    }
+    
+
+    
+    /**
+     * Get the session key's public key as hex
+     */override fun `publicKeyHex`(): kotlin.String {
+            return FfiConverterString.lift(
+    callWithHandle {
+    uniffiRustCall() { _status ->
+    UniffiLib.uniffi_mob_fn_method_sessionsigner_public_key_hex(
+        it,
+        _status)
+}
+    }
+    )
+    }
+    
+
+    
+    /**
+     * Get remaining session time in seconds
+     */override fun `remainingSeconds`(): kotlin.ULong {
+            return FfiConverterULong.lift(
+    callWithHandle {
+    uniffiRustCall() { _status ->
+    UniffiLib.uniffi_mob_fn_method_sessionsigner_remaining_seconds(
+        it,
+        _status)
+}
+    }
+    )
+    }
+    
+
+    
+
+    
+
+
+    
+    companion object {
+        
+    /**
+     * Create a session signer from a private key with duration
+     *
+     * Note: This constructor is only available with the `rust-signer` feature.
+     */
+    @Throws(MobException::class) fun `fromPrivateKey`(`privateKey`: kotlin.ByteArray, `addressPrefix`: kotlin.String, `granterAddress`: kotlin.String, `durationSeconds`: kotlin.ULong): SessionSigner {
+            return FfiConverterTypeSessionSigner.lift(
+    uniffiRustCallWithError(MobException) { _status ->
+    UniffiLib.uniffi_mob_fn_constructor_sessionsigner_from_private_key(
+    
+        FfiConverterByteArray.lower(`privateKey`),FfiConverterString.lower(`addressPrefix`),FfiConverterString.lower(`granterAddress`),FfiConverterULong.lower(`durationSeconds`),_status)
+}
+    )
+    }
+    
+
+        
+    }
+    
+}
+
+
+/**
+ * @suppress
+ */
+public object FfiConverterTypeSessionSigner: FfiConverter<SessionSigner, Long> {
+    override fun lower(value: SessionSigner): Long {
+        return value.uniffiCloneHandle()
+    }
+
+    override fun lift(value: Long): SessionSigner {
+        return SessionSigner(UniffiWithHandle, value)
+    }
+
+    override fun read(buf: ByteBuffer): SessionSigner {
+        return lift(buf.getLong())
+    }
+
+    override fun allocationSize(value: SessionSigner) = 8UL
+
+    override fun write(value: SessionSigner, buf: ByteBuffer) {
         buf.putLong(lower(value))
     }
 }
@@ -2126,6 +4632,12 @@ data class ChainConfig (
     var `coinType`: kotlin.UInt
     , 
     var `gasPrice`: kotlin.String
+    , 
+    /**
+     * Optional fee granter address (e.g. treasury contract).
+     * When set, all transactions include this address as the fee granter.
+     */
+    var `feeGranter`: kotlin.String?
     
 ){
     
@@ -2146,6 +4658,7 @@ public object FfiConverterTypeChainConfig: FfiConverterRustBuffer<ChainConfig> {
             FfiConverterString.read(buf),
             FfiConverterUInt.read(buf),
             FfiConverterString.read(buf),
+            FfiConverterOptionalString.read(buf),
         )
     }
 
@@ -2155,7 +4668,8 @@ public object FfiConverterTypeChainConfig: FfiConverterRustBuffer<ChainConfig> {
             FfiConverterOptionalString.allocationSize(value.`grpcEndpoint`) +
             FfiConverterString.allocationSize(value.`addressPrefix`) +
             FfiConverterUInt.allocationSize(value.`coinType`) +
-            FfiConverterString.allocationSize(value.`gasPrice`)
+            FfiConverterString.allocationSize(value.`gasPrice`) +
+            FfiConverterOptionalString.allocationSize(value.`feeGranter`)
     )
 
     override fun write(value: ChainConfig, buf: ByteBuffer) {
@@ -2165,6 +4679,7 @@ public object FfiConverterTypeChainConfig: FfiConverterRustBuffer<ChainConfig> {
             FfiConverterString.write(value.`addressPrefix`, buf)
             FfiConverterUInt.write(value.`coinType`, buf)
             FfiConverterString.write(value.`gasPrice`, buf)
+            FfiConverterOptionalString.write(value.`feeGranter`, buf)
     }
 }
 
@@ -2253,6 +4768,170 @@ public object FfiConverterTypeFee: FfiConverterRustBuffer<Fee> {
             FfiConverterULong.write(value.`gasLimit`, buf)
             FfiConverterOptionalString.write(value.`payer`, buf)
             FfiConverterOptionalString.write(value.`granter`, buf)
+    }
+}
+
+
+
+/**
+ * Message type for transactions
+ */
+data class Message (
+    var `typeUrl`: kotlin.String
+    , 
+    var `value`: kotlin.ByteArray
+    
+){
+    
+
+    
+    companion object
+}
+
+/**
+ * @suppress
+ */
+public object FfiConverterTypeMessage: FfiConverterRustBuffer<Message> {
+    override fun read(buf: ByteBuffer): Message {
+        return Message(
+            FfiConverterString.read(buf),
+            FfiConverterByteArray.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: Message) = (
+            FfiConverterString.allocationSize(value.`typeUrl`) +
+            FfiConverterByteArray.allocationSize(value.`value`)
+    )
+
+    override fun write(value: Message, buf: ByteBuffer) {
+            FfiConverterString.write(value.`typeUrl`, buf)
+            FfiConverterByteArray.write(value.`value`, buf)
+    }
+}
+
+
+
+/**
+ * Session key metadata
+ */
+data class SessionMetadata (
+    /**
+     * The address that granted this session (the main account)
+     */
+    var `granter`: kotlin.String
+    , 
+    /**
+     * The address of the session key (grantee)
+     */
+    var `grantee`: kotlin.String
+    , 
+    /**
+     * Optional fee granter for transactions signed under this session.
+     * Defaults to the granter when omitted.
+     */
+    var `feeGranter`: kotlin.String?
+    , 
+    /**
+     * Optional fee payer for transactions signed under this session.
+     */
+    var `feePayer`: kotlin.String?
+    , 
+    /**
+     * When the session was created (Unix timestamp in seconds)
+     */
+    var `createdAt`: kotlin.ULong
+    , 
+    /**
+     * When the session expires (Unix timestamp in seconds)
+     */
+    var `expiresAt`: kotlin.ULong
+    , 
+    /**
+     * Optional description of the session
+     */
+    var `description`: kotlin.String?
+    
+){
+    
+
+    
+    companion object
+}
+
+/**
+ * @suppress
+ */
+public object FfiConverterTypeSessionMetadata: FfiConverterRustBuffer<SessionMetadata> {
+    override fun read(buf: ByteBuffer): SessionMetadata {
+        return SessionMetadata(
+            FfiConverterString.read(buf),
+            FfiConverterString.read(buf),
+            FfiConverterOptionalString.read(buf),
+            FfiConverterOptionalString.read(buf),
+            FfiConverterULong.read(buf),
+            FfiConverterULong.read(buf),
+            FfiConverterOptionalString.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: SessionMetadata) = (
+            FfiConverterString.allocationSize(value.`granter`) +
+            FfiConverterString.allocationSize(value.`grantee`) +
+            FfiConverterOptionalString.allocationSize(value.`feeGranter`) +
+            FfiConverterOptionalString.allocationSize(value.`feePayer`) +
+            FfiConverterULong.allocationSize(value.`createdAt`) +
+            FfiConverterULong.allocationSize(value.`expiresAt`) +
+            FfiConverterOptionalString.allocationSize(value.`description`)
+    )
+
+    override fun write(value: SessionMetadata, buf: ByteBuffer) {
+            FfiConverterString.write(value.`granter`, buf)
+            FfiConverterString.write(value.`grantee`, buf)
+            FfiConverterOptionalString.write(value.`feeGranter`, buf)
+            FfiConverterOptionalString.write(value.`feePayer`, buf)
+            FfiConverterULong.write(value.`createdAt`, buf)
+            FfiConverterULong.write(value.`expiresAt`, buf)
+            FfiConverterOptionalString.write(value.`description`, buf)
+    }
+}
+
+
+
+/**
+ * Signer address and public key, returned from session manager operations
+ */
+data class SignerInfo (
+    var `address`: kotlin.String
+    , 
+    var `publicKeyHex`: kotlin.String
+    
+){
+    
+
+    
+    companion object
+}
+
+/**
+ * @suppress
+ */
+public object FfiConverterTypeSignerInfo: FfiConverterRustBuffer<SignerInfo> {
+    override fun read(buf: ByteBuffer): SignerInfo {
+        return SignerInfo(
+            FfiConverterString.read(buf),
+            FfiConverterString.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: SignerInfo) = (
+            FfiConverterString.allocationSize(value.`address`) +
+            FfiConverterString.allocationSize(value.`publicKeyHex`)
+    )
+
+    override fun write(value: SignerInfo, buf: ByteBuffer) {
+            FfiConverterString.write(value.`address`, buf)
+            FfiConverterString.write(value.`publicKeyHex`, buf)
     }
 }
 
@@ -2428,6 +5107,11 @@ sealed class MobException(message: String): kotlin.Exception(message) {
         class Timeout(message: String) : MobException(message)
         
     /**
+     * Session expired errors
+     */
+        class SessionExpired(message: String) : MobException(message)
+        
+    /**
      * Generic error
      */
         class Generic(message: String) : MobException(message)
@@ -2457,7 +5141,8 @@ public object FfiConverterTypeMobError : FfiConverterRustBuffer<MobException> {
             10 -> MobException.GasEstimation(FfiConverterString.read(buf))
             11 -> MobException.InsufficientFunds(FfiConverterString.read(buf))
             12 -> MobException.Timeout(FfiConverterString.read(buf))
-            13 -> MobException.Generic(FfiConverterString.read(buf))
+            13 -> MobException.SessionExpired(FfiConverterString.read(buf))
+            14 -> MobException.Generic(FfiConverterString.read(buf))
             else -> throw RuntimeException("invalid error enum value, something is very wrong!!")
         }
         
@@ -2517,13 +5202,175 @@ public object FfiConverterTypeMobError : FfiConverterRustBuffer<MobException> {
                 buf.putInt(12)
                 Unit
             }
-            is MobException.Generic -> {
+            is MobException.SessionExpired -> {
                 buf.putInt(13)
+                Unit
+            }
+            is MobException.Generic -> {
+                buf.putInt(14)
                 Unit
             }
         }.let { /* this makes the `when` an expression, which ensures it is exhaustive */ }
     }
 
+}
+
+
+
+
+
+/**
+ * Error types for signer operations that cross FFI boundary
+ */
+sealed class SignerException(message: String): kotlin.Exception(message) {
+        
+    /**
+     * Failed to sign data
+     */
+        class SigningFailed(message: String) : SignerException(message)
+        
+    /**
+     * Invalid key format or data
+     */
+        class InvalidKey(message: String) : SignerException(message)
+        
+    /**
+     * Invalid signature format
+     */
+        class InvalidSignature(message: String) : SignerException(message)
+        
+
+    companion object ErrorHandler : UniffiRustCallStatusErrorHandler<SignerException> {
+        override fun lift(error_buf: RustBuffer.ByValue): SignerException = FfiConverterTypeSignerError.lift(error_buf)
+    }
+}
+
+/**
+ * @suppress
+ */
+public object FfiConverterTypeSignerError : FfiConverterRustBuffer<SignerException> {
+    override fun read(buf: ByteBuffer): SignerException {
+        
+            return when(buf.getInt()) {
+            1 -> SignerException.SigningFailed(FfiConverterString.read(buf))
+            2 -> SignerException.InvalidKey(FfiConverterString.read(buf))
+            3 -> SignerException.InvalidSignature(FfiConverterString.read(buf))
+            else -> throw RuntimeException("invalid error enum value, something is very wrong!!")
+        }
+        
+    }
+
+    override fun allocationSize(value: SignerException): ULong {
+        return 4UL
+    }
+
+    override fun write(value: SignerException, buf: ByteBuffer) {
+        when(value) {
+            is SignerException.SigningFailed -> {
+                buf.putInt(1)
+                Unit
+            }
+            is SignerException.InvalidKey -> {
+                buf.putInt(2)
+                Unit
+            }
+            is SignerException.InvalidSignature -> {
+                buf.putInt(3)
+                Unit
+            }
+        }.let { /* this makes the `when` an expression, which ensures it is exhaustive */ }
+    }
+
+}
+
+
+
+
+
+/**
+ * Error types for HTTP transport operations that cross FFI boundary
+ */
+sealed class TransportException(message: String): kotlin.Exception(message) {
+        
+    /**
+     * HTTP request failed (non-network error: bad URL, invalid response, etc.)
+     */
+        class RequestFailed(message: String) : TransportException(message)
+        
+    /**
+     * Network-level error (DNS, timeout, TLS, connection refused, etc.)
+     */
+        class NetworkException(message: String) : TransportException(message)
+        
+
+    companion object ErrorHandler : UniffiRustCallStatusErrorHandler<TransportException> {
+        override fun lift(error_buf: RustBuffer.ByValue): TransportException = FfiConverterTypeTransportError.lift(error_buf)
+    }
+}
+
+/**
+ * @suppress
+ */
+public object FfiConverterTypeTransportError : FfiConverterRustBuffer<TransportException> {
+    override fun read(buf: ByteBuffer): TransportException {
+        
+            return when(buf.getInt()) {
+            1 -> TransportException.RequestFailed(FfiConverterString.read(buf))
+            2 -> TransportException.NetworkException(FfiConverterString.read(buf))
+            else -> throw RuntimeException("invalid error enum value, something is very wrong!!")
+        }
+        
+    }
+
+    override fun allocationSize(value: TransportException): ULong {
+        return 4UL
+    }
+
+    override fun write(value: TransportException, buf: ByteBuffer) {
+        when(value) {
+            is TransportException.RequestFailed -> {
+                buf.putInt(1)
+                Unit
+            }
+            is TransportException.NetworkException -> {
+                buf.putInt(2)
+                Unit
+            }
+        }.let { /* this makes the `when` an expression, which ensures it is exhaustive */ }
+    }
+
+}
+
+
+
+
+/**
+ * @suppress
+ */
+public object FfiConverterOptionalULong: FfiConverterRustBuffer<kotlin.ULong?> {
+    override fun read(buf: ByteBuffer): kotlin.ULong? {
+        if (buf.get().toInt() == 0) {
+            return null
+        }
+        return FfiConverterULong.read(buf)
+    }
+
+    override fun allocationSize(value: kotlin.ULong?): ULong {
+        if (value == null) {
+            return 1UL
+        } else {
+            return 1UL + FfiConverterULong.allocationSize(value)
+        }
+    }
+
+    override fun write(value: kotlin.ULong?, buf: ByteBuffer) {
+        if (value == null) {
+            buf.put(0)
+        } else {
+            buf.put(1)
+            FfiConverterULong.write(value, buf)
+        }
+    }
 }
 
 
@@ -2564,6 +5411,38 @@ public object FfiConverterOptionalString: FfiConverterRustBuffer<kotlin.String?>
 /**
  * @suppress
  */
+public object FfiConverterOptionalTypeSessionMetadata: FfiConverterRustBuffer<SessionMetadata?> {
+    override fun read(buf: ByteBuffer): SessionMetadata? {
+        if (buf.get().toInt() == 0) {
+            return null
+        }
+        return FfiConverterTypeSessionMetadata.read(buf)
+    }
+
+    override fun allocationSize(value: SessionMetadata?): ULong {
+        if (value == null) {
+            return 1UL
+        } else {
+            return 1UL + FfiConverterTypeSessionMetadata.allocationSize(value)
+        }
+    }
+
+    override fun write(value: SessionMetadata?, buf: ByteBuffer) {
+        if (value == null) {
+            buf.put(0)
+        } else {
+            buf.put(1)
+            FfiConverterTypeSessionMetadata.write(value, buf)
+        }
+    }
+}
+
+
+
+
+/**
+ * @suppress
+ */
 public object FfiConverterSequenceTypeCoin: FfiConverterRustBuffer<List<Coin>> {
     override fun read(buf: ByteBuffer): List<Coin> {
         val len = buf.getInt()
@@ -2582,6 +5461,34 @@ public object FfiConverterSequenceTypeCoin: FfiConverterRustBuffer<List<Coin>> {
         buf.putInt(value.size)
         value.iterator().forEach {
             FfiConverterTypeCoin.write(it, buf)
+        }
+    }
+}
+
+
+
+
+/**
+ * @suppress
+ */
+public object FfiConverterSequenceTypeMessage: FfiConverterRustBuffer<List<Message>> {
+    override fun read(buf: ByteBuffer): List<Message> {
+        val len = buf.getInt()
+        return List<Message>(len) {
+            FfiConverterTypeMessage.read(buf)
+        }
+    }
+
+    override fun allocationSize(value: List<Message>): ULong {
+        val sizeForLength = 4UL
+        val sizeForItems = value.map { FfiConverterTypeMessage.allocationSize(it) }.sum()
+        return sizeForLength + sizeForItems
+    }
+
+    override fun write(value: List<Message>, buf: ByteBuffer) {
+        buf.putInt(value.size)
+        value.iterator().forEach {
+            FfiConverterTypeMessage.write(it, buf)
         }
     }
 }

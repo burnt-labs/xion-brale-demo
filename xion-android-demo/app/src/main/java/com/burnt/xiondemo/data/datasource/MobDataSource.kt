@@ -1,5 +1,6 @@
 package com.burnt.xiondemo.data.datasource
 
+import com.burnt.mob.NativeHttpTransport
 import com.burnt.xiondemo.data.model.BalanceInfo
 import com.burnt.xiondemo.data.model.TransactionResult
 import kotlinx.coroutines.CoroutineScope
@@ -11,21 +12,25 @@ import kotlinx.coroutines.withContext
 import uniffi.mob.ChainConfig
 import uniffi.mob.Client
 import uniffi.mob.Coin
-import uniffi.mob.Signer
+import uniffi.mob.RustSigner
+import uniffi.mob.SessionMetadata
 import javax.inject.Inject
 import javax.inject.Singleton
 
 interface MobDataSource {
-    suspend fun createClientWithSigner(mnemonic: String): String
+    suspend fun createSigner(mnemonic: String): String
+    suspend fun upgradeToSessionClient(
+        metaAccountAddress: String,
+        treasuryAddress: String,
+        sessionExpiresAt: Long
+    )
     suspend fun getHeight(): Long
     suspend fun getBalance(address: String, denom: String): BalanceInfo
-    suspend fun send(toAddress: String, coins: List<Coin>, granter: String?, feeGranter: String?, memo: String?): TransactionResult
+    suspend fun send(toAddress: String, coins: List<Coin>, memo: String?): TransactionResult
     suspend fun executeContract(
         contractAddress: String,
         msg: ByteArray,
         funds: List<Coin>,
-        granter: String?,
-        feeGranter: String?,
         memo: String?
     ): TransactionResult
     suspend fun getTx(txHash: String): TransactionResult
@@ -37,49 +42,33 @@ interface MobDataSource {
 class RealMobDataSource @Inject constructor() : MobDataSource {
 
     private var client: Client? = null
-    private var signer: Signer? = null
+    private var signer: RustSigner? = null
     private val cleanupScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+    private val transport = NativeHttpTransport()
 
-    override suspend fun createClientWithSigner(mnemonic: String): String = withContext(Dispatchers.IO) {
-        // Null refs immediately so new operations see "Client not initialized",
-        // but defer close() so in-flight RPCs on the old runtime can finish.
+    private fun buildConfig(): ChainConfig = ChainConfig(
+        chainId = "xion-testnet-2",
+        rpcEndpoint = "https://rpc.xion-testnet-2.burnt.com:443",
+        grpcEndpoint = null,
+        addressPrefix = "xion",
+        coinType = 118u,
+        gasPrice = "0.025",
+        feeGranter = null
+    )
+
+    override suspend fun createSigner(mnemonic: String): String = withContext(Dispatchers.IO) {
         val oldClient = client
         val oldSigner = signer
         client = null
         signer = null
 
-        val config = ChainConfig(
-            chainId = "xion-testnet-2",
-            rpcEndpoint = "https://rpc.xion-testnet-2.burnt.com:443",
-            grpcEndpoint = null,
-            addressPrefix = "xion",
-            coinType = 118u,
-            gasPrice = "0.025"
-        )
-
-        val newSigner = Signer.fromMnemonic(
+        val newSigner = RustSigner.fromMnemonic(
             mnemonic = mnemonic,
             addressPrefix = "xion",
             derivationPath = "m/44'/118'/0'/0/0"
         )
 
-        // Never fall back to a bare Client — attachSigner is not implemented in FFI.
-        // Retry once after a brief delay for transient cold-start failures.
-        val newClient = try {
-            Client.newWithSigner(config, newSigner)
-        } catch (e: Exception) {
-            delay(500)
-            try {
-                Client.newWithSigner(config, newSigner)
-            } catch (retryError: Exception) {
-                newSigner.close()
-                throw retryError
-            }
-        }
-
-        // Set fields only AFTER successful client creation
         signer = newSigner
-        client = newClient
 
         // Deferred cleanup of old resources
         if (oldClient != null || oldSigner != null) {
@@ -91,6 +80,41 @@ class RealMobDataSource @Inject constructor() : MobDataSource {
         }
 
         newSigner.address()
+    }
+
+    override suspend fun upgradeToSessionClient(
+        metaAccountAddress: String,
+        treasuryAddress: String,
+        sessionExpiresAt: Long
+    ) = withContext(Dispatchers.IO) {
+        val currentSigner = signer ?: throw IllegalStateException("Signer not initialized")
+
+        val config = buildConfig()
+        val now = System.currentTimeMillis() / 1000
+
+        val metadata = SessionMetadata(
+            granter = metaAccountAddress,
+            grantee = currentSigner.address(),
+            feeGranter = treasuryAddress,
+            feePayer = null,
+            createdAt = now.toULong(),
+            expiresAt = sessionExpiresAt.toULong(),
+            description = null
+        )
+
+        val oldClient = client
+        client = null
+
+        val sessionClient = Client.newWithSessionSigner(config, currentSigner, metadata, transport)
+        client = sessionClient
+
+        // Deferred cleanup of old client
+        if (oldClient != null) {
+            cleanupScope.launch {
+                delay(2000)
+                oldClient.close()
+            }
+        }
     }
 
     override suspend fun getHeight(): Long = withContext(Dispatchers.IO) {
@@ -107,12 +131,10 @@ class RealMobDataSource @Inject constructor() : MobDataSource {
     override suspend fun send(
         toAddress: String,
         coins: List<Coin>,
-        granter: String?,
-        feeGranter: String?,
         memo: String?
     ): TransactionResult = withContext(Dispatchers.IO) {
         val c = client ?: throw IllegalStateException("Client not initialized")
-        val response = c.send(toAddress, coins, granter, feeGranter, memo)
+        val response = c.send(toAddress, coins, memo)
         TransactionResult(
             txHash = response.txhash,
             success = response.code == 0u,
@@ -127,12 +149,10 @@ class RealMobDataSource @Inject constructor() : MobDataSource {
         contractAddress: String,
         msg: ByteArray,
         funds: List<Coin>,
-        granter: String?,
-        feeGranter: String?,
         memo: String?
     ): TransactionResult = withContext(Dispatchers.IO) {
         val c = client ?: throw IllegalStateException("Client not initialized")
-        val response = c.executeContract(contractAddress, msg, funds, granter, feeGranter, memo)
+        val response = c.executeContract(contractAddress, msg, funds, memo, null)
         TransactionResult(
             txHash = response.txhash,
             success = response.code == 0u,
