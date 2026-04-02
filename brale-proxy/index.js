@@ -1,6 +1,7 @@
 import "dotenv/config";
 import express from "express";
 import { v4 as uuidv4 } from "uuid";
+import { getAccountId, saveAccountMapping, getMappingCount } from "./db.js";
 
 const app = express();
 app.use(express.json());
@@ -8,12 +9,10 @@ app.use(express.json());
 const {
   BRALE_CLIENT_ID,
   BRALE_CLIENT_SECRET,
-  BRALE_ACCOUNT_ID,
+  BRALE_ACCOUNT_ID, // Partner (parent) account — used as fallback and for brand injection
   BRALE_API_URL = "https://api.brale.xyz",
   BRALE_AUTH_URL = "https://auth.brale.xyz",
   PORT = 3000,
-  // Comma-separated allowlist of transfer types. Transfers with types not
-  // in this list are rejected. Set to "*" to allow all (not recommended).
   ALLOWED_TRANSFER_TYPES = "xion_testnet,ach_debit,ach_credit,same_day_ach_credit,rtp_credit",
 } = process.env;
 
@@ -66,7 +65,6 @@ async function getBearerToken() {
 
   const data = await res.json();
   cachedToken = data.access_token;
-  // Refresh 5 minutes before expiry
   tokenExpiresAt = Date.now() + (data.expires_in - 300) * 1000;
   return cachedToken;
 }
@@ -121,18 +119,103 @@ function handleError(res, err) {
 }
 
 // ---------------------------------------------------------------------------
+// Health check — registered BEFORE middleware so it's always accessible
+// ---------------------------------------------------------------------------
+
+app.get("/health", (_req, res) => {
+  res.json({
+    status: "ok",
+    account_id: BRALE_ACCOUNT_ID ? "configured" : "missing",
+    managed_accounts: getMappingCount(),
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Wallet address middleware — resolves per-user Brale account
+// ---------------------------------------------------------------------------
+
+const pendingCreations = new Map();
+
+async function createManagedAccount(walletAddress) {
+  // TODO: Replace with actual Brale managed account creation endpoint
+  // once confirmed. Expected: POST /accounts with parent reference.
+  // For now, stub: use the partner account for all users until Brale
+  // confirms the managed account API spec.
+  //
+  // When ready, uncomment and adapt:
+  // const data = await braleRequest("POST", "/accounts", {
+  //   name: `Managed: ${walletAddress}`,
+  //   parent_account_id: BRALE_ACCOUNT_ID,
+  // }, true);
+  // return data.id;
+
+  // Stub: map all new wallets to the partner account
+  return BRALE_ACCOUNT_ID;
+}
+
+async function resolveAccountId(walletAddress) {
+  const existing = getAccountId(walletAddress);
+  if (existing) return existing;
+
+  // Deduplicate concurrent first-requests for the same wallet
+  if (pendingCreations.has(walletAddress)) {
+    return pendingCreations.get(walletAddress);
+  }
+
+  const promise = (async () => {
+    const accountId = await createManagedAccount(walletAddress);
+    saveAccountMapping(walletAddress, accountId);
+    return accountId;
+  })();
+
+  pendingCreations.set(walletAddress, promise);
+  try {
+    return await promise;
+  } finally {
+    pendingCreations.delete(walletAddress);
+  }
+}
+
+app.use(async (req, res, next) => {
+  const walletAddress = req.headers["x-wallet-address"];
+
+  if (!walletAddress) {
+    // Backward compat: fall back to partner account when header is missing.
+    // Remove this fallback once both app updates are deployed.
+    req.braleAccountId = BRALE_ACCOUNT_ID;
+    return next();
+  }
+
+  // Validate wallet address format
+  if (
+    !walletAddress.startsWith("xion1") ||
+    walletAddress.length < 40 ||
+    walletAddress.length > 65 ||
+    !/^[a-z0-9]+$/.test(walletAddress)
+  ) {
+    return res.status(400).json({ error: "Invalid X-Wallet-Address format" });
+  }
+
+  try {
+    req.braleAccountId = await resolveAccountId(walletAddress);
+    next();
+  } catch (err) {
+    handleError(res, err);
+  }
+});
+
+// ---------------------------------------------------------------------------
 // Routes — Plaid
 // ---------------------------------------------------------------------------
 
-// Create Plaid link token for bank account linking
 app.post("/plaid/link-token", async (req, res) => {
   try {
     const { legal_name, email_address, phone_number, date_of_birth } = req.body;
     const data = await braleRequest(
       "POST",
-      `/accounts/${BRALE_ACCOUNT_ID}/plaid/link_token`,
+      `/accounts/${req.braleAccountId}/plaid/link_token`,
       { legal_name, email_address, phone_number, date_of_birth },
-      true // idempotent
+      true
     );
     res.json(data);
   } catch (err) {
@@ -140,13 +223,12 @@ app.post("/plaid/link-token", async (req, res) => {
   }
 });
 
-// Exchange Plaid public token to register bank account
 app.post("/plaid/register", async (req, res) => {
   try {
     const { public_token, transfer_types } = req.body;
     const data = await braleRequest(
       "POST",
-      `/accounts/${BRALE_ACCOUNT_ID}/plaid/register-account`,
+      `/accounts/${req.braleAccountId}/plaid/register-account`,
       {
         public_token,
         transfer_types: transfer_types || [
@@ -155,7 +237,7 @@ app.post("/plaid/register", async (req, res) => {
           "same_day_ach_credit",
         ],
       },
-      true // idempotent
+      true
     );
     res.json(data);
   } catch (err) {
@@ -167,11 +249,10 @@ app.post("/plaid/register", async (req, res) => {
 // Routes — Addresses
 // ---------------------------------------------------------------------------
 
-// List addresses for the account
 app.get("/addresses", async (req, res) => {
   try {
     const { type } = req.query;
-    let path = `/accounts/${BRALE_ACCOUNT_ID}/addresses`;
+    let path = `/accounts/${req.braleAccountId}/addresses`;
     if (type) path += `?type=${type}`;
     const data = await braleRequest("GET", path);
     res.json(data);
@@ -180,14 +261,13 @@ app.get("/addresses", async (req, res) => {
   }
 });
 
-// Create external address (blockchain wallet or bank account)
 app.post("/addresses/external", async (req, res) => {
   try {
     const data = await braleRequest(
       "POST",
-      `/accounts/${BRALE_ACCOUNT_ID}/addresses/external`,
+      `/accounts/${req.braleAccountId}/addresses/external`,
       req.body,
-      true // idempotent
+      true
     );
     res.json(data);
   } catch (err) {
@@ -195,12 +275,11 @@ app.post("/addresses/external", async (req, res) => {
   }
 });
 
-// Get single address
 app.get("/addresses/:id", async (req, res) => {
   try {
     const data = await braleRequest(
       "GET",
-      `/accounts/${BRALE_ACCOUNT_ID}/addresses/${req.params.id}`
+      `/accounts/${req.braleAccountId}/addresses/${req.params.id}`
     );
     res.json(data);
   } catch (err) {
@@ -208,11 +287,10 @@ app.get("/addresses/:id", async (req, res) => {
   }
 });
 
-// Get address balance
 app.get("/addresses/:id/balance", async (req, res) => {
   try {
     const { transfer_type, value_type } = req.query;
-    let path = `/accounts/${BRALE_ACCOUNT_ID}/addresses/${req.params.id}/balance`;
+    let path = `/accounts/${req.braleAccountId}/addresses/${req.params.id}/balance`;
     const params = new URLSearchParams();
     if (transfer_type) params.set("transfer_type", transfer_type);
     if (value_type) params.set("value_type", value_type);
@@ -228,23 +306,22 @@ app.get("/addresses/:id/balance", async (req, res) => {
 // Routes — Transfers
 // ---------------------------------------------------------------------------
 
-// Create transfer (onramp or offramp)
 app.post("/transfers", async (req, res) => {
   try {
     const violation = validateTransferTypes(req.body);
     if (violation) {
       return res.status(400).json({ error: violation });
     }
-    // Inject brand (controls ACH bank statement name) server-side
+    // Brand uses the PARTNER account ID (controls ACH bank statement name)
     const body = {
       ...req.body,
       brand: req.body.brand || { account_id: BRALE_ACCOUNT_ID },
     };
     const data = await braleRequest(
       "POST",
-      `/accounts/${BRALE_ACCOUNT_ID}/transfers`,
+      `/accounts/${req.braleAccountId}/transfers`,
       body,
-      true // idempotent
+      true
     );
     res.json(data);
   } catch (err) {
@@ -252,12 +329,11 @@ app.post("/transfers", async (req, res) => {
   }
 });
 
-// Get transfer status
 app.get("/transfers/:id", async (req, res) => {
   try {
     const data = await braleRequest(
       "GET",
-      `/accounts/${BRALE_ACCOUNT_ID}/transfers/${req.params.id}`
+      `/accounts/${req.braleAccountId}/transfers/${req.params.id}`
     );
     res.json(data);
   } catch (err) {
@@ -265,28 +341,19 @@ app.get("/transfers/:id", async (req, res) => {
   }
 });
 
-// List transfers
 app.get("/transfers", async (req, res) => {
   try {
     const params = new URLSearchParams();
     for (const [key, val] of Object.entries(req.query)) {
       params.set(key, val);
     }
-    let path = `/accounts/${BRALE_ACCOUNT_ID}/transfers`;
+    let path = `/accounts/${req.braleAccountId}/transfers`;
     if (params.toString()) path += `?${params}`;
     const data = await braleRequest("GET", path);
     res.json(data);
   } catch (err) {
     handleError(res, err);
   }
-});
-
-// ---------------------------------------------------------------------------
-// Health check
-// ---------------------------------------------------------------------------
-
-app.get("/health", (_req, res) => {
-  res.json({ status: "ok", account_id: BRALE_ACCOUNT_ID ? "configured" : "missing" });
 });
 
 // ---------------------------------------------------------------------------

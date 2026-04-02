@@ -4,7 +4,6 @@ protocol BraleRepositoryProtocol {
     func createPlaidLinkToken(name: String, email: String) async throws -> PlaidLinkTokenResponse
     func registerBankAccount(publicToken: String) async throws -> String
     func getInternalAddresses() async throws -> [BraleAddress]
-    func findExistingBankAddress() async throws -> BraleAddress?
     func findExistingXionAddress(walletAddress: String) async throws -> BraleAddress?
     func registerXionAddress(walletAddress: String) async throws -> BraleAddress
     func createOnrampTransfer(amount: String, bankAddressId: String, xionAddressId: String) async throws -> BraleTransfer
@@ -38,28 +37,6 @@ final class BraleRepositoryImpl: BraleRepositoryProtocol {
 
     func getInternalAddresses() async throws -> [BraleAddress] {
         try await braleService.getAddresses(type: "internal")
-    }
-
-    func findExistingBankAddress() async throws -> BraleAddress? {
-        // Check cached ID first
-        if let cachedId = secureStorage.getBraleBankAddressId() {
-            let addresses = try await braleService.getAddresses(type: "external")
-            if let match = addresses.first(where: { $0.id == cachedId }) {
-                return match
-            }
-        }
-
-        // Search all external addresses for one with ACH debit capability
-        let addresses = try await braleService.getAddresses(type: "external")
-        let bankAddress = addresses.first { address in
-            address.transferTypes?.contains(Constants.braleAchDebitType) == true
-        }
-
-        if let bankAddress = bankAddress {
-            secureStorage.saveBraleBankAddressId(bankAddress.id)
-        }
-
-        return bankAddress
     }
 
     func findExistingXionAddress(walletAddress: String) async throws -> BraleAddress? {

@@ -50,26 +50,8 @@ class OfframpViewModel @Inject constructor(
             bankLinked = bankId != null,
             bankAddressId = bankId
         )
-        // Auto-detect existing bank address from Brale
-        if (bankId == null) checkExistingBankAddress()
         // Load the xion_testnet custodial address specifically
         loadCustodialAddress()
-    }
-
-    private fun checkExistingBankAddress() {
-        viewModelScope.launch {
-            try {
-                val existing = braleRepository.findExistingBankAddress()
-                if (existing != null) {
-                    secureStorage.putString(Constants.PREF_BRALE_BANK_ADDRESS_ID, existing.id)
-                    _uiState.value = _uiState.value.copy(
-                        bankLinked = true,
-                        bankAddressId = existing.id,
-                        bankName = existing.name
-                    )
-                }
-            } catch (_: Exception) {}
-        }
     }
 
     private fun loadCustodialAddress() {

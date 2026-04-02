@@ -27,7 +27,12 @@ final class AppContainer: ObservableObject {
             mobService: mobService
         )
 
-        braleService = BraleProxyService()
+        braleService = BraleProxyService(walletAddressProvider: { [weak sessionManager] in
+            if case .connected(let addr, _, _, _, _) = sessionManager?.walletState {
+                return addr
+            }
+            return nil
+        })
         braleRepository = BraleRepositoryImpl(
             braleService: braleService,
             secureStorage: secureStorage

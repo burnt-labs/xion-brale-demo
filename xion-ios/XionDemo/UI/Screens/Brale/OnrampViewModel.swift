@@ -55,7 +55,6 @@ final class OnrampViewModel: ObservableObject {
         bankAddressId = bankId
         xionAddressId = xionId
 
-        if bankId == nil { checkExistingBankAddress() }
         if xionId == nil { checkExistingXionAddress() }
     }
 
@@ -179,21 +178,6 @@ final class OnrampViewModel: ObservableObject {
     }
 
     // MARK: - Private
-
-    private func checkExistingBankAddress() {
-        Task {
-            do {
-                if let existing = try await braleRepository.findExistingBankAddress() {
-                    secureStorage.saveBraleBankAddressId(existing.id)
-                    bankLinked = true
-                    bankAddressId = existing.id
-                    bankName = existing.name
-                }
-            } catch {
-                // Non-critical
-            }
-        }
-    }
 
     private func checkExistingXionAddress() {
         Task {

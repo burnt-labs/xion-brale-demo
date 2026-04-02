@@ -48,7 +48,6 @@ final class OfframpViewModel: ObservableObject {
         bankLinked = bankId != nil
         bankAddressId = bankId
 
-        if bankId == nil { checkExistingBankAddress() }
         loadCustodialAddress()
     }
 
@@ -144,21 +143,6 @@ final class OfframpViewModel: ObservableObject {
     }
 
     // MARK: - Private
-
-    private func checkExistingBankAddress() {
-        Task {
-            do {
-                if let existing = try await braleRepository.findExistingBankAddress() {
-                    secureStorage.saveBraleBankAddressId(existing.id)
-                    bankLinked = true
-                    bankAddressId = existing.id
-                    bankName = existing.name
-                }
-            } catch {
-                // Non-critical
-            }
-        }
-    }
 
     private func loadCustodialAddress() {
         Task {

@@ -21,14 +21,36 @@ import javax.inject.Singleton
 @Retention(AnnotationRetention.BINARY)
 annotation class BraleRetrofit
 
+@Qualifier
+@Retention(AnnotationRetention.BINARY)
+annotation class BraleClient
+
 @Module
 @InstallIn(SingletonComponent::class)
 object BraleNetworkModule {
 
     @Provides
     @Singleton
+    @BraleClient
+    fun provideBraleOkHttpClient(
+        client: OkHttpClient,
+        walletAddressProvider: WalletAddressProvider
+    ): OkHttpClient {
+        return client.newBuilder()
+            .addInterceptor { chain ->
+                val builder = chain.request().newBuilder()
+                walletAddressProvider.getWalletAddress()?.let {
+                    builder.addHeader("X-Wallet-Address", it)
+                }
+                chain.proceed(builder.build())
+            }
+            .build()
+    }
+
+    @Provides
+    @Singleton
     @BraleRetrofit
-    fun provideBraleRetrofit(client: OkHttpClient, json: Json): Retrofit {
+    fun provideBraleRetrofit(@BraleClient client: OkHttpClient, json: Json): Retrofit {
         val contentType = "application/json".toMediaType()
         return Retrofit.Builder()
             .baseUrl(Constants.BRALE_PROXY_URL)
@@ -50,4 +72,8 @@ abstract class BraleBindingsModule {
     @Binds
     @Singleton
     abstract fun bindBraleRepository(impl: BraleRepositoryImpl): BraleRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindWalletAddressProvider(impl: WalletAddressProviderImpl): WalletAddressProvider
 }

@@ -3,11 +3,16 @@ import Foundation
 final class BraleProxyService {
 
     private let baseURL: String
+    private let walletAddressProvider: () -> String?
     private let encoder: JSONEncoder
     private let decoder: JSONDecoder
 
-    init(baseURL: String = Constants.braleProxyUrl) {
+    init(
+        baseURL: String = Constants.braleProxyUrl,
+        walletAddressProvider: @escaping () -> String? = { nil }
+    ) {
         self.baseURL = baseURL.hasSuffix("/") ? String(baseURL.dropLast()) : baseURL
+        self.walletAddressProvider = walletAddressProvider
 
         encoder = JSONEncoder()
         encoder.keyEncodingStrategy = .convertToSnakeCase
@@ -77,6 +82,9 @@ final class BraleProxyService {
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
         request.setValue("application/json", forHTTPHeaderField: "Accept")
+        if let walletAddress = walletAddressProvider() {
+            request.setValue(walletAddress, forHTTPHeaderField: "X-Wallet-Address")
+        }
 
         let (data, response) = try await URLSession.shared.data(for: request)
         try validateResponse(response, data: data)
@@ -92,6 +100,9 @@ final class BraleProxyService {
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.setValue("application/json", forHTTPHeaderField: "Accept")
+        if let walletAddress = walletAddressProvider() {
+            request.setValue(walletAddress, forHTTPHeaderField: "X-Wallet-Address")
+        }
         request.httpBody = try encoder.encode(body)
 
         let (data, response) = try await URLSession.shared.data(for: request)

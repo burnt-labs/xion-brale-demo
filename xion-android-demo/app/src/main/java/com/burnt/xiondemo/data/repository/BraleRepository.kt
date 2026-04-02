@@ -7,10 +7,9 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 interface BraleRepository {
-    suspend fun createPlaidLinkToken(name: String, email: String): PlaidLinkTokenResponse
+    suspend fun createPlaidLinkToken(name: String, email: String, phone: String, dob: String): PlaidLinkTokenResponse
     suspend fun registerBankAccount(publicToken: String): String
     suspend fun getInternalAddresses(): List<BraleAddress>
-    suspend fun findExistingBankAddress(): BraleAddress?
     suspend fun findExistingXionAddress(walletAddress: String): BraleAddress?
     suspend fun registerXionAddress(walletAddress: String): BraleAddress
     suspend fun createOnrampTransfer(
@@ -32,9 +31,9 @@ class BraleRepositoryImpl @Inject constructor(
     private val api: BraleProxyApi
 ) : BraleRepository {
 
-    override suspend fun createPlaidLinkToken(name: String, email: String): PlaidLinkTokenResponse {
+    override suspend fun createPlaidLinkToken(name: String, email: String, phone: String, dob: String): PlaidLinkTokenResponse {
         return api.createPlaidLinkToken(
-            PlaidLinkTokenRequest(legalName = name, emailAddress = email)
+            PlaidLinkTokenRequest(legalName = name, emailAddress = email, phoneNumber = phone, dateOfBirth = dob)
         )
     }
 
@@ -44,13 +43,6 @@ class BraleRepositoryImpl @Inject constructor(
 
     override suspend fun getInternalAddresses(): List<BraleAddress> {
         return api.getAddresses(type = "internal").addresses
-    }
-
-    override suspend fun findExistingBankAddress(): BraleAddress? {
-        val all = api.getAddresses().addresses
-        return all.firstOrNull { addr ->
-            addr.status == "active" && addr.transferTypes.contains("ach_debit")
-        }
     }
 
     override suspend fun findExistingXionAddress(walletAddress: String): BraleAddress? {

@@ -60,6 +60,8 @@ apps/
     │  iOS: SwiftUI   │◀────│  Holds API secrets │
     │                 │     │  Token caching     │
     │  mob (Rust FFI) │     │  Transfer guard    │
+    │                 │     │  Per-user accounts │
+    │  X-Wallet-Addr  │     │  (SQLite)          │
     └─────────────────┘     └───────┬────────────┘
                                     │ OAuth2 Client Credentials
                                     ▼
@@ -74,7 +76,7 @@ apps/
 **Three components:**
 
 1. **Mobile apps** — connect directly to XION RPC/REST for blockchain operations (balance, send, contract execution) via the mob Rust library (compiled as native code via UniFFI)
-2. **Brale proxy** — sits between mobile apps and Brale's API. Holds OAuth2 client credentials, manages bearer token lifecycle, enforces a transfer-type allowlist to prevent accidental mainnet usage
+2. **Brale proxy** — sits between mobile apps and Brale's API. Holds OAuth2 client credentials, manages bearer token lifecycle, enforces a transfer-type allowlist to prevent accidental mainnet usage. Routes requests to per-user Brale managed accounts via a local SQLite database, using the user's XION wallet address (sent as `X-Wallet-Address` header) as the lookup key
 3. **XION testnet** — Cosmos SDK chain with account abstraction. The Abstraxion dashboard handles OAuth login and authz grant creation
 
 ---
@@ -138,11 +140,12 @@ xcrun simctl launch booted com.burnt.xiondemo.ios
 |----------|----------|---------|-------------|
 | `BRALE_CLIENT_ID` | Yes | — | OAuth2 client ID from Brale dashboard |
 | `BRALE_CLIENT_SECRET` | Yes | — | OAuth2 client secret from Brale dashboard |
-| `BRALE_ACCOUNT_ID` | Yes | — | Your KYB-verified Brale account ID (KSUID, 26 chars). Find via `GET /accounts` after authenticating |
+| `BRALE_ACCOUNT_ID` | Yes | — | Partner (parent) Brale account ID (KSUID, 26 chars). Managed sub-accounts for end users are created under this account. Also used for the `brand` field on ACH transfers (bank statement name). Find via `GET /accounts` after authenticating |
 | `BRALE_API_URL` | No | `https://api.brale.xyz` | Brale API base URL |
 | `BRALE_AUTH_URL` | No | `https://auth.brale.xyz` | Brale OAuth2 token endpoint base |
 | `PORT` | No | `3000` | Port the proxy server listens on |
 | `ALLOWED_TRANSFER_TYPES` | No | `xion_testnet,ach_debit,ach_credit,same_day_ach_credit,rtp_credit` | Comma-separated allowlist. The proxy rejects any `POST /transfers` request whose source or destination `transfer_type` is not in this list. Set to `*` to disable (not recommended). This prevents accidental mainnet transfers since the same Brale credentials access both environments |
+| `DB_PATH` | No | `./data/accounts.db` | SQLite database file path for per-user wallet-to-Brale-account mappings |
 
 **How to get your Account ID:**
 ```bash
@@ -167,9 +170,10 @@ curl -s "https://api.brale.xyz/accounts" -H "Authorization: Bearer $TOKEN"
 | `XION_TREASURY_ADDRESS` | String | `xion1sm3qp...hqa0mj` | Address that pays gas fees via the Cosmos fee grant module. Set by the Abstraxion dashboard during grant creation |
 | `XION_OAUTH_CLIENT_ID` | String | `""` (empty) | OAuth2 client ID for the Abstraxion dashboard. Leave empty if using the default public client |
 | `XION_OAUTH_AUTHORIZATION_ENDPOINT` | String | `https://auth.testnet.burnt.com/` | Base URL of the Abstraxion authentication dashboard |
-| `BRALE_PROXY_URL` | String | `http://10.0.2.2:3000/` | URL of the Brale proxy server. `10.0.2.2` is Android emulator's host loopback. For physical devices, use your machine's LAN IP (e.g., `http://192.168.1.100:3000/`) |
+| `BRALE_PROXY_URL` | String | `http://192.168.100.199:3000/` | URL of the Brale proxy server. Set this to your machine's LAN IP for physical device testing, or `http://10.0.2.2:3000/` for Android emulator (host loopback). Must match a domain in `network_security_config.xml` |
 | `BRALE_TRANSFER_TYPE` | String | `xion_testnet` | Brale transfer type for on-chain stablecoin operations. Use `xion_testnet` for testnet, `xion` for mainnet |
 | `BRALE_STABLECOIN_DENOM` | String | `SBC` | Brale stablecoin denomination identifier used in transfer `value_type` fields |
+| `BRALE_SBC_ON_CHAIN_DENOM` | String | `factory/xion17grq736740r70awldugfs3mls3stu9haewctv2/sbc` | Full on-chain denomination for the SBC token (Cosmos token factory format). Used to query on-chain SBC balance via the LCD REST API |
 
 ### Android Constants (`util/Constants.kt`)
 
@@ -187,6 +191,23 @@ These are compile-time constants not exposed as BuildConfig (change by editing s
 | `BRALE_ACH_DEBIT_TYPE` | `ach_debit` | Brale transfer type for pulling funds from a bank account |
 | `BRALE_ACH_CREDIT_TYPE` | `same_day_ach_credit` | Brale transfer type for pushing funds to a bank account (same-day settlement) |
 | `BRALE_FIAT_VALUE_TYPE` | `USD` | Fiat value type used in Brale transfer endpoints |
+
+### Android Network Security Config (`app/src/main/res/xml/network_security_config.xml`)
+
+The Android app includes a network security config that allows cleartext HTTP traffic to the local Brale proxy during development. By default, Android blocks all cleartext (non-HTTPS) traffic.
+
+**Pre-configured domains:**
+
+| Domain | Purpose |
+|--------|---------|
+| `10.0.2.2` | Android emulator host loopback |
+| `192.168.100.199` | Developer LAN IP (change to yours) |
+| `localhost` | Local testing |
+| `127.0.0.1` | Local testing |
+
+**For physical device testing:** Add your machine's LAN IP to the `<domain-config>` block in this file. The domain must match the IP in `BRALE_PROXY_URL` in `build.gradle.kts`.
+
+Referenced from `AndroidManifest.xml` via `android:networkSecurityConfig="@xml/network_security_config"`.
 
 ### iOS Configuration (`Constants.swift`)
 
@@ -343,6 +364,44 @@ The apps don't call mob directly. A service layer wraps mob for thread safety an
 
 Brale provides stablecoin infrastructure on XION. The same Brale account and API credentials access **both testnet and mainnet** — the environment is determined by the `transfer_type` field in each transfer (`xion_testnet` vs `xion`).
 
+### How the ACH Onramp Works (Plain English)
+
+**The goal:** User gives USD from their bank, gets stablecoin tokens (SBC) in their crypto wallet.
+
+1. **User links their bank** — They go through Plaid (the bank-linking widget you've seen in Venmo, Robinhood, etc.). They pick their bank, log in, select an account. This is the *only* way to do ACH debit — you can't just type in an account number.
+
+2. **Your backend registers that bank** — Plaid gives you a temporary `public_token`. You send it to Brale, and Brale gives you back a permanent `address_id` representing that bank account. Think of it like a nickname for "Chase checking ****1039".
+
+3. **User's crypto wallet gets registered too** — You tell Brale "here's the XION wallet address where tokens should go" and get another `address_id` for it.
+
+4. **User says "buy $100 of SBC"** — You create a transfer that says:
+   - **Pull $100 from** the bank `address_id` (via ACH debit)
+   - **Send SBC tokens to** the wallet `address_id` (via xion_testnet)
+
+5. **Brale handles the rest** — They debit the bank, mint the stablecoins on-chain, and deliver them to the wallet.
+
+**Key constraints:**
+- **Plaid is mandatory** for pulling money from banks (ACH debit). No Plaid = no bank pulls.
+- **$50k max** per transaction.
+- **The `brand` field** is optional — it controls what name appears on the user's bank statement (e.g., "HOUSE MONEY" instead of "BRALE"). This is a premium feature.
+- **Idempotency-Key header** — prevents duplicate transfers if a request is accidentally sent twice.
+
+**What this looks like in our app:**
+
+```
+User fills form (name, email, phone, DOB)
+        |
+Taps "Link" -> Plaid opens -> picks bank -> done
+        |
+Enters "$100" -> taps "Buy"
+        |
+App tells proxy: pull $100 from bank, send SBC to wallet
+        |
+Poll until tokens arrive on-chain -> show confirmation
+```
+
+Brale is the bridge between the traditional banking system (ACH) and the blockchain (XION). Plaid is the secure way to connect a user's bank account without you ever touching their credentials.
+
 ### Onramp Flow (Buy Stablecoins)
 
 ```
@@ -437,13 +496,15 @@ Base URL: `http://localhost:3000` (or wherever the proxy is deployed)
 
 All requests and responses use `Content-Type: application/json`.
 
+All endpoints (except `/health`) accept an optional `X-Wallet-Address` header containing the user's XION wallet address (e.g., `xion1abc...`). When present, the proxy routes the request to that user's managed Brale sub-account. When absent, falls back to the partner account.
+
 ### `GET /health`
 
 Health check.
 
 **Response:**
 ```json
-{"status": "ok", "account_id": "configured"}
+{"status": "ok", "account_id": "configured", "managed_accounts": 0}
 ```
 
 ### `POST /plaid/link-token`
@@ -782,6 +843,19 @@ The app uses a sealed class / enum to track wallet connection state:
 | Session mnemonic (iOS) | iOS Keychain (`kSecClassGenericPassword`) | Plaintext on disk, other apps |
 | Session private key | In-memory only (mob Rust `Signer` object) | Disk, network |
 
+### Per-User Account Routing
+
+The proxy maps each user's XION wallet address to their own Brale managed sub-account. This provides data isolation — each user's bank links, wallet registrations, and transfer history are scoped to their own account.
+
+**How it works:**
+1. Mobile apps send an `X-Wallet-Address` header with every proxy request (injected automatically by an OkHttp interceptor on Android, or in `BraleProxyService` on iOS)
+2. The proxy looks up the wallet address in a local SQLite database (`data/accounts.db`)
+3. If found, routes the request to that user's Brale account
+4. If not found, creates a new managed sub-account under the partner account, stores the mapping, then routes
+5. A race-condition guard deduplicates concurrent first-requests from the same wallet
+
+**Backward compatibility:** If the `X-Wallet-Address` header is missing, the proxy falls back to `BRALE_ACCOUNT_ID` (the partner account). This allows older app versions to continue working during rollout.
+
 ### Transfer Type Allowlist
 
 The proxy's `ALLOWED_TRANSFER_TYPES` environment variable prevents accidental mainnet transfers. Since the same Brale credentials access both testnet and mainnet, a misconfigured `transfer_type` could move real money. The proxy rejects any `POST /transfers` request containing a type not in the allowlist before it reaches Brale.
@@ -866,7 +940,9 @@ app/src/main/java/com/burnt/xiondemo/
 │   ├── DataModule.kt                   # Binds XionRepository
 │   ├── NetworkModule.kt                # OkHttp, Retrofit (XION REST)
 │   ├── AppModule.kt                    # MobDataSource singleton
-│   └── BraleModule.kt                  # BraleRetrofit, BraleProxyApi, BraleRepository
+│   ├── BraleModule.kt                  # BraleRetrofit, BraleProxyApi, BraleRepository,
+│   │                                    # @BraleClient OkHttpClient with X-Wallet-Address
+│   └── WalletAddressProvider.kt        # Interface + impl for dynamic wallet address
 │
 ├── security/
 │   ├── SecureStorage.kt                # EncryptedSharedPreferences wrapper
@@ -945,11 +1021,14 @@ XionDemo/
 
 ```
 brale-proxy/
-├── index.js          # All routes, auth, transfer guard (single file for demo)
-├── package.json      # Express, uuid, dotenv
+├── index.js          # Routes, auth, transfer guard, per-user account middleware
+├── db.js             # SQLite database layer (wallet → Brale account mapping)
+├── package.json      # Express, uuid, dotenv, better-sqlite3
 ├── .env.example      # Documented env var template
 ├── .env              # Actual credentials (gitignored)
-├── .gitignore        # node_modules/, .env
+├── .gitignore        # node_modules/, .env, data/
+├── data/             # SQLite database files (gitignored)
+│   └── accounts.db   # Per-user account mappings
 └── node_modules/     # Installed dependencies
 ```
 
@@ -1091,7 +1170,23 @@ curl -s "https://api.brale.xyz/accounts" -H "Authorization: Bearer $TOKEN"
 
 Store the `account_id` in your proxy's `.env` file as `BRALE_ACCOUNT_ID`.
 
-#### Step 2: Create Plaid Link Token (Server-Side)
+#### Step 2: Configure Plaid OAuth for Mobile (Brale Dashboard)
+
+Before integrating Plaid Link in your mobile apps, you must register your app's identity in the Brale dashboard so that OAuth-based bank connections can redirect back to your app.
+
+In the Brale dashboard, navigate to **Plaid OAuth Configuration**:
+
+**Android Package Names:**
+Add your Android app's `applicationId` (from `build.gradle.kts`). For this demo: `com.burnt.xiondemo`.
+
+Without this, Plaid Link will fail to redirect back to your app after OAuth-based bank login flows (where the user is taken to their bank's app or website to authenticate).
+
+**iOS Redirect URIs:**
+Add HTTPS universal link URLs for iOS if your app uses OAuth-based bank connections. These must be HTTPS URLs that your app has registered as universal links (e.g., `https://app.example.com/plaid-oauth`). If your app only uses non-OAuth institutions (like sandbox test banks), this can be deferred.
+
+**Note:** Plaid OAuth configuration is per API key. If you have separate testnet and production keys, configure both.
+
+#### Step 3: Create Plaid Link Token (Server-Side)
 
 Your backend calls Brale to create a Plaid link token. The mobile app never calls Brale directly.
 
@@ -1113,7 +1208,7 @@ POST /accounts/{account_id}/plaid/link_token
 - However, **Plaid uses these for identity verification**. If `phone_number` is provided, Plaid will send an SMS verification code to that number. The user must enter the code before they can select their bank
 - If `phone_number` is omitted, Plaid may prompt the user to enter their phone number inline
 - **The phone number must be in E.164 format** (e.g., `+15551234567`). Invalid format will cause Plaid to fail silently
-- **These should be the end user's real details**, not hardcoded test values. Collect them during your app's onboarding or account creation flow
+- **These should be the end user's real details**, not hardcoded test values. The demo app collects legal name and email via input fields on the Buy Stablecoins screen before launching Plaid Link
 
 Response:
 ```json
@@ -1124,7 +1219,7 @@ Response:
 }
 ```
 
-#### Step 3: Launch Plaid Link (Mobile App)
+#### Step 4: Launch Plaid Link (Mobile App)
 
 Pass the `link_token` to the Plaid Link SDK:
 
@@ -1146,7 +1241,33 @@ val config = LinkTokenConfiguration.Builder().token(linkToken).build()
 plaidLauncher.launch(config)
 ```
 
-**iOS (SwiftUI):** Use the [Plaid Link iOS SDK](https://plaid.com/docs/link/ios/).
+**iOS (SwiftUI):**
+```swift
+// project.yml dependency:
+//   LinkKit: { url: "https://github.com/plaid/plaid-link-ios", from: "5.6.0" }
+
+import LinkKit
+
+// The demo wraps LinkKit's callback API in an async/await service:
+let result = try await plaidLinkService.openLink(token: linkToken)
+switch result {
+case .success(let publicToken):
+    let addressId = try await braleRepository.registerBankAccount(publicToken: publicToken)
+    secureStorage.saveBraleBankAddressId(addressId)
+case .cancelled:
+    break
+}
+
+// Under the hood, PlaidLinkService creates a handler and presents it:
+var config = LinkTokenConfiguration(token: token) { success in
+    // success.publicToken — exchange this via your backend
+}
+config.onExit = { exit in
+    // User cancelled or Plaid error (exit.error)
+}
+let result = Plaid.create(config) // Returns Result<Handler, PlaidError>
+handler.open(presentUsing: .viewController(topViewController))
+```
 
 The user will:
 1. Verify their identity (SMS code to their phone number)
@@ -1155,7 +1276,7 @@ The user will:
 4. Select a checking/savings account
 5. Plaid returns a `public_token` to your app
 
-#### Step 4: Register the Bank Account
+#### Step 5: Register the Bank Account
 
 Exchange the Plaid `public_token` for a Brale bank address:
 
@@ -1166,12 +1287,11 @@ POST /accounts/{account_id}/plaid/register-account
 ```json
 {
   "public_token": "public-production-xyz789...",
-  "customer_webhook_url": "https://yourapp.com/webhooks/plaid",
   "transfer_types": ["ach_debit", "ach_credit", "same_day_ach_credit"]
 }
 ```
 
-- `customer_webhook_url` is required — Brale forwards Plaid events (e.g., `ITEM_LOGIN_REQUIRED` for re-authentication)
+- `customer_webhook_url` is optional. If provided, Brale forwards Plaid events (e.g., `ITEM_LOGIN_REQUIRED` for bank re-authentication) to this URL. The demo app omits it
 - `transfer_types` determines which rails are enabled. `ach_debit` is required for onramp
 - **ACH debit is ONLY available through the Plaid-linked bank account flow.** You cannot enable `ach_debit` via direct bank entry
 
@@ -1184,7 +1304,7 @@ Response:
 
 Store this `address_id` — it's the user's bank account for future transfers.
 
-#### Step 5: Register the User's Xion Wallet
+#### Step 6: Register the User's Xion Wallet
 
 Create an external address for the user's on-chain wallet:
 
@@ -1203,7 +1323,7 @@ Idempotency-Key: <uuid>
 
 Use `xion_testnet` for testnet or `xion` for mainnet.
 
-#### Step 6: Create the Onramp Transfer
+#### Step 7: Create the Onramp Transfer
 
 ```
 POST /accounts/{account_id}/transfers
@@ -1233,7 +1353,7 @@ Idempotency-Key: <uuid>
 - Always include an `Idempotency-Key` header on POST requests (the proxy handles this automatically)
 - Our proxy injects the `brand` field server-side so the mobile app doesn't need the account ID
 
-#### Step 7: Poll Transfer Status
+#### Step 8: Poll Transfer Status
 
 ```
 GET /accounts/{account_id}/transfers/{transfer_id}
@@ -1243,32 +1363,41 @@ Status progression: `pending` → `processing` → `complete` (or `failed`/`canc
 
 Poll with exponential backoff (3s → 6s → 12s → ... up to 30s). ACH debits can take 1-3 business days to settle in production.
 
-### Returning Users: Auto-Detect Existing Bank Accounts
+### Returning Users: Local Cache
 
-Once a user has linked their bank via Plaid, the `address_id` persists on your Brale account. On subsequent app launches, query existing addresses instead of requiring Plaid again:
+Once a user has linked their bank via Plaid, the demo app stores the `bank_address_id` in local secure storage (EncryptedSharedPreferences on Android, Keychain on iOS). On subsequent app launches, the cached ID is restored — no Plaid flow needed.
 
-```
-GET /accounts/{account_id}/addresses
-```
-
-Look for addresses with `status: "active"` and `"ach_debit"` in `transfer_types`. If found, use that `address_id` directly — no Plaid flow needed.
-
-The demo app does this automatically in `OnrampViewModel.init()`:
-1. Check local storage for a saved `bank_address_id`
-2. If not found, query `GET /addresses` via the proxy
-3. If an active bank with `ach_debit` exists, auto-populate and skip Plaid
+The app does **not** auto-detect bank accounts from the Brale API. Each user must link their own bank via Plaid at least once. This is intentional — with per-user managed accounts, querying all addresses could only return that user's own addresses, but the Plaid flow ensures proper bank verification and KYC.
 
 ### Common Pitfalls
 
 | Issue | Cause | Fix |
 |-------|-------|-----|
-| Plaid Link closes immediately after "Sending verification code" | Identity fields (name, email, phone) are dummy values or phone format is wrong | Collect real user details. Phone must be E.164 format (`+1...`) |
+| Plaid Link shows "Sending SMS" then closes without bank selection | A `phone_number` was included in the link token request, triggering Plaid's Returning User phone verification — real phone numbers don't work in Sandbox | **Do not send `phone_number`** to Brale's link token endpoint. It's optional, and omitting it skips the SMS step entirely. If you must test phone verification in Sandbox, use Plaid's test numbers (`+14155550010` through `+14155550015`) with OTP `123456` |
 | HTTP 400 "null value where string expected" | Kotlinx serialization sends `null` for optional fields | Set `explicitNulls = false` in your Json config |
 | HTTP 400 "No idempotency key found" | Missing `Idempotency-Key` header on POST requests | Ensure all POST requests include a UUID idempotency key |
-| "CLEARTEXT communication not permitted" (Android) | Android blocks HTTP by default | Add a `network_security_config.xml` allowing cleartext to your proxy host |
+| "CLEARTEXT communication not permitted" (Android) | Android blocks HTTP by default | A `network_security_config.xml` is already included. Add your machine's LAN IP to the `<domain-config>` block in `app/src/main/res/xml/network_security_config.xml` and rebuild |
 | Transfer type not in allowlist | Proxy's `ALLOWED_TRANSFER_TYPES` is blocking the request | Add the type to `.env` and restart proxy |
 | Brale returns `{"addresses": [...]}` but model expects `{"data": [...]}` | Brale's response keys don't match generic `data` field | Use the exact field names from Brale's API (`addresses`, `transfers`, etc.) |
-| Bank address not auto-detected | Response parsing uses wrong field name | Ensure your model maps to `addresses` (not `data`) for the address list response |
+
+### Sandbox Testing with Plaid
+
+Brale manages the Plaid integration on their end. When using Brale's testnet credentials, Plaid Link will connect to Plaid's Sandbox environment. No setup is needed in the Plaid dashboard — test bank accounts with pre-populated balances are provided automatically.
+
+**Test credentials for Plaid Sandbox:**
+
+| Field | Value |
+|-------|-------|
+| Institution | Select any sandbox bank (e.g. "First Platypus Bank") |
+| Username | `user_good` |
+| Password | `pass_good` |
+| MFA code (if prompted) | `1234` |
+
+These credentials work across all sandbox test institutions and provide checking/savings accounts with balances.
+
+**Custom test data:** If you need specific balances or account types, use Plaid Dashboard → Developers → Sandbox → "Sandbox Users" to create a custom test user. Alternatively, log in with username `user_custom` and pass a JSON configuration as the password.
+
+**Note:** On Brale testnet, the fiat leg of on-ramp/off-ramp transfers is simulated — tokens mint/burn on-chain without actual ACH movement. The Plaid bank linking step primarily tests the UI/UX flow of connecting a bank account.
 
 ### Testnet vs Production
 
@@ -1277,7 +1406,7 @@ The demo app does this automatically in `OnrampViewModel.init()`:
 | API credentials | Testnet-scoped from Brale dashboard | Production-scoped |
 | API URL | Same: `https://api.brale.xyz` | Same |
 | Transfer type | `xion_testnet` | `xion` |
-| Plaid environment | Plaid sandbox/production (managed by Brale) | Plaid production |
-| ACH settlement | May be faster | 1-3 business days |
+| Plaid environment | Plaid Sandbox (managed by Brale) | Plaid Production |
+| ACH settlement | Simulated (immediate on-chain) | 1-3 business days |
 | Real money | No | Yes |
 | Proxy `ALLOWED_TRANSFER_TYPES` | Include `xion_testnet` | Include `xion` |
