@@ -1148,7 +1148,10 @@ This section covers everything a developer needs to integrate Brale's stablecoin
 
 2. **Brale API credentials** — After approval, create OAuth2 client credentials in the Brale dashboard. You'll receive a `client_id` and `client_secret`. **Important:** Credentials are scoped to either testnet or production at creation time — the same API base URL (`https://api.brale.xyz`) is used for both, but the credentials determine which environment you access.
 
-3. **Plaid** — Brale handles Plaid configuration on their end. You do NOT need a separate Plaid account. The Plaid Link token is created through Brale's API, and Brale manages the Plaid integration. However, your mobile app needs the Plaid Link SDK to render the bank selection UI.
+3. **Plaid** — Brale handles Plaid configuration on their end. You do NOT need a separate Plaid account. The Plaid Link token is created through Brale's API, and Brale manages the Plaid integration entirely. However, your **mobile app** needs the Plaid Link SDK to render the bank selection UI:
+   - **Android:** `com.plaid.link:sdk-core:4.5.1` (see `build.gradle.kts`)
+   - **iOS:** `LinkKit` from `github.com/plaid/plaid-link-ios`, version 5.6.0+ (see `project.yml`)
+   - Register your Android package name and/or iOS redirect URI in the Brale dashboard under **Plaid OAuth Configuration** (Step 2 below)
 
 ### Step-by-Step Integration
 
@@ -1188,7 +1191,9 @@ Add HTTPS universal link URLs for iOS if your app uses OAuth-based bank connecti
 
 #### Step 3: Create Plaid Link Token (Server-Side)
 
-Your backend calls Brale to create a Plaid link token. The mobile app never calls Brale directly.
+Your **backend** (not the mobile app) calls Brale to create a Plaid link token. The mobile app never talks to Brale directly — it gets the `link_token` from your backend and uses it to initialize the Plaid Link SDK.
+
+**In our app:** The proxy handles this at `POST /plaid/link-token`, which forwards to Brale. `OnrampViewModel` calls this when the user taps "Link", then passes the returned `link_token` to the Plaid Link SDK.
 
 ```
 POST /accounts/{account_id}/plaid/link_token
@@ -1210,16 +1215,30 @@ POST /accounts/{account_id}/plaid/link_token
 - **The phone number must be in E.164 format** (e.g., `+15551234567`). Invalid format will cause Plaid to fail silently
 - **These should be the end user's real details**, not hardcoded test values. The demo app collects legal name and email via input fields on the Buy Stablecoins screen before launching Plaid Link
 
-Response:
+**Response:**
 ```json
 {
-  "link_token": "link-production-abc123...",
+  "link_token": "link-sandbox-abc123...",
   "expiration": "2026-03-25T05:37:05Z",
   "callback_url": "http://api.brale.xyz:80/accounts/.../plaid/register-account"
 }
 ```
 
+**Key fields in the response:**
+- `link_token` — Pass this to the Plaid Link SDK on the mobile app. This is the only field you need for the next step.
+- `expiration` — The token is short-lived (typically 4 hours). Create a new one if it expires before the user completes the flow.
+- `callback_url` — This is Brale's register-account endpoint. You don't need to call this URL directly — instead, your backend calls `POST /plaid/register` (Step 5) with the `public_token` that Plaid returns after the user finishes. The demo app handles Step 5 explicitly rather than relying on the callback.
+
 #### Step 4: Launch Plaid Link (Mobile App)
+
+Pass the `link_token` to the Plaid Link SDK. The SDK opens a webview where the user links their bank. When finished, it returns a `public_token` to your app.
+
+**Redirect URI requirement:** For banks that use OAuth (where the user is redirected to their bank's app or website), Plaid needs a way to return the user to your app. This is configured in Step 2 via the Brale dashboard:
+- **Android:** Register your package name (`com.burnt.xiondemo`). Plaid uses Android App Links to redirect back.
+- **iOS:** Register an HTTPS universal link as a redirect URI. For sandbox test banks this isn't needed (they don't use OAuth), but production banks will require it.
+- The redirect URI configured in the Brale dashboard **must exactly match** what your app is registered to handle, otherwise the handoff back to the app will fail silently.
+
+**In our app:** `OnrampViewModel.requestPlaidLinkToken()` calls the proxy, gets the `link_token`, and sets it in UI state. `OnrampScreen` observes this and launches Plaid Link. On success, `onPlaidSuccess(publicToken)` is called, which triggers Step 5.
 
 Pass the `link_token` to the Plaid Link SDK:
 
@@ -1278,7 +1297,13 @@ The user will:
 
 #### Step 5: Register the Bank Account
 
-Exchange the Plaid `public_token` for a Brale bank address:
+After the user completes Plaid Link, the SDK returns a `public_token` to your app. Your **backend** exchanges this token with Brale to register the bank account. This creates an external address in Brale representing the user's bank account and returns an `address_id` you'll use in all future transfers.
+
+**How this relates to the `callback_url`:** The link token response (Step 3) includes a `callback_url` pointing to Brale's register-account endpoint. You have two options:
+1. **Explicit call (what we do):** Your backend calls `POST /plaid/register` with the `public_token` from the Plaid SDK callback. This gives you full control over the flow.
+2. **Callback-based:** Plaid can call the `callback_url` directly if configured. We don't use this approach because our proxy handles the exchange explicitly.
+
+**In our app:** `OnrampViewModel.onPlaidSuccess(publicToken)` calls the proxy at `POST /plaid/register`, which forwards to Brale. The returned `address_id` is saved to secure storage for future sessions.
 
 ```
 POST /accounts/{account_id}/plaid/register-account
@@ -1286,23 +1311,25 @@ POST /accounts/{account_id}/plaid/register-account
 
 ```json
 {
-  "public_token": "public-production-xyz789...",
+  "public_token": "public-sandbox-xyz789...",
   "transfer_types": ["ach_debit", "ach_credit", "same_day_ach_credit"]
 }
 ```
 
-- `customer_webhook_url` is optional. If provided, Brale forwards Plaid events (e.g., `ITEM_LOGIN_REQUIRED` for bank re-authentication) to this URL. The demo app omits it
-- `transfer_types` determines which rails are enabled. `ach_debit` is required for onramp
-- **ACH debit is ONLY available through the Plaid-linked bank account flow.** You cannot enable `ach_debit` via direct bank entry
+**Fields:**
+- `public_token` (required) — The token from the Plaid Link SDK callback. This is a one-time-use token that must be exchanged promptly.
+- `transfer_types` (required) — Determines which payment rails are enabled for this bank account. `ach_debit` is required for onramp (pulling money from the bank). `ach_credit` and `same_day_ach_credit` are needed for offramp (pushing money to the bank).
+- `customer_webhook_url` (optional) — If provided, Brale forwards Plaid events to this URL, such as `ITEM_LOGIN_REQUIRED` (the user needs to re-authenticate with their bank due to a password change or MFA update). The demo app omits this. **For production:** consider adding a webhook endpoint so you can prompt users to re-link when their bank connection breaks.
+- **ACH debit is ONLY available through the Plaid-linked bank account flow.** You cannot enable `ach_debit` via direct bank entry — this is a Plaid/regulatory requirement.
 
-Response:
+**Response:**
 ```json
 {
   "address_id": "36nftTpbLIOwLZwEC7UXjwUGrcc"
 }
 ```
 
-Store this `address_id` — it's the user's bank account for future transfers.
+Store this `address_id` — it's the user's bank account identifier for all future onramp and offramp transfers. The demo app saves it to encrypted local storage (`EncryptedSharedPreferences` on Android, Keychain on iOS) so returning users don't need to re-link.
 
 #### Step 6: Register the User's Xion Wallet
 
