@@ -42,6 +42,11 @@ object Constants {
     // Brale pref keys
     const val PREF_BRALE_BANK_ADDRESS_ID = "brale_bank_address_id"
     const val PREF_BRALE_XION_ADDRESS_ID = "brale_xion_address_id"
+    const val PREF_BRALE_USER_NAME = "brale_user_name"
+    const val PREF_BRALE_USER_EMAIL = "brale_user_email"
+    const val PREF_BRALE_USER_PHONE = "brale_user_phone"
+    const val PREF_BRALE_USER_DOB = "brale_user_dob"
+
 
     // Keystore
     const val KEYSTORE_ALIAS = "xion_demo_session_key"

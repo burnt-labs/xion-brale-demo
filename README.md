@@ -1331,9 +1331,13 @@ POST /accounts/{account_id}/plaid/register-account
 
 Store this `address_id` — it's the user's bank account identifier for all future onramp and offramp transfers. The demo app saves it to encrypted local storage (`EncryptedSharedPreferences` on Android, Keychain on iOS) so returning users don't need to re-link.
 
-#### Step 6: Register the User's Xion Wallet
+#### Step 6: Setup Addresses (Funding)
 
-Create an external address for the user's on-chain wallet:
+Before you can create a transfer, both the **source** (where money comes from) and **destination** (where tokens go) must be registered as addresses on the Brale account. There are two types of external addresses:
+
+**On-chain wallet (destination for onramp, source for offramp):**
+
+Register the user's XION wallet so Brale knows where to mint stablecoins:
 
 ```
 POST /accounts/{account_id}/addresses/external
@@ -1342,13 +1346,44 @@ Idempotency-Key: <uuid>
 
 ```json
 {
-  "name": "User Xion Wallet",
-  "wallet_address": "xion1abc123...",
+  "name": "XION Wallet xion1abc123...",
+  "address": "xion1abc123...",
   "transfer_types": ["xion_testnet"]
 }
 ```
 
-Use `xion_testnet` for testnet or `xion` for mainnet.
+Use `xion_testnet` for testnet or `xion` for mainnet. The returned `address_id` is the destination for onramp transfers and the identifier Brale uses to track this wallet.
+
+**In our app:** `OnrampViewModel.submitOnramp()` checks if the user's wallet is already registered (cached `xionAddressId` in secure storage). If not, it calls `braleRepository.registerXionAddress(walletAddress)` which sends the request above through the proxy. This happens automatically — the user doesn't need to do anything.
+
+**Off-chain bank account (source for onramp, destination for offramp):**
+
+There are two ways to register a bank account:
+
+1. **Via Plaid (what we use):** Steps 4-5 above handle this. Plaid Link collects the bank credentials securely, and the `public_token` exchange creates the bank address. **This is the only way to enable ACH debit** (pulling money from a bank).
+
+2. **Via direct bank entry (not used in this app):** You can also register a bank account by collecting routing number, account number, and beneficiary details directly:
+   ```json
+   {
+     "owner": "Jane Doe",
+     "account_number": "1234567890",
+     "routing_number": "021000021",
+     "name": "Chase Checking",
+     "transfer_types": ["ach_credit", "same_day_ach_credit"],
+     "account_type": "checking",
+     "beneficiary_address": {
+       "street_line_1": "100 Main St",
+       "city": "New York",
+       "state": "NY",
+       "zip": "10001"
+     }
+   }
+   ```
+   **Important:** Direct bank entry only supports ACH credit (pushing money *to* a bank). It does **not** support ACH debit (pulling money *from* a bank). If your app needs to pull funds from users' bank accounts (onramp), you must use the Plaid flow.
+
+**How address IDs work:** Once registered, Brale returns an `address_id` (KSUID, 26 chars) for each address. This ID is permanent and used in all future transfer requests to reference that bank account or wallet. The demo app caches these IDs in encrypted local storage so they persist across sessions.
+
+**Idempotency:** All `POST /addresses/external` requests must include an `Idempotency-Key` header (UUID). The proxy handles this automatically. This prevents duplicate address creation if a request is retried.
 
 #### Step 7: Create the Onramp Transfer
 

@@ -91,6 +91,7 @@ data class PlaidLinkTokenResponse(
 @Serializable
 data class PlaidRegisterRequest(
     @SerialName("public_token") val publicToken: String,
+    @SerialName("customer_webhook_url") val customerWebhookUrl: String? = null,
     @SerialName("transfer_types") val transferTypes: List<String> = listOf(
         "ach_debit", "ach_credit", "same_day_ach_credit"
     )
