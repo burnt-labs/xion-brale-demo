@@ -13,10 +13,15 @@ use crate::state::{Config, BALANCES, CONFIG};
 pub fn instantiate(
     deps: DepsMut,
     _env: Env,
-    _info: MessageInfo,
+    info: MessageInfo,
     msg: InstantiateMsg,
 ) -> Result<Response, ContractError> {
+    let admin = match msg.admin {
+        Some(addr) => deps.api.addr_validate(&addr)?,
+        None => info.sender.clone(),
+    };
     let config = Config {
+        admin,
         allowed_denoms: msg.allowed_denoms,
     };
     CONFIG.save(deps.storage, &config)?;
@@ -35,6 +40,9 @@ pub fn execute(
         ExecuteMsg::Deposit {} => execute_deposit(deps, info),
         ExecuteMsg::Withdraw { coins } => execute_withdraw(deps, info, coins),
         ExecuteMsg::WithdrawAll {} => execute_withdraw_all(deps, info),
+        ExecuteMsg::UpdateAllowedDenoms { add, remove } => {
+            execute_update_allowed_denoms(deps, info, add, remove)
+        }
     }
 }
 
@@ -92,7 +100,7 @@ fn execute_withdraw(
         .may_load(deps.storage, sender)?
         .ok_or(ContractError::NoBalance)?;
 
-    // Deduct each requested coin
+    // Deduct each requested coin — no allowed_denoms check on withdrawal
     for requested in &coins {
         let existing = balance
             .iter_mut()
@@ -154,7 +162,7 @@ fn execute_withdraw_all(deps: DepsMut, info: MessageInfo) -> Result<Response, Co
     // Remove the balance entry
     BALANCES.remove(deps.storage, sender);
 
-    // Send all tokens back to the user
+    // Send all tokens back to the user — no allowed_denoms check on withdrawal
     let send_msg = BankMsg::Send {
         to_address: info.sender.to_string(),
         amount: balance.clone(),
@@ -168,6 +176,42 @@ fn execute_withdraw_all(deps: DepsMut, info: MessageInfo) -> Result<Response, Co
     }
 
     Ok(Response::new().add_message(send_msg).add_event(event))
+}
+
+fn execute_update_allowed_denoms(
+    deps: DepsMut,
+    info: MessageInfo,
+    add: Vec<String>,
+    remove: Vec<String>,
+) -> Result<Response, ContractError> {
+    let mut config = CONFIG.load(deps.storage)?;
+
+    if info.sender != config.admin {
+        return Err(ContractError::Unauthorized);
+    }
+
+    // Remove denoms
+    config.allowed_denoms.retain(|d| !remove.contains(d));
+
+    // Add new denoms (avoid duplicates)
+    for denom in &add {
+        if !config.allowed_denoms.contains(denom) {
+            config.allowed_denoms.push(denom.clone());
+        }
+    }
+
+    CONFIG.save(deps.storage, &config)?;
+
+    let mut event =
+        Event::new("vault_update_denoms").add_attribute("admin", info.sender.as_str());
+    for denom in &add {
+        event = event.add_attribute("added", denom);
+    }
+    for denom in &remove {
+        event = event.add_attribute("removed", denom);
+    }
+
+    Ok(Response::new().add_event(event))
 }
 
 #[entry_point]
@@ -189,6 +233,7 @@ fn query_balance(deps: Deps, address: String) -> StdResult<BalanceResponse> {
 fn query_config(deps: Deps) -> StdResult<ConfigResponse> {
     let config = CONFIG.load(deps.storage)?;
     Ok(ConfigResponse {
+        admin: config.admin.to_string(),
         allowed_denoms: config.allowed_denoms,
     })
 }

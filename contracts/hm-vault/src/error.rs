@@ -21,4 +21,7 @@ pub enum ContractError {
 
     #[error("No balance to withdraw")]
     NoBalance,
+
+    #[error("Unauthorized: only the admin can perform this action")]
+    Unauthorized,
 }

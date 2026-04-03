@@ -30,6 +30,8 @@ const BALANCES: Map<&Addr, Vec<Coin>> = Map::new("balances");
 
 /// Contract configuration, set at instantiation
 struct Config {
+    /// Admin address that can update allowed_denoms
+    admin: Addr,
     /// Token denominations the vault accepts (e.g., ["uxion", "usbc"])
     allowed_denoms: Vec<String>,
 }
@@ -42,24 +44,28 @@ const CONFIG: Item<Config> = Item::new("config");
 | Message | Caller | Behavior |
 |---------|--------|----------|
 | `Deposit {}` | Any user | Accepts native tokens sent with the tx (`info.funds`). Credits each coin to the sender's balance. Rejects if any denom is not in `allowed_denoms`. |
-| `Withdraw { coins: Vec<Coin> }` | Depositor only | Deducts specified coins from caller's balance and sends them back via `BankMsg::Send`. Fails if insufficient balance. |
-| `WithdrawAll {}` | Depositor only | Sends all of the caller's vault balance back to them. Removes their entry from the map. |
+| `Withdraw { coins: Vec<Coin> }` | Depositor only | Deducts specified coins from caller's balance and sends them back via `BankMsg::Send`. Fails if insufficient balance. Always works regardless of current `allowed_denoms`. |
+| `WithdrawAll {}` | Depositor only | Sends all of the caller's vault balance back to them. Removes their entry from the map. Always works regardless of current `allowed_denoms`. |
+| `UpdateAllowedDenoms { add, remove }` | Admin only | Adds and/or removes token denominations from the accepted list. Does not affect existing deposits — users can still withdraw tokens whose denom was removed. |
 
 ### Query Messages
 
 | Message | Returns |
 |---------|---------|
 | `QueryBalance { address: String }` | `BalanceResponse { coins: Vec<Coin> }` |
-| `QueryConfig {}` | `ConfigResponse { allowed_denoms: Vec<String> }` |
+| `QueryConfig {}` | `ConfigResponse { admin: String, allowed_denoms: Vec<String> }` |
 | `QueryTotalDeposits {}` | `TotalDepositsResponse { coins: Vec<Coin> }` |
+
+### Admin Role
+
+The contract has an **admin** address (set at instantiation, defaults to deployer). The admin's only capability is updating `allowed_denoms` via `UpdateAllowedDenoms`. The admin **cannot** move, freeze, or access user funds.
 
 ### What the contract does NOT have
 
-- **No admin/owner role** that can move or freeze user funds
+- **No ability for admin to move or freeze user funds** — admin can only manage accepted denoms
 - **No `ForceWithdraw`** or `Freeze` message
 - **No automation hooks** or callback interfaces
 - **No share tokens** or pooling — balances are per-user, not proportional claims
-- **No `UpdateConfig`** — `allowed_denoms` is set at instantiation and cannot be changed
 - **No upgrade admin** — migrate authority can be set to XION governance or burned at deployment
 
 ### Events
@@ -67,6 +73,7 @@ const CONFIG: Item<Config> = Item::new("config");
 ```
 wasm-vault_deposit { user: "xion1...", denom: "usbc", amount: "50000000" }
 wasm-vault_withdraw { user: "xion1...", denom: "usbc", amount: "25000000" }
+wasm-vault_update_denoms { admin: "xion1...", added: "uatom", removed: "usbc" }
 ```
 
 Events enable off-chain indexers to reconcile vault state with the House Money ledger.

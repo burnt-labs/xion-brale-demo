@@ -116,6 +116,6 @@ Neither contract is suitable. A custom vault contract (`hm-vault`) was built and
 | Code ID | `2106` |
 | Contract Address | `xion1snjtcrvqtlpmzkxfwwt69nffwz8tqazl3t4r38tqllvx3qx7redsmhcvgl` |
 | Allowed Denoms | `uxion`, `factory/xion17grq736740r70awldugfs3mls3stu9haewctv2/sbc` |
-| Admin | None (immutable) |
+| Admin | Deployer (`xion15r5yxaeqwlx5zz5f2vwg87vz3m7d6dd5pdd6qp`) — can update allowed denoms only, cannot move user funds |
 
 See `docs/superpowers/specs/2026-04-03-vault-contract-design.md` for the full design specification.

@@ -6,7 +6,7 @@ use crate::msg::{
     BalanceResponse, ConfigResponse, ExecuteMsg, InstantiateMsg, QueryMsg, TotalDepositsResponse,
 };
 
-fn setup_app() -> (App, Addr) {
+fn setup_app() -> (App, Addr, Addr) {
     let mut app = App::default();
 
     let code = ContractWrapper::new(execute, instantiate, query);
@@ -16,9 +16,10 @@ fn setup_app() -> (App, Addr) {
     let contract_addr = app
         .instantiate_contract(
             code_id,
-            creator,
+            creator.clone(),
             &InstantiateMsg {
                 allowed_denoms: vec!["uxion".to_string(), "usbc".to_string()],
+                admin: None,
             },
             &[],
             "hm-vault",
@@ -26,12 +27,12 @@ fn setup_app() -> (App, Addr) {
         )
         .unwrap();
 
-    (app, contract_addr)
+    (app, contract_addr, creator)
 }
 
 #[test]
 fn test_instantiate() {
-    let (app, contract_addr) = setup_app();
+    let (app, contract_addr, creator) = setup_app();
 
     let res: ConfigResponse = app
         .wrap()
@@ -42,11 +43,12 @@ fn test_instantiate() {
         res.allowed_denoms,
         vec!["uxion".to_string(), "usbc".to_string()]
     );
+    assert_eq!(res.admin, creator.to_string());
 }
 
 #[test]
 fn test_deposit() {
-    let (mut app, contract_addr) = setup_app();
+    let (mut app, contract_addr, _) = setup_app();
 
     let user = app.api().addr_make("user1");
 
@@ -83,7 +85,7 @@ fn test_deposit() {
 
 #[test]
 fn test_deposit_multiple_times() {
-    let (mut app, contract_addr) = setup_app();
+    let (mut app, contract_addr, _) = setup_app();
     let user = app.api().addr_make("user1");
 
     app.init_modules(|router, _, storage| {
@@ -126,16 +128,11 @@ fn test_deposit_multiple_times() {
 
 #[test]
 fn test_deposit_no_funds() {
-    let (mut app, contract_addr) = setup_app();
+    let (mut app, contract_addr, _) = setup_app();
     let user = app.api().addr_make("user1");
 
     let err = app
-        .execute_contract(
-            user,
-            contract_addr,
-            &ExecuteMsg::Deposit {},
-            &[],
-        )
+        .execute_contract(user, contract_addr, &ExecuteMsg::Deposit {}, &[])
         .unwrap_err();
 
     assert!(err.root_cause().to_string().contains("No funds sent"));
@@ -143,7 +140,7 @@ fn test_deposit_no_funds() {
 
 #[test]
 fn test_deposit_disallowed_denom() {
-    let (mut app, contract_addr) = setup_app();
+    let (mut app, contract_addr, _) = setup_app();
     let user = app.api().addr_make("user1");
 
     app.init_modules(|router, _, storage| {
@@ -170,7 +167,7 @@ fn test_deposit_disallowed_denom() {
 
 #[test]
 fn test_withdraw_partial() {
-    let (mut app, contract_addr) = setup_app();
+    let (mut app, contract_addr, _) = setup_app();
     let user = app.api().addr_make("user1");
 
     app.init_modules(|router, _, storage| {
@@ -180,7 +177,6 @@ fn test_withdraw_partial() {
             .unwrap();
     });
 
-    // Deposit
     app.execute_contract(
         user.clone(),
         contract_addr.clone(),
@@ -189,7 +185,6 @@ fn test_withdraw_partial() {
     )
     .unwrap();
 
-    // Withdraw partial
     app.execute_contract(
         user.clone(),
         contract_addr.clone(),
@@ -200,7 +195,6 @@ fn test_withdraw_partial() {
     )
     .unwrap();
 
-    // Check vault balance
     let res: BalanceResponse = app
         .wrap()
         .query_wasm_smart(
@@ -213,14 +207,13 @@ fn test_withdraw_partial() {
 
     assert_eq!(res.coins, coins(300_000, "uxion"));
 
-    // Check user received funds back (started with 1M, deposited 500K, withdrew 200K = 700K)
     let user_balance = app.wrap().query_balance(&user, "uxion").unwrap();
     assert_eq!(user_balance.amount, Uint128::new(700_000));
 }
 
 #[test]
 fn test_withdraw_all() {
-    let (mut app, contract_addr) = setup_app();
+    let (mut app, contract_addr, _) = setup_app();
     let user = app.api().addr_make("user1");
 
     app.init_modules(|router, _, storage| {
@@ -230,7 +223,6 @@ fn test_withdraw_all() {
             .unwrap();
     });
 
-    // Deposit
     app.execute_contract(
         user.clone(),
         contract_addr.clone(),
@@ -239,7 +231,6 @@ fn test_withdraw_all() {
     )
     .unwrap();
 
-    // Withdraw all
     app.execute_contract(
         user.clone(),
         contract_addr.clone(),
@@ -248,7 +239,6 @@ fn test_withdraw_all() {
     )
     .unwrap();
 
-    // Vault balance should be empty
     let res: BalanceResponse = app
         .wrap()
         .query_wasm_smart(
@@ -261,14 +251,13 @@ fn test_withdraw_all() {
 
     assert!(res.coins.is_empty());
 
-    // User should have all funds back
     let user_balance = app.wrap().query_balance(&user, "uxion").unwrap();
     assert_eq!(user_balance.amount, Uint128::new(1_000_000));
 }
 
 #[test]
 fn test_unauthorized_withdraw() {
-    let (mut app, contract_addr) = setup_app();
+    let (mut app, contract_addr, _) = setup_app();
     let user1 = app.api().addr_make("user1");
     let user2 = app.api().addr_make("user2");
 
@@ -279,7 +268,6 @@ fn test_unauthorized_withdraw() {
             .unwrap();
     });
 
-    // User1 deposits
     app.execute_contract(
         user1.clone(),
         contract_addr.clone(),
@@ -288,7 +276,6 @@ fn test_unauthorized_withdraw() {
     )
     .unwrap();
 
-    // User2 tries to withdraw — has no balance, should fail
     let err = app
         .execute_contract(
             user2,
@@ -302,7 +289,6 @@ fn test_unauthorized_withdraw() {
 
     assert!(err.root_cause().to_string().contains("No balance"));
 
-    // User1's balance should be untouched
     let res: BalanceResponse = app
         .wrap()
         .query_wasm_smart(
@@ -318,7 +304,7 @@ fn test_unauthorized_withdraw() {
 
 #[test]
 fn test_withdraw_insufficient_balance() {
-    let (mut app, contract_addr) = setup_app();
+    let (mut app, contract_addr, _) = setup_app();
     let user = app.api().addr_make("user1");
 
     app.init_modules(|router, _, storage| {
@@ -352,7 +338,7 @@ fn test_withdraw_insufficient_balance() {
 
 #[test]
 fn test_multi_user_isolation() {
-    let (mut app, contract_addr) = setup_app();
+    let (mut app, contract_addr, _) = setup_app();
     let user1 = app.api().addr_make("user1");
     let user2 = app.api().addr_make("user2");
 
@@ -367,7 +353,6 @@ fn test_multi_user_isolation() {
             .unwrap();
     });
 
-    // User1 deposits 500K
     app.execute_contract(
         user1.clone(),
         contract_addr.clone(),
@@ -376,7 +361,6 @@ fn test_multi_user_isolation() {
     )
     .unwrap();
 
-    // User2 deposits 1M
     app.execute_contract(
         user2.clone(),
         contract_addr.clone(),
@@ -385,7 +369,6 @@ fn test_multi_user_isolation() {
     )
     .unwrap();
 
-    // Verify isolated balances
     let res1: BalanceResponse = app
         .wrap()
         .query_wasm_smart(
@@ -408,9 +391,8 @@ fn test_multi_user_isolation() {
         .unwrap();
     assert_eq!(res2.coins, coins(1_000_000, "uxion"));
 
-    // User1 withdraws — should not affect User2
     app.execute_contract(
-        user1.clone(),
+        user1,
         contract_addr.clone(),
         &ExecuteMsg::WithdrawAll {},
         &[],
@@ -431,7 +413,7 @@ fn test_multi_user_isolation() {
 
 #[test]
 fn test_multi_denom() {
-    let (mut app, contract_addr) = setup_app();
+    let (mut app, contract_addr, _) = setup_app();
     let user = app.api().addr_make("user1");
 
     app.init_modules(|router, _, storage| {
@@ -448,7 +430,6 @@ fn test_multi_denom() {
             .unwrap();
     });
 
-    // Deposit both denoms
     app.execute_contract(
         user.clone(),
         contract_addr.clone(),
@@ -476,7 +457,6 @@ fn test_multi_denom() {
     assert_eq!(uxion.amount, Uint128::new(300_000));
     assert_eq!(usbc.amount, Uint128::new(500_000));
 
-    // Withdraw just one denom
     app.execute_contract(
         user.clone(),
         contract_addr.clone(),
@@ -505,7 +485,7 @@ fn test_multi_denom() {
 
 #[test]
 fn test_total_deposits() {
-    let (mut app, contract_addr) = setup_app();
+    let (mut app, contract_addr, _) = setup_app();
     let user1 = app.api().addr_make("user1");
     let user2 = app.api().addr_make("user2");
 
@@ -546,7 +526,7 @@ fn test_total_deposits() {
 
 #[test]
 fn test_query_nonexistent_balance() {
-    let (app, contract_addr) = setup_app();
+    let (app, contract_addr, _) = setup_app();
 
     let res: BalanceResponse = app
         .wrap()
@@ -559,4 +539,152 @@ fn test_query_nonexistent_balance() {
         .unwrap();
 
     assert!(res.coins.is_empty());
+}
+
+// --- Admin tests ---
+
+#[test]
+fn test_update_allowed_denoms_by_admin() {
+    let (mut app, contract_addr, admin) = setup_app();
+
+    // Add "uatom", remove "usbc"
+    app.execute_contract(
+        admin,
+        contract_addr.clone(),
+        &ExecuteMsg::UpdateAllowedDenoms {
+            add: vec!["uatom".to_string()],
+            remove: vec!["usbc".to_string()],
+        },
+        &[],
+    )
+    .unwrap();
+
+    let res: ConfigResponse = app
+        .wrap()
+        .query_wasm_smart(contract_addr, &QueryMsg::Config {})
+        .unwrap();
+
+    assert!(res.allowed_denoms.contains(&"uxion".to_string()));
+    assert!(res.allowed_denoms.contains(&"uatom".to_string()));
+    assert!(!res.allowed_denoms.contains(&"usbc".to_string()));
+}
+
+#[test]
+fn test_update_allowed_denoms_unauthorized() {
+    let (mut app, contract_addr, _) = setup_app();
+    let random_user = app.api().addr_make("random");
+
+    let err = app
+        .execute_contract(
+            random_user,
+            contract_addr,
+            &ExecuteMsg::UpdateAllowedDenoms {
+                add: vec!["uatom".to_string()],
+                remove: vec![],
+            },
+            &[],
+        )
+        .unwrap_err();
+
+    assert!(err.root_cause().to_string().contains("Unauthorized"));
+}
+
+#[test]
+fn test_withdraw_after_denom_removed() {
+    let (mut app, contract_addr, admin) = setup_app();
+    let user = app.api().addr_make("user1");
+
+    app.init_modules(|router, _, storage| {
+        router
+            .bank
+            .init_balance(storage, &user, coins(1_000_000, "usbc"))
+            .unwrap();
+    });
+
+    // Deposit usbc while it's still allowed
+    app.execute_contract(
+        user.clone(),
+        contract_addr.clone(),
+        &ExecuteMsg::Deposit {},
+        &coins(500_000, "usbc"),
+    )
+    .unwrap();
+
+    // Admin removes usbc from allowed denoms
+    app.execute_contract(
+        admin,
+        contract_addr.clone(),
+        &ExecuteMsg::UpdateAllowedDenoms {
+            add: vec![],
+            remove: vec!["usbc".to_string()],
+        },
+        &[],
+    )
+    .unwrap();
+
+    // User can still withdraw their usbc
+    app.execute_contract(
+        user.clone(),
+        contract_addr.clone(),
+        &ExecuteMsg::Withdraw {
+            coins: coins(500_000, "usbc"),
+        },
+        &[],
+    )
+    .unwrap();
+
+    let res: BalanceResponse = app
+        .wrap()
+        .query_wasm_smart(
+            contract_addr,
+            &QueryMsg::Balance {
+                address: user.to_string(),
+            },
+        )
+        .unwrap();
+
+    assert!(res.coins.is_empty());
+
+    let user_balance = app.wrap().query_balance(&user, "usbc").unwrap();
+    assert_eq!(user_balance.amount, Uint128::new(1_000_000));
+}
+
+#[test]
+fn test_deposit_after_denom_removed() {
+    let (mut app, contract_addr, admin) = setup_app();
+    let user = app.api().addr_make("user1");
+
+    app.init_modules(|router, _, storage| {
+        router
+            .bank
+            .init_balance(storage, &user, coins(1_000_000, "usbc"))
+            .unwrap();
+    });
+
+    // Admin removes usbc
+    app.execute_contract(
+        admin,
+        contract_addr.clone(),
+        &ExecuteMsg::UpdateAllowedDenoms {
+            add: vec![],
+            remove: vec!["usbc".to_string()],
+        },
+        &[],
+    )
+    .unwrap();
+
+    // New deposits of usbc are rejected
+    let err = app
+        .execute_contract(
+            user,
+            contract_addr,
+            &ExecuteMsg::Deposit {},
+            &coins(500_000, "usbc"),
+        )
+        .unwrap_err();
+
+    assert!(err
+        .root_cause()
+        .to_string()
+        .contains("not accepted by this vault"));
 }

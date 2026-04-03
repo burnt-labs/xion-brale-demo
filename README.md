@@ -382,7 +382,13 @@ The vault contract (`contracts/hm-vault/`) implements a non-custodial per-user s
 | Code ID | `2106` |
 | Contract Address | `xion1snjtcrvqtlpmzkxfwwt69nffwz8tqazl3t4r38tqllvx3qx7redsmhcvgl` |
 | Allowed Denoms | `uxion`, `factory/xion17grq736740r70awldugfs3mls3stu9haewctv2/sbc` |
-| Admin | None (immutable) |
+| Admin | Deployer — can update allowed denoms only, cannot move user funds |
+
+### Admin & Token Management
+
+The contract has an **admin** address (set at instantiation, defaults to the deployer). The admin can add or remove accepted token denominations via `UpdateAllowedDenoms`. This is the admin's **only** power — they cannot move, freeze, or access user funds.
+
+**Key safety guarantee:** If a denom is removed from `allowed_denoms`, users who already deposited that token can still withdraw it. Only new deposits of the removed denom are blocked.
 
 ### Contract Messages
 
@@ -391,15 +397,16 @@ The vault contract (`contracts/hm-vault/`) implements a non-custodial per-user s
 | Message | Caller | Behavior |
 |---------|--------|----------|
 | `Deposit {}` | Any user | Accepts native tokens sent with the tx. Credits to sender's balance. Rejects disallowed denoms. |
-| `Withdraw { coins }` | Depositor only | Deducts coins from caller's balance, sends back via `BankMsg::Send`. |
-| `WithdrawAll {}` | Depositor only | Sends all of the caller's vault balance back to them. |
+| `Withdraw { coins }` | Depositor only | Deducts coins from caller's balance, sends back via `BankMsg::Send`. Always works regardless of current `allowed_denoms`. |
+| `WithdrawAll {}` | Depositor only | Sends all of the caller's vault balance back to them. Always works regardless of current `allowed_denoms`. |
+| `UpdateAllowedDenoms { add, remove }` | Admin only | Adds and/or removes token denominations from the accepted list. Does not affect existing deposits. |
 
 **Query:**
 
 | Message | Returns |
 |---------|---------|
 | `Balance { address }` | `{ coins: [{ denom, amount }] }` |
-| `Config {}` | `{ allowed_denoms: [...] }` |
+| `Config {}` | `{ admin: "xion1...", allowed_denoms: [...] }` |
 | `TotalDeposits {}` | `{ coins: [{ denom, amount }] }` |
 
 ### CLI Usage
@@ -429,6 +436,14 @@ xiond tx wasm execute \
   xion1snjtcrvqtlpmzkxfwwt69nffwz8tqazl3t4r38tqllvx3qx7redsmhcvgl \
   '{"withdraw_all":{}}' \
   --from <key> --chain-id xion-testnet-2 \
+  --node https://rpc.xion-testnet-2.burnt.com:443 \
+  --gas auto --gas-adjustment 1.3 --fees 50000uxion -y
+
+# Update allowed denoms (admin only) — add uatom, remove usbc
+xiond tx wasm execute \
+  xion1snjtcrvqtlpmzkxfwwt69nffwz8tqazl3t4r38tqllvx3qx7redsmhcvgl \
+  '{"update_allowed_denoms":{"add":["uatom"],"remove":["usbc"]}}' \
+  --from <admin-key> --chain-id xion-testnet-2 \
   --node https://rpc.xion-testnet-2.burnt.com:443 \
   --gas auto --gas-adjustment 1.3 --fees 50000uxion -y
 ```
