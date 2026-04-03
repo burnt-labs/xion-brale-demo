@@ -2,8 +2,10 @@ package com.burnt.xiondemo.ui.screens.vault
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Lock
@@ -11,12 +13,15 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.burnt.xiondemo.ui.components.ErrorBanner
+import com.burnt.xiondemo.ui.screens.send.SendToken
 import com.burnt.xiondemo.ui.theme.*
 import com.burnt.xiondemo.util.CoinFormatter
 
@@ -29,16 +34,20 @@ fun VaultScreen(
     val uiState by viewModel.uiState.collectAsState()
 
     LaunchedEffect(Unit) {
-        viewModel.loadVaultBalance()
+        viewModel.loadAllBalances()
     }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Vault", fontWeight = FontWeight.SemiBold) },
+                title = {},
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back",
+                            tint = GreetingText
+                        )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = ScreenBackground)
@@ -51,6 +60,7 @@ fun VaultScreen(
                 .fillMaxSize()
                 .padding(padding)
                 .padding(horizontal = 24.dp)
+                .verticalScroll(rememberScrollState())
         ) {
             // Vault balance card
             Card(
@@ -93,6 +103,46 @@ fun VaultScreen(
                 }
             }
 
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Available wallet balances
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = CardBackground),
+                shape = RoundedCornerShape(16.dp),
+                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text("Available to Deposit", fontSize = 13.sp, fontWeight = FontWeight.Medium, color = SubtitleText)
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text("XION", fontSize = 15.sp, color = GreetingText)
+                        Text(
+                            text = uiState.walletBalance?.let { CoinFormatter.formatWithDenom(it) } ?: "—",
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = GreetingText
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text("SBC", fontSize = 15.sp, color = GreetingText)
+                        Text(
+                            text = uiState.walletSbcBalance?.let { CoinFormatter.formatWithDenom(it, "SBC") } ?: "—",
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = GreetingText
+                        )
+                    }
+                }
+            }
+
             Spacer(modifier = Modifier.height(24.dp))
 
             // Success state
@@ -123,15 +173,49 @@ fun VaultScreen(
                     Text("New Transaction", fontWeight = FontWeight.SemiBold)
                 }
             } else {
+                // Token selector
+                Text("Token", fontSize = 13.sp, fontWeight = FontWeight.Medium, color = SubtitleText)
+                Spacer(modifier = Modifier.height(8.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    SendToken.entries.forEach { token ->
+                        FilterChip(
+                            selected = uiState.selectedToken == token,
+                            onClick = { viewModel.selectToken(token) },
+                            label = { Text(token.displayName, color = if (uiState.selectedToken == token) CardBackground else GreetingText) },
+                            shape = RoundedCornerShape(8.dp),
+                            colors = FilterChipDefaults.filterChipColors(
+                                selectedContainerColor = XionOrange,
+                                containerColor = CardBackground
+                            )
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
                 // Amount input
                 OutlinedTextField(
                     value = uiState.amount,
                     onValueChange = { viewModel.updateAmount(it) },
-                    label = { Text("Amount (XION)") },
+                    label = { Text("Amount (${uiState.selectedToken.displayName})") },
+                    placeholder = { Text("0.0", color = SubtitleText) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
-                    enabled = !uiState.isLoading
+                    enabled = !uiState.isLoading,
+                    textStyle = TextStyle(color = GreetingText, fontSize = 16.sp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedTextColor = GreetingText,
+                        unfocusedTextColor = GreetingText,
+                        focusedBorderColor = XionOrange,
+                        unfocusedBorderColor = SubtitleText.copy(alpha = 0.4f),
+                        focusedLabelColor = XionOrange,
+                        unfocusedLabelColor = SubtitleText,
+                        cursorColor = XionOrange
+                    )
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -146,13 +230,18 @@ fun VaultScreen(
                         enabled = uiState.amount.isNotBlank() && !uiState.isLoading,
                         modifier = Modifier.weight(1f),
                         shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = XionGreen)
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = XionGreen,
+                            contentColor = Color.White,
+                            disabledContainerColor = XionGreen.copy(alpha = 0.4f),
+                            disabledContentColor = Color.White.copy(alpha = 0.6f)
+                        )
                     ) {
                         if (uiState.isLoading) {
                             CircularProgressIndicator(
                                 modifier = Modifier.size(18.dp),
                                 strokeWidth = 2.dp,
-                                color = MaterialTheme.colorScheme.onPrimary
+                                color = Color.White
                             )
                         } else {
                             Text("Deposit", fontWeight = FontWeight.SemiBold)
@@ -163,13 +252,18 @@ fun VaultScreen(
                         enabled = uiState.amount.isNotBlank() && !uiState.isLoading,
                         modifier = Modifier.weight(1f),
                         shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = MintscanBlue)
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MintscanBlue,
+                            contentColor = Color.White,
+                            disabledContainerColor = MintscanBlue.copy(alpha = 0.4f),
+                            disabledContentColor = Color.White.copy(alpha = 0.6f)
+                        )
                     ) {
                         if (uiState.isLoading) {
                             CircularProgressIndicator(
                                 modifier = Modifier.size(18.dp),
                                 strokeWidth = 2.dp,
-                                color = MaterialTheme.colorScheme.onPrimary
+                                color = Color.White
                             )
                         } else {
                             Text("Withdraw", fontWeight = FontWeight.SemiBold)
@@ -198,6 +292,8 @@ fun VaultScreen(
                 onDismiss = { viewModel.clearError() },
                 onRetry = null
             )
+
+            Spacer(modifier = Modifier.height(32.dp))
         }
     }
 }
