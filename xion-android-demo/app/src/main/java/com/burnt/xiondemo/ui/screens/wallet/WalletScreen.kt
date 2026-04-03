@@ -212,7 +212,7 @@ fun WalletScreen(
                 modifier = Modifier.padding(24.dp)
             ) {
                 Text(
-                    text = "Available Balance",
+                    text = "XION Balance",
                     fontSize = 14.sp,
                     color = SubtitleText
                 )
@@ -232,19 +232,11 @@ fun WalletScreen(
                         maxLines = 1
                     )
                 }
-            }
-        }
 
-        // SBC Stablecoin balance
-        if (uiState.sbcBalance != null) {
-            Spacer(modifier = Modifier.height(12.dp))
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = CardBackground),
-                shape = RoundedCornerShape(20.dp),
-                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
-            ) {
-                Column(modifier = Modifier.padding(24.dp)) {
+                if (uiState.sbcBalance != null) {
+                    Spacer(modifier = Modifier.height(16.dp))
+                    HorizontalDivider(color = SubtitleText.copy(alpha = 0.2f))
+                    Spacer(modifier = Modifier.height(16.dp))
                     Text(
                         text = "Stablecoin Balance",
                         fontSize = 14.sp,

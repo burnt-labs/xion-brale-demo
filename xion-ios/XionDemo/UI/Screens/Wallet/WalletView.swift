@@ -108,9 +108,9 @@ struct WalletView: View {
                     .listRowSeparator(.hidden)
                 }
 
-                // XION Balance card
+                // Balance card
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("Available Balance")
+                    Text("XION Balance")
                         .font(.system(size: 14))
                         .foregroundStyle(Color.subtitleText)
 
@@ -123,6 +123,20 @@ struct WalletView: View {
                             .foregroundStyle(Color.greetingText)
                             .lineLimit(1)
                     }
+
+                    if viewModel.sbcBalance != nil {
+                        Divider()
+                            .padding(.vertical, 8)
+
+                        Text("Stablecoin Balance")
+                            .font(.system(size: 14))
+                            .foregroundStyle(Color.subtitleText)
+
+                        Text(viewModel.sbcBalance.map { CoinFormatter.formatWithDenom($0, denom: Constants.sbcDisplayDenom) } ?? "\u{2014}")
+                            .font(.system(size: 22, weight: .bold))
+                            .foregroundStyle(Color.greetingText)
+                            .lineLimit(1)
+                    }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(24)
@@ -132,26 +146,6 @@ struct WalletView: View {
                 .listRowBackground(Color.screenBackground)
                 .listRowSeparator(.hidden)
                 .listRowInsets(EdgeInsets(top: 10, leading: 24, bottom: 0, trailing: 24))
-
-                // SBC Stablecoin Balance card
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Stablecoin Balance")
-                        .font(.system(size: 14))
-                        .foregroundStyle(Color.subtitleText)
-
-                    Text(viewModel.sbcBalance.map { CoinFormatter.formatWithDenom($0, denom: Constants.sbcDisplayDenom) } ?? "\u{2014}")
-                        .font(.system(size: 22, weight: .bold))
-                        .foregroundStyle(Color.greetingText)
-                        .lineLimit(1)
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(24)
-                .background(Color.cardBackground)
-                .clipShape(RoundedRectangle(cornerRadius: 20))
-                .shadow(color: Color.cardShadow, radius: 2, y: 1)
-                .listRowBackground(Color.screenBackground)
-                .listRowSeparator(.hidden)
-                .listRowInsets(EdgeInsets(top: 12, leading: 24, bottom: 0, trailing: 24))
 
                 // Send Tokens button
                 Button(action: { showSendSheet = true }) {
