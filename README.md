@@ -193,7 +193,7 @@ These are compile-time constants not exposed as BuildConfig (change by editing s
 | `DECIMALS` | `6` | Decimal places for uxion → XION conversion |
 | `SESSION_GRANT_DURATION_SECONDS` | `86400` | Session key grant duration (24 hours) |
 | `OAUTH_REDIRECT_URI` | `xiondemo://callback` | Deep link URI for OAuth callback. Must match the URL scheme registered in `AndroidManifest.xml` |
-| `VAULT_CONTRACT_ADDRESS` | `xion1snjtcrvqtlpmzkxfwwt69nffwz8tqazl3t4r38tqllvx3qx7redsmhcvgl` | Non-custodial vault contract on xion-testnet-2 (code_id: 2106) |
+| `VAULT_CONTRACT_ADDRESS` | `xion1waen5muj0g5p76t35apjnje43t795478lmnpcxvcm7flmlry5szq0dzvlc` | Non-custodial vault contract on xion-testnet-2 (code_id: 2107) |
 | `BRALE_ACH_DEBIT_TYPE` | `ach_debit` | Brale transfer type for pulling funds from a bank account |
 | `BRALE_ACH_CREDIT_TYPE` | `same_day_ach_credit` | Brale transfer type for pushing funds to a bank account (same-day settlement) |
 | `BRALE_FIAT_VALUE_TYPE` | `USD` | Fiat value type used in Brale transfer endpoints |
@@ -233,7 +233,7 @@ iOS reads configuration from `Info.plist` first (settable via xcconfig), falling
 | `treasuryAddress` | `xion1sm3qp...hqa0mj` | `XION_TREASURY_ADDRESS` |
 | `oauthAuthorizationEndpoint` | `https://auth.testnet.burnt.com/` | `XION_OAUTH_AUTHORIZATION_ENDPOINT` |
 | `braleProxyUrl` | `http://localhost:3000/` | `BRALE_PROXY_URL` |
-| `vaultContractAddress` | `xion1snjtcrvqtlpmzkxfwwt69nffwz8tqazl3t4r38tqllvx3qx7redsmhcvgl` | — (edit source) |
+| `vaultContractAddress` | `xion1waen5muj0g5p76t35apjnje43t795478lmnpcxvcm7flmlry5szq0dzvlc` | — (edit source) |
 | `coinType` | `118` | — (edit source) |
 | `derivationPath` | `m/44'/118'/0'/0/0` | — (edit source) |
 | `sessionGrantDurationSeconds` | `86400` | — (edit source) |
@@ -379,8 +379,8 @@ The vault contract (`contracts/hm-vault/`) implements a non-custodial per-user s
 | Field | Value |
 |-------|-------|
 | Chain | `xion-testnet-2` |
-| Code ID | `2106` |
-| Contract Address | `xion1snjtcrvqtlpmzkxfwwt69nffwz8tqazl3t4r38tqllvx3qx7redsmhcvgl` |
+| Code ID | `2107` |
+| Contract Address | `xion1waen5muj0g5p76t35apjnje43t795478lmnpcxvcm7flmlry5szq0dzvlc` |
 | Allowed Denoms | `uxion`, `factory/xion17grq736740r70awldugfs3mls3stu9haewctv2/sbc` |
 | Admin | Deployer — can update allowed denoms only, cannot move user funds |
 
@@ -414,12 +414,12 @@ The contract has an **admin** address (set at instantiation, defaults to the dep
 ```bash
 # Query config
 xiond query wasm contract-state smart \
-  xion1snjtcrvqtlpmzkxfwwt69nffwz8tqazl3t4r38tqllvx3qx7redsmhcvgl \
+  xion1waen5muj0g5p76t35apjnje43t795478lmnpcxvcm7flmlry5szq0dzvlc \
   '{"config":{}}' --node https://rpc.xion-testnet-2.burnt.com:443
 
 # Deposit 1 XION
 xiond tx wasm execute \
-  xion1snjtcrvqtlpmzkxfwwt69nffwz8tqazl3t4r38tqllvx3qx7redsmhcvgl \
+  xion1waen5muj0g5p76t35apjnje43t795478lmnpcxvcm7flmlry5szq0dzvlc \
   '{"deposit":{}}' --amount 1000000uxion \
   --from <key> --chain-id xion-testnet-2 \
   --node https://rpc.xion-testnet-2.burnt.com:443 \
@@ -427,13 +427,13 @@ xiond tx wasm execute \
 
 # Query balance
 xiond query wasm contract-state smart \
-  xion1snjtcrvqtlpmzkxfwwt69nffwz8tqazl3t4r38tqllvx3qx7redsmhcvgl \
+  xion1waen5muj0g5p76t35apjnje43t795478lmnpcxvcm7flmlry5szq0dzvlc \
   '{"balance":{"address":"xion1your..."}}' \
   --node https://rpc.xion-testnet-2.burnt.com:443
 
 # Withdraw all
 xiond tx wasm execute \
-  xion1snjtcrvqtlpmzkxfwwt69nffwz8tqazl3t4r38tqllvx3qx7redsmhcvgl \
+  xion1waen5muj0g5p76t35apjnje43t795478lmnpcxvcm7flmlry5szq0dzvlc \
   '{"withdraw_all":{}}' \
   --from <key> --chain-id xion-testnet-2 \
   --node https://rpc.xion-testnet-2.burnt.com:443 \
@@ -441,7 +441,7 @@ xiond tx wasm execute \
 
 # Update allowed denoms (admin only) — add uatom, remove usbc
 xiond tx wasm execute \
-  xion1snjtcrvqtlpmzkxfwwt69nffwz8tqazl3t4r38tqllvx3qx7redsmhcvgl \
+  xion1waen5muj0g5p76t35apjnje43t795478lmnpcxvcm7flmlry5szq0dzvlc \
   '{"update_allowed_denoms":{"add":["uatom"],"remove":["usbc"]}}' \
   --from <admin-key> --chain-id xion-testnet-2 \
   --node https://rpc.xion-testnet-2.burnt.com:443 \

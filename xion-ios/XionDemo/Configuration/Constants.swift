@@ -56,7 +56,7 @@ enum Constants {
     static let sampleContractMsg = #"{"increment": {}}"#
 
     // Vault contract (testnet)
-    static let vaultContractAddress = "xion1snjtcrvqtlpmzkxfwwt69nffwz8tqazl3t4r38tqllvx3qx7redsmhcvgl"
+    static let vaultContractAddress = "xion1waen5muj0g5p76t35apjnje43t795478lmnpcxvcm7flmlry5szq0dzvlc"
 
     // Read a value from Info.plist (set via xcconfig or build settings)
     private static func envString(_ key: String) -> String? {

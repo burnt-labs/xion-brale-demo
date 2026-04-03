@@ -113,8 +113,8 @@ Neither contract is suitable. A custom vault contract (`hm-vault`) was built and
 | Field | Value |
 |-------|-------|
 | Chain | `xion-testnet-2` |
-| Code ID | `2106` |
-| Contract Address | `xion1snjtcrvqtlpmzkxfwwt69nffwz8tqazl3t4r38tqllvx3qx7redsmhcvgl` |
+| Code ID | `2107` |
+| Contract Address | `xion1waen5muj0g5p76t35apjnje43t795478lmnpcxvcm7flmlry5szq0dzvlc` |
 | Allowed Denoms | `uxion`, `factory/xion17grq736740r70awldugfs3mls3stu9haewctv2/sbc` |
 | Admin | Deployer (`xion15r5yxaeqwlx5zz5f2vwg87vz3m7d6dd5pdd6qp`) — can update allowed denoms only, cannot move user funds |
 
