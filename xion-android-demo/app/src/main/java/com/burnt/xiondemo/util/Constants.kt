@@ -27,6 +27,9 @@ object Constants {
     const val SAMPLE_CONTRACT_ADDRESS = ""
     const val SAMPLE_CONTRACT_MSG = """{"increment": {}}"""
 
+    // Vault contract (testnet)
+    const val VAULT_CONTRACT_ADDRESS = "xion1snjtcrvqtlpmzkxfwwt69nffwz8tqazl3t4r38tqllvx3qx7redsmhcvgl"
+
     // Brale — all values from BuildConfig so developers can override per environment
     val BRALE_PROXY_URL = BuildConfig.BRALE_PROXY_URL
     val BRALE_TRANSFER_TYPE = BuildConfig.BRALE_TRANSFER_TYPE

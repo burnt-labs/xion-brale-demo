@@ -7,6 +7,7 @@ enum Route: Hashable {
     case linkBank
     case onramp
     case offramp
+    case vault
 }
 
 struct AppNavigation: View {
@@ -26,6 +27,7 @@ struct AppNavigation: View {
                     onNavigateToOnramp: { path.append(Route.onramp) },
                     onNavigateToOfframp: { path.append(Route.offramp) },
                     onNavigateToLinkBank: { path.append(Route.linkBank) },
+                    onNavigateToVault: { path.append(Route.vault) },
                     onDisconnected: { isConnected = false }
                 )
                 .navigationDestination(for: Route.self) { route in
@@ -59,6 +61,11 @@ struct AppNavigation: View {
                                 xionRepository: container.repository,
                                 secureStorage: container.secureStorage
                             ),
+                            onDone: { path.removeLast() }
+                        )
+                    case .vault:
+                        VaultView(
+                            viewModel: VaultViewModel(repository: container.repository),
                             onDone: { path.removeLast() }
                         )
                     case .wallet:

@@ -20,6 +20,10 @@ interface XionRepository {
     suspend fun getBlockHeight(): Result<Long>
     suspend fun send(toAddress: String, amount: String, memo: String, denom: String = Constants.COIN_DENOM): Result<TransactionResult>
     suspend fun executeContract(contractAddress: String, msg: String, funds: String?): Result<TransactionResult>
+    suspend fun getVaultBalance(): Result<BalanceInfo>
+    suspend fun vaultDeposit(amount: String, denom: String = Constants.COIN_DENOM): Result<TransactionResult>
+    suspend fun vaultWithdraw(amount: String, denom: String = Constants.COIN_DENOM): Result<TransactionResult>
+    suspend fun vaultWithdrawAll(): Result<TransactionResult>
     suspend fun getTx(txHash: String): Result<TransactionResult>
     suspend fun getRecentTransactions(address: String): Result<List<TransactionResult>>
 

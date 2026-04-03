@@ -204,6 +204,83 @@ class XionRepositoryImpl @Inject constructor(
         confirmed
     }
 
+    override suspend fun getVaultBalance(): Result<BalanceInfo> = Result.runCatching {
+        val state = _walletState.value as? WalletState.Connected
+            ?: throw IllegalStateException("Wallet not connected")
+        val queryMsg = """{"balance":{"address":"${state.metaAccountAddress}"}}"""
+        val responseBytes = mobDataSource.queryContractSmart(
+            Constants.VAULT_CONTRACT_ADDRESS,
+            queryMsg.toByteArray()
+        )
+        val responseStr = String(responseBytes)
+        val json = org.json.JSONObject(responseStr)
+        val coins = json.getJSONArray("coins")
+        if (coins.length() == 0) {
+            BalanceInfo(amount = "0", denom = Constants.COIN_DENOM)
+        } else {
+            val firstCoin = coins.getJSONObject(0)
+            BalanceInfo(amount = firstCoin.getString("amount"), denom = firstCoin.getString("denom"))
+        }
+    }
+
+    override suspend fun vaultDeposit(amount: String, denom: String): Result<TransactionResult> = withGrantRecovery {
+        _walletState.value as? WalletState.Connected
+            ?: throw IllegalStateException("Wallet not connected")
+        val msg = """{"deposit":{}}"""
+        val fundsCoins = listOf(Coin(denom = denom, amount = amount))
+        val result = mobDataSource.executeContract(
+            contractAddress = Constants.VAULT_CONTRACT_ADDRESS,
+            msg = msg.toByteArray(),
+            funds = fundsCoins,
+            memo = null
+        )
+        val confirmed = if (result.success) {
+            awaitTxConfirmation(result.txHash) ?: result
+        } else {
+            result
+        }
+        _transactionHistory.value = _transactionHistory.value + confirmed
+        confirmed
+    }
+
+    override suspend fun vaultWithdraw(amount: String, denom: String): Result<TransactionResult> = withGrantRecovery {
+        _walletState.value as? WalletState.Connected
+            ?: throw IllegalStateException("Wallet not connected")
+        val msg = """{"withdraw":{"coins":[{"denom":"$denom","amount":"$amount"}]}}"""
+        val result = mobDataSource.executeContract(
+            contractAddress = Constants.VAULT_CONTRACT_ADDRESS,
+            msg = msg.toByteArray(),
+            funds = emptyList(),
+            memo = null
+        )
+        val confirmed = if (result.success) {
+            awaitTxConfirmation(result.txHash) ?: result
+        } else {
+            result
+        }
+        _transactionHistory.value = _transactionHistory.value + confirmed
+        confirmed
+    }
+
+    override suspend fun vaultWithdrawAll(): Result<TransactionResult> = withGrantRecovery {
+        _walletState.value as? WalletState.Connected
+            ?: throw IllegalStateException("Wallet not connected")
+        val msg = """{"withdraw_all":{}}"""
+        val result = mobDataSource.executeContract(
+            contractAddress = Constants.VAULT_CONTRACT_ADDRESS,
+            msg = msg.toByteArray(),
+            funds = emptyList(),
+            memo = null
+        )
+        val confirmed = if (result.success) {
+            awaitTxConfirmation(result.txHash) ?: result
+        } else {
+            result
+        }
+        _transactionHistory.value = _transactionHistory.value + confirmed
+        confirmed
+    }
+
     override suspend fun getTx(txHash: String): Result<TransactionResult> = Result.runCatching {
         mobDataSource.getTx(txHash)
     }

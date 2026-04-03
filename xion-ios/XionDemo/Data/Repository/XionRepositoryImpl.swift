@@ -73,6 +73,71 @@ final class XionRepositoryImpl: XionRepositoryProtocol {
         return confirmed
     }
 
+    func getVaultBalance() async throws -> BalanceInfo {
+        let state = sessionManager.walletState
+        guard state.isConnected else { throw RepositoryError.notConnected }
+        let query = "{\"balance\":{\"address\":\"\(state.metaAccountAddress)\"}}"
+        let queryData = Data(query.utf8)
+        let responseData = try await mobService.queryContractSmart(
+            contractAddress: Constants.vaultContractAddress,
+            queryMsg: queryData
+        )
+        let json = try JSONSerialization.jsonObject(with: responseData) as? [String: Any]
+        let coins = json?["coins"] as? [[String: Any]] ?? []
+        guard let first = coins.first,
+              let amount = first["amount"] as? String,
+              let denom = first["denom"] as? String else {
+            return BalanceInfo(amount: "0", denom: Constants.coinDenom)
+        }
+        return BalanceInfo(amount: amount, denom: denom)
+    }
+
+    func vaultDeposit(amount: String, denom: String) async throws -> TransactionResult {
+        let msg = "{\"deposit\":{}}"
+        let funds = [Coin(denom: denom, amount: amount)]
+        let result = try await withGrantRecovery {
+            try await self.mobService.executeContract(
+                contractAddress: Constants.vaultContractAddress,
+                msg: Data(msg.utf8),
+                funds: funds,
+                memo: nil
+            )
+        }
+        let confirmed = result.success ? (await awaitTxConfirmation(txHash: result.txHash) ?? result) : result
+        sessionManager.appendTransaction(confirmed)
+        return confirmed
+    }
+
+    func vaultWithdraw(amount: String, denom: String) async throws -> TransactionResult {
+        let msg = "{\"withdraw\":{\"coins\":[{\"denom\":\"\(denom)\",\"amount\":\"\(amount)\"}]}}"
+        let result = try await withGrantRecovery {
+            try await self.mobService.executeContract(
+                contractAddress: Constants.vaultContractAddress,
+                msg: Data(msg.utf8),
+                funds: [],
+                memo: nil
+            )
+        }
+        let confirmed = result.success ? (await awaitTxConfirmation(txHash: result.txHash) ?? result) : result
+        sessionManager.appendTransaction(confirmed)
+        return confirmed
+    }
+
+    func vaultWithdrawAll() async throws -> TransactionResult {
+        let msg = "{\"withdraw_all\":{}}"
+        let result = try await withGrantRecovery {
+            try await self.mobService.executeContract(
+                contractAddress: Constants.vaultContractAddress,
+                msg: Data(msg.utf8),
+                funds: [],
+                memo: nil
+            )
+        }
+        let confirmed = result.success ? (await awaitTxConfirmation(txHash: result.txHash) ?? result) : result
+        sessionManager.appendTransaction(confirmed)
+        return confirmed
+    }
+
     func getTx(txHash: String) async throws -> TransactionResult {
         try await mobService.getTx(txHash: txHash)
     }

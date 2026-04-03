@@ -55,6 +55,9 @@ enum Constants {
     static let sampleContractAddress = ""
     static let sampleContractMsg = #"{"increment": {}}"#
 
+    // Vault contract (testnet)
+    static let vaultContractAddress = "xion1snjtcrvqtlpmzkxfwwt69nffwz8tqazl3t4r38tqllvx3qx7redsmhcvgl"
+
     // Read a value from Info.plist (set via xcconfig or build settings)
     private static func envString(_ key: String) -> String? {
         guard let value = Bundle.main.infoDictionary?[key] as? String,

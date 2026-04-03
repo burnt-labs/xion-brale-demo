@@ -24,6 +24,7 @@ data class WalletUiState(
     val grantsActive: Boolean = true,
     val balance: String? = null,
     val sbcBalance: String? = null,
+    val vaultBalance: String? = null,
     val isBalanceLoading: Boolean = false,
     val blockHeight: Long? = null,
     val chainId: String = Constants.CHAIN_ID,
@@ -92,6 +93,7 @@ class WalletViewModel @Inject constructor(
     fun refresh() {
         loadBalance()
         loadSbcBalance()
+        loadVaultBalance()
         loadBlockHeight()
         loadRecentTransactions()
         checkBankLinked()
@@ -126,6 +128,18 @@ class WalletViewModel @Inject constructor(
             when (val result = repository.getSbcBalance()) {
                 is Result.Success -> {
                     _uiState.update { it.copy(sbcBalance = result.data.amount) }
+                }
+                is Result.Error -> {} // Non-critical
+                is Result.Loading -> {}
+            }
+        }
+    }
+
+    private fun loadVaultBalance() {
+        viewModelScope.launch {
+            when (val result = repository.getVaultBalance()) {
+                is Result.Success -> {
+                    _uiState.update { it.copy(vaultBalance = result.data.amount) }
                 }
                 is Result.Error -> {} // Non-critical
                 is Result.Loading -> {}

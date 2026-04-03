@@ -13,6 +13,7 @@ protocol MobSigningServiceProtocol {
         funds: [Coin],
         memo: String?
     ) async throws -> TransactionResult
+    func queryContractSmart(contractAddress: String, queryMsg: Data) async throws -> Data
     func getTx(txHash: String) async throws -> TransactionResult
     func getSignerAddress() -> String?
     func disconnect()
@@ -217,6 +218,22 @@ final class MobSigningService: MobSigningServiceProtocol {
                         height: response.height,
                         rawLog: response.rawLog
                     ))
+                } catch {
+                    continuation.resume(throwing: error)
+                }
+            }
+        }
+    }
+
+    func queryContractSmart(contractAddress: String, queryMsg: Data) async throws -> Data {
+        try await withCheckedThrowingContinuation { continuation in
+            queue.async {
+                do {
+                    guard let client = self.client else {
+                        throw MobServiceError.clientNotInitialized
+                    }
+                    let result = try client.queryContractSmart(contractAddress: contractAddress, queryMsg: queryMsg)
+                    continuation.resume(returning: result)
                 } catch {
                     continuation.resume(throwing: error)
                 }

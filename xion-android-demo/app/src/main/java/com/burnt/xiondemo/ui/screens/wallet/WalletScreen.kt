@@ -1,6 +1,7 @@
 package com.burnt.xiondemo.ui.screens.wallet
 
 import android.content.Intent
+import androidx.compose.foundation.BorderStroke
 import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -41,6 +42,7 @@ fun WalletScreen(
     onNavigateToOnramp: () -> Unit,
     onNavigateToOfframp: () -> Unit,
     onNavigateToLinkBank: () -> Unit,
+    onNavigateToVault: () -> Unit,
     onDisconnected: () -> Unit,
     viewModel: WalletViewModel = hiltViewModel()
 ) {
@@ -251,6 +253,39 @@ fun WalletScreen(
                         maxLines = 1
                     )
                 }
+
+                if (uiState.vaultBalance != null && uiState.vaultBalance != "0") {
+                    Spacer(modifier = Modifier.height(16.dp))
+                    HorizontalDivider(color = SubtitleText.copy(alpha = 0.2f))
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column {
+                            Text(
+                                text = "Vault Balance",
+                                fontSize = 14.sp,
+                                color = SubtitleText
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = CoinFormatter.formatWithDenom(uiState.vaultBalance!!),
+                                fontSize = 22.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = GreetingText,
+                                maxLines = 1
+                            )
+                        }
+                        Icon(
+                            imageVector = Icons.Default.Lock,
+                            contentDescription = "Vault",
+                            tint = SubtitleText,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                }
             }
         }
 
@@ -272,6 +307,28 @@ fun WalletScreen(
             Text(
                 text = "Send Tokens",
                 fontWeight = FontWeight.SemiBold
+            )
+        }
+
+        // Vault button
+        Spacer(modifier = Modifier.height(8.dp))
+        OutlinedButton(
+            onClick = onNavigateToVault,
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(12.dp),
+            border = BorderStroke(1.dp, SubtitleText.copy(alpha = 0.3f))
+        ) {
+            Icon(
+                imageVector = Icons.Default.Lock,
+                contentDescription = null,
+                modifier = Modifier.size(18.dp),
+                tint = GreetingText
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = "Vault",
+                fontWeight = FontWeight.SemiBold,
+                color = GreetingText
             )
         }
 

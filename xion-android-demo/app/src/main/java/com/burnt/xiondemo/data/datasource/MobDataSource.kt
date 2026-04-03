@@ -33,6 +33,7 @@ interface MobDataSource {
         funds: List<Coin>,
         memo: String?
     ): TransactionResult
+    suspend fun queryContractSmart(contractAddress: String, queryMsg: ByteArray): ByteArray
     suspend fun getTx(txHash: String): TransactionResult
     fun getSignerAddress(): String?
     fun disconnect()
@@ -161,6 +162,14 @@ class RealMobDataSource @Inject constructor() : MobDataSource {
             height = response.height,
             rawLog = response.rawLog
         )
+    }
+
+    override suspend fun queryContractSmart(
+        contractAddress: String,
+        queryMsg: ByteArray
+    ): ByteArray = withContext(Dispatchers.IO) {
+        val c = client ?: throw IllegalStateException("Client not initialized")
+        c.queryContractSmart(contractAddress, queryMsg)
     }
 
     override suspend fun getTx(txHash: String): TransactionResult = withContext(Dispatchers.IO) {

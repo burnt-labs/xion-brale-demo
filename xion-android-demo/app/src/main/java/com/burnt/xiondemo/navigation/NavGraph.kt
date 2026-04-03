@@ -10,6 +10,7 @@ import com.burnt.xiondemo.ui.screens.connect.ConnectScreen
 import com.burnt.xiondemo.ui.screens.contract.ContractScreen
 import com.burnt.xiondemo.ui.screens.history.HistoryScreen
 import com.burnt.xiondemo.ui.screens.linkbank.LinkBankScreen
+import com.burnt.xiondemo.ui.screens.vault.VaultScreen
 import com.burnt.xiondemo.ui.screens.wallet.WalletScreen
 
 object Routes {
@@ -20,6 +21,7 @@ object Routes {
     const val ONRAMP = "onramp"
     const val OFFRAMP = "offramp"
     const val LINK_BANK = "link_bank"
+    const val VAULT = "vault"
 }
 
 @Composable
@@ -47,6 +49,7 @@ fun NavGraph() {
                 onNavigateToOnramp = { navController.navigate(Routes.ONRAMP) },
                 onNavigateToOfframp = { navController.navigate(Routes.OFFRAMP) },
                 onNavigateToLinkBank = { navController.navigate(Routes.LINK_BANK) },
+                onNavigateToVault = { navController.navigate(Routes.VAULT) },
                 onDisconnected = {
                     navController.navigate(Routes.CONNECT) {
                         popUpTo(Routes.WALLET) { inclusive = true }
@@ -73,6 +76,10 @@ fun NavGraph() {
 
         composable(Routes.LINK_BANK) {
             LinkBankScreen(onDone = { navController.popBackStack() })
+        }
+
+        composable(Routes.VAULT) {
+            VaultScreen(onBack = { navController.popBackStack() })
         }
     }
 }
