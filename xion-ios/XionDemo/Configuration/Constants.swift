@@ -46,6 +46,10 @@ enum Constants {
     // Brale keychain keys
     static let keychainBraleBankAddressId = "brale_bank_address_id"
     static let keychainBraleXionAddressId = "brale_xion_address_id"
+    static let keychainBraleUserName = "brale_user_name"
+    static let keychainBraleUserEmail = "brale_user_email"
+    static let keychainBraleUserPhone = "brale_user_phone"
+    static let keychainBraleUserDob = "brale_user_dob"
 
     // Sample contract for demo
     static let sampleContractAddress = ""

@@ -23,8 +23,8 @@ final class BraleProxyService {
 
     // MARK: - Plaid
 
-    func createPlaidLinkToken(name: String, email: String) async throws -> PlaidLinkTokenResponse {
-        let body = PlaidLinkTokenRequest(legalName: name, emailAddress: email)
+    func createPlaidLinkToken(name: String, email: String, phone: String?, dob: String?) async throws -> PlaidLinkTokenResponse {
+        let body = PlaidLinkTokenRequest(legalName: name, emailAddress: email, phoneNumber: phone, dateOfBirth: dob)
         return try await post(path: "/plaid/link-token", body: body)
     }
 

@@ -1,7 +1,7 @@
 import Foundation
 
 protocol BraleRepositoryProtocol {
-    func createPlaidLinkToken(name: String, email: String) async throws -> PlaidLinkTokenResponse
+    func createPlaidLinkToken(name: String, email: String, phone: String?, dob: String?) async throws -> PlaidLinkTokenResponse
     func registerBankAccount(publicToken: String) async throws -> String
     func getInternalAddresses() async throws -> [BraleAddress]
     func findExistingXionAddress(walletAddress: String) async throws -> BraleAddress?
@@ -23,8 +23,8 @@ final class BraleRepositoryImpl: BraleRepositoryProtocol {
 
     // MARK: - Plaid
 
-    func createPlaidLinkToken(name: String, email: String) async throws -> PlaidLinkTokenResponse {
-        try await braleService.createPlaidLinkToken(name: name, email: email)
+    func createPlaidLinkToken(name: String, email: String, phone: String?, dob: String?) async throws -> PlaidLinkTokenResponse {
+        try await braleService.createPlaidLinkToken(name: name, email: email, phone: phone, dob: dob)
     }
 
     func registerBankAccount(publicToken: String) async throws -> String {

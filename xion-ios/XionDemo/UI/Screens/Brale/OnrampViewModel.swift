@@ -9,8 +9,19 @@ enum OnrampStep {
 @MainActor
 final class OnrampViewModel: ObservableObject {
 
+    // Form fields
+    @Published var userName = ""
+    @Published var userEmail = ""
+    @Published var userPhone = ""
+    @Published var userDob = ""
+    @Published var userNameError: String?
+    @Published var userEmailError: String?
+    @Published var userPhoneError: String?
+    @Published var userDobError: String?
     @Published var amount = ""
     @Published var amountError: String?
+
+    // Bank/transfer state
     @Published var bankLinked = false
     @Published var bankAddressId: String?
     @Published var bankName: String?
@@ -30,6 +41,17 @@ final class OnrampViewModel: ObservableObject {
     private var initialSbcBalance: Int64 = 0
     private var pollTask: Task<Void, Never>?
 
+    var isLinkFormValid: Bool {
+        !userName.trimmingCharacters(in: .whitespaces).isEmpty
+            && userNameError == nil
+            && !userEmail.trimmingCharacters(in: .whitespaces).isEmpty
+            && userEmailError == nil
+            && !userPhone.trimmingCharacters(in: .whitespaces).isEmpty
+            && userPhoneError == nil
+            && !userDob.trimmingCharacters(in: .whitespaces).isEmpty
+            && userDobError == nil
+    }
+
     var isFormValid: Bool {
         guard let num = Double(amount), num > 0, amountError == nil, bankLinked else {
             return false
@@ -48,14 +70,65 @@ final class OnrampViewModel: ObservableObject {
         self.secureStorage = secureStorage
         self.plaidLinkService = plaidLinkService
 
-        // Restore cached IDs from secure storage
+        // Restore cached IDs and user data from secure storage
         let bankId = secureStorage.getBraleBankAddressId()
         let xionId = secureStorage.getBraleXionAddressId()
-        bankLinked = bankId != nil
+        bankLinked = bankId != nil && !bankId!.isEmpty
         bankAddressId = bankId
         xionAddressId = xionId
+        userName = secureStorage.getBraleUserName() ?? ""
+        userEmail = secureStorage.getBraleUserEmail() ?? ""
+        userPhone = secureStorage.getBraleUserPhone() ?? ""
+        userDob = secureStorage.getBraleUserDob() ?? ""
 
         if xionId == nil { checkExistingXionAddress() }
+    }
+
+    // MARK: - Validation
+
+    func updateUserName(_ value: String) {
+        userName = value
+        userNameError = value.trimmingCharacters(in: .whitespaces).isEmpty ? "Name is required" : nil
+    }
+
+    func updateUserEmail(_ value: String) {
+        userEmail = value
+        let trimmed = value.trimmingCharacters(in: .whitespaces)
+        if trimmed.isEmpty {
+            userEmailError = "Email is required"
+        } else if !trimmed.contains("@") || !trimmed.contains(".") {
+            userEmailError = "Enter a valid email address"
+        } else {
+            userEmailError = nil
+        }
+    }
+
+    func updateUserPhone(_ value: String) {
+        userPhone = value
+        let trimmed = value.trimmingCharacters(in: .whitespaces)
+        if trimmed.isEmpty {
+            userPhoneError = "Phone number is required"
+        } else if !trimmed.hasPrefix("+") {
+            userPhoneError = "Must start with + (e.g. +15551234567)"
+        } else if !trimmed.dropFirst().allSatisfy(\.isNumber) {
+            userPhoneError = "Only digits after +"
+        } else if trimmed.count < 11 {
+            userPhoneError = "Enter full number with country code"
+        } else {
+            userPhoneError = nil
+        }
+    }
+
+    func updateUserDob(_ value: String) {
+        userDob = value
+        let trimmed = value.trimmingCharacters(in: .whitespaces)
+        if trimmed.isEmpty {
+            userDobError = "Date of birth is required"
+        } else if trimmed.range(of: #"^\d{4}-\d{2}-\d{2}$"#, options: .regularExpression) == nil {
+            userDobError = "Use YYYY-MM-DD format"
+        } else {
+            userDobError = nil
+        }
     }
 
     func updateAmount(_ value: String) {
@@ -75,12 +148,27 @@ final class OnrampViewModel: ObservableObject {
         }
     }
 
-    func requestPlaidLinkToken(name: String, email: String) {
+    // MARK: - Plaid Link
+
+    func requestPlaidLinkToken() {
+        let name = userName.trimmingCharacters(in: .whitespaces)
+        let email = userEmail.trimmingCharacters(in: .whitespaces)
+        let phone = userPhone.trimmingCharacters(in: .whitespaces)
+        let dob = userDob.trimmingCharacters(in: .whitespaces)
+
+        // Persist user data
+        secureStorage.saveBraleUserName(name)
+        secureStorage.saveBraleUserEmail(email)
+        secureStorage.saveBraleUserPhone(phone)
+        secureStorage.saveBraleUserDob(dob)
+
         Task {
             isLoading = true
             error = nil
             do {
-                let response = try await braleRepository.createPlaidLinkToken(name: name, email: email)
+                let response = try await braleRepository.createPlaidLinkToken(
+                    name: name, email: email, phone: phone, dob: dob
+                )
                 let result = try await plaidLinkService.openLink(token: response.linkToken)
                 switch result {
                 case .success(let publicToken):
@@ -116,6 +204,15 @@ final class OnrampViewModel: ObservableObject {
         isLoading = false
     }
 
+    func unlinkBank() {
+        secureStorage.deleteBraleBankAddressId()
+        bankLinked = false
+        bankAddressId = nil
+        bankName = nil
+    }
+
+    // MARK: - Submit
+
     func submitOnramp() {
         guard let bankId = bankAddressId else { return }
 
@@ -125,10 +222,8 @@ final class OnrampViewModel: ObservableObject {
             step = .processing
 
             do {
-                // Capture initial SBC balance before transfer
                 initialSbcBalance = await getCurrentSbcBalance()
 
-                // Ensure Xion address is registered with Brale
                 let resolvedXionId: String
                 if let existingId = xionAddressId {
                     resolvedXionId = existingId
@@ -149,8 +244,6 @@ final class OnrampViewModel: ObservableObject {
                 )
                 self.transfer = transfer
                 isLoading = false
-
-                // Poll on-chain balance for token arrival
                 pollForTokenArrival()
             } catch {
                 self.error = error.localizedDescription
@@ -204,7 +297,7 @@ final class OnrampViewModel: ObservableObject {
 
     private func pollForTokenArrival() {
         pollTask = Task {
-            for _ in 0..<60 { // Poll for up to ~3 minutes
+            for _ in 0..<60 {
                 try? await Task.sleep(nanoseconds: 3_000_000_000)
                 guard !Task.isCancelled else { return }
 
@@ -215,7 +308,6 @@ final class OnrampViewModel: ObservableObject {
                     receivedAmount = "\(received)"
                     step = .status
 
-                    // Add to transaction history
                     await xionRepository.appendTransaction(TransactionResult(
                         txHash: transfer?.id ?? "",
                         success: true,
@@ -233,7 +325,6 @@ final class OnrampViewModel: ObservableObject {
                     return
                 }
             }
-            // Timeout -- show status anyway
             step = .status
         }
     }

@@ -36,7 +36,7 @@ final class PlaidLinkService {
                 self?.handler = nil
                 if let error = exit.error {
                     continuation.resume(throwing: PlaidLinkError.handlerCreationFailed(
-                        NSError(domain: "PlaidLink", code: Int(error.errorCode.rawValue),
+                        NSError(domain: "PlaidLink", code: 0,
                                 userInfo: [NSLocalizedDescriptionKey: error.errorMessage])
                     ))
                 } else {

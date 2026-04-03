@@ -64,6 +64,24 @@ final class SecureStorage {
         load(key: Constants.keychainBraleXionAddressId)
     }
 
+    func deleteBraleBankAddressId() {
+        delete(key: Constants.keychainBraleBankAddressId)
+    }
+
+    // MARK: - Brale User Data
+
+    func saveBraleUserName(_ name: String) { save(key: Constants.keychainBraleUserName, value: name) }
+    func getBraleUserName() -> String? { load(key: Constants.keychainBraleUserName) }
+
+    func saveBraleUserEmail(_ email: String) { save(key: Constants.keychainBraleUserEmail, value: email) }
+    func getBraleUserEmail() -> String? { load(key: Constants.keychainBraleUserEmail) }
+
+    func saveBraleUserPhone(_ phone: String) { save(key: Constants.keychainBraleUserPhone, value: phone) }
+    func getBraleUserPhone() -> String? { load(key: Constants.keychainBraleUserPhone) }
+
+    func saveBraleUserDob(_ dob: String) { save(key: Constants.keychainBraleUserDob, value: dob) }
+    func getBraleUserDob() -> String? { load(key: Constants.keychainBraleUserDob) }
+
     // MARK: - Bulk Operations
 
     func saveSessionData(
@@ -86,7 +104,11 @@ final class SecureStorage {
             Constants.keychainTreasuryAddress,
             Constants.keychainSessionExpiry,
             Constants.keychainBraleBankAddressId,
-            Constants.keychainBraleXionAddressId
+            Constants.keychainBraleXionAddressId,
+            Constants.keychainBraleUserName,
+            Constants.keychainBraleUserEmail,
+            Constants.keychainBraleUserPhone,
+            Constants.keychainBraleUserDob
         ]
         for key in keys {
             delete(key: key)

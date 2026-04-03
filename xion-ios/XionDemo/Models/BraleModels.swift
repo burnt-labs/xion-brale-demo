@@ -62,6 +62,8 @@ struct CreateTransferRequest: Codable {
 struct PlaidLinkTokenRequest: Codable {
     let legalName: String
     let emailAddress: String
+    let phoneNumber: String?
+    let dateOfBirth: String?
 }
 
 struct PlaidLinkTokenResponse: Codable {
