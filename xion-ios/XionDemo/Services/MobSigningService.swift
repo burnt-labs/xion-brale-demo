@@ -3,15 +3,14 @@ import Foundation
 
 protocol MobSigningServiceProtocol {
     func createClientWithSigner(mnemonic: String) async throws -> String
+    func upgradeToSessionClient(metaAccountAddress: String, treasuryAddress: String, sessionExpiresAt: Int64) async throws
     func getBalance(address: String, denom: String) async throws -> BalanceInfo
     func getHeight() async throws -> Int64
-    func send(toAddress: String, coins: [Coin], granter: String?, feeGranter: String?, memo: String?) async throws -> TransactionResult
+    func send(toAddress: String, coins: [Coin], memo: String?) async throws -> TransactionResult
     func executeContract(
         contractAddress: String,
         msg: Data,
         funds: [Coin],
-        granter: String?,
-        feeGranter: String?,
         memo: String?
     ) async throws -> TransactionResult
     func getTx(txHash: String) async throws -> TransactionResult
@@ -22,15 +21,15 @@ protocol MobSigningServiceProtocol {
 final class MobSigningService: MobSigningServiceProtocol {
 
     private let queue = DispatchQueue(label: "com.burnt.xiondemo.mob", qos: .userInitiated)
+    private let transport = NativeHttpTransport()
 
     private var client: Client?
-    private var signer: Signer?
+    private var signer: RustSigner?
 
     func createClientWithSigner(mnemonic: String) async throws -> String {
         try await withCheckedThrowingContinuation { continuation in
             queue.async {
                 do {
-                    // Defer cleanup of old resources to avoid racing with in-flight RPCs
                     let oldClient = self.client
                     let oldSigner = self.signer
                     self.client = nil
@@ -42,10 +41,11 @@ final class MobSigningService: MobSigningServiceProtocol {
                         grpcEndpoint: nil,
                         addressPrefix: Constants.addressPrefix,
                         coinType: Constants.coinType,
-                        gasPrice: Constants.gasPrice
+                        gasPrice: Constants.gasPrice,
+                        feeGranter: nil
                     )
 
-                    let newSigner = try Signer.fromMnemonic(
+                    let newSigner = try RustSigner.fromMnemonic(
                         mnemonic: mnemonic,
                         addressPrefix: Constants.addressPrefix,
                         derivationPath: Constants.derivationPath
@@ -54,10 +54,10 @@ final class MobSigningService: MobSigningServiceProtocol {
                     // Retry once on transient cold-start failure
                     let newClient: Client
                     do {
-                        newClient = try Client.newWithSigner(config: config, signer: newSigner)
+                        newClient = try Client.newWithSigner(config: config, signer: newSigner, transport: self.transport)
                     } catch {
                         Thread.sleep(forTimeInterval: 0.5)
-                        newClient = try Client.newWithSigner(config: config, signer: newSigner)
+                        newClient = try Client.newWithSigner(config: config, signer: newSigner, transport: self.transport)
                     }
 
                     self.signer = newSigner
@@ -72,6 +72,61 @@ final class MobSigningService: MobSigningServiceProtocol {
                     }
 
                     continuation.resume(returning: newSigner.address())
+                } catch {
+                    continuation.resume(throwing: error)
+                }
+            }
+        }
+    }
+
+    func upgradeToSessionClient(metaAccountAddress: String, treasuryAddress: String, sessionExpiresAt: Int64) async throws {
+        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+            queue.async {
+                do {
+                    guard let currentSigner = self.signer else {
+                        throw MobServiceError.signerNotInitialized
+                    }
+
+                    let now = UInt64(Date().timeIntervalSince1970)
+                    let metadata = SessionMetadata(
+                        granter: metaAccountAddress,
+                        grantee: currentSigner.address(),
+                        feeGranter: treasuryAddress,
+                        feePayer: nil,
+                        createdAt: now,
+                        expiresAt: UInt64(sessionExpiresAt),
+                        description: nil
+                    )
+
+                    let config = ChainConfig(
+                        chainId: Constants.chainId,
+                        rpcEndpoint: Constants.rpcUrl,
+                        grpcEndpoint: nil,
+                        addressPrefix: Constants.addressPrefix,
+                        coinType: Constants.coinType,
+                        gasPrice: Constants.gasPrice,
+                        feeGranter: treasuryAddress
+                    )
+
+                    let oldClient = self.client
+                    self.client = nil
+
+                    let sessionClient = try Client.newWithSessionSigner(
+                        config: config,
+                        signer: currentSigner,
+                        metadata: metadata,
+                        transport: self.transport
+                    )
+                    self.client = sessionClient
+
+                    // Deferred cleanup
+                    if oldClient != nil {
+                        DispatchQueue.global().asyncAfter(deadline: .now() + 2) {
+                            _ = oldClient
+                        }
+                    }
+
+                    continuation.resume()
                 } catch {
                     continuation.resume(throwing: error)
                 }
@@ -111,14 +166,14 @@ final class MobSigningService: MobSigningServiceProtocol {
         }
     }
 
-    func send(toAddress: String, coins: [Coin], granter: String?, feeGranter: String?, memo: String?) async throws -> TransactionResult {
+    func send(toAddress: String, coins: [Coin], memo: String?) async throws -> TransactionResult {
         try await withCheckedThrowingContinuation { continuation in
             queue.async {
                 do {
                     guard let client = self.client else {
                         throw MobServiceError.clientNotInitialized
                     }
-                    let response = try client.send(toAddress: toAddress, amount: coins, granter: granter, feeGranter: feeGranter, memo: memo)
+                    let response = try client.send(toAddress: toAddress, amount: coins, memo: memo)
                     continuation.resume(returning: TransactionResult(
                         txHash: response.txhash,
                         success: response.code == 0,
@@ -138,8 +193,6 @@ final class MobSigningService: MobSigningServiceProtocol {
         contractAddress: String,
         msg: Data,
         funds: [Coin],
-        granter: String?,
-        feeGranter: String?,
         memo: String?
     ) async throws -> TransactionResult {
         try await withCheckedThrowingContinuation { continuation in
@@ -152,9 +205,8 @@ final class MobSigningService: MobSigningServiceProtocol {
                         contractAddress: contractAddress,
                         msg: msg,
                         funds: funds,
-                        granter: granter,
-                        feeGranter: feeGranter,
-                        memo: memo
+                        memo: memo,
+                        gasLimit: nil
                     )
                     continuation.resume(returning: TransactionResult(
                         txHash: response.txhash,
@@ -203,7 +255,6 @@ final class MobSigningService: MobSigningServiceProtocol {
         let oldSigner = signer
         client = nil
         signer = nil
-        // Deferred cleanup so in-flight RPCs can finish
         if oldClient != nil || oldSigner != nil {
             DispatchQueue.global().asyncAfter(deadline: .now() + 2) {
                 _ = oldClient

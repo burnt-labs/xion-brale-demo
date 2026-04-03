@@ -50,6 +50,13 @@ final class SessionManager: ObservableObject {
         let expiresAt = Int64(Date().timeIntervalSince1970) + Constants.sessionGrantDurationSeconds
         secureStorage.saveSessionExpiry(expiresAt)
 
+        // Upgrade to session client so granter/feeGranter are handled internally
+        try await mobService.upgradeToSessionClient(
+            metaAccountAddress: metaAccountAddress,
+            treasuryAddress: Constants.treasuryAddress,
+            sessionExpiresAt: expiresAt
+        )
+
         walletState = .connecting(step: .verifyingGrants)
 
         // Poll LCD to verify grants are active
@@ -86,6 +93,13 @@ final class SessionManager: ObservableObject {
             walletState = .connecting(step: .generatingSessionKey)
 
             _ = try await mobService.createClientWithSigner(mnemonic: sessionMnemonic)
+
+            // Upgrade to session client so granter/feeGranter are handled internally
+            try await mobService.upgradeToSessionClient(
+                metaAccountAddress: metaAccountAddress,
+                treasuryAddress: treasuryAddress,
+                sessionExpiresAt: expiresAt
+            )
 
             walletState = .connected(
                 metaAccountAddress: metaAccountAddress,

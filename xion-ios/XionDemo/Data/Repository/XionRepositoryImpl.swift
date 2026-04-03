@@ -46,8 +46,6 @@ final class XionRepositoryImpl: XionRepositoryProtocol {
             try await self.mobService.send(
                 toAddress: toAddress,
                 coins: coins,
-                granter: state.metaAccountAddress,
-                feeGranter: state.treasuryAddress,
                 memo: memo.isEmpty ? nil : memo
             )
         }
@@ -67,8 +65,6 @@ final class XionRepositoryImpl: XionRepositoryProtocol {
                 contractAddress: contractAddress,
                 msg: msgData,
                 funds: fundsCoins,
-                granter: state.metaAccountAddress,
-                feeGranter: state.treasuryAddress,
                 memo: nil
             )
         }

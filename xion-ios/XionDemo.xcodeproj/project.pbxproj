@@ -35,6 +35,7 @@
 		79115013436612F46A531622 /* AddressDisplay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62B610670109F185885A91B0 /* AddressDisplay.swift */; };
 		79CF5EE68B7AC3140A4ED016 /* OfframpView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B7E4DFBE0B842959A37A6B18 /* OfframpView.swift */; };
 		79FD5EDDF88C418741DB9C69 /* SessionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B47243A696BBF12B9851043 /* SessionManager.swift */; };
+		8B910DBD82927E86D505B909 /* NativeHttpTransport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81DA30E71A0F48830F7EDDC3 /* NativeHttpTransport.swift */; };
 		8E5B7A85919528FB2DCE812D /* ActionCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01DAD41647DF7EA5C703A9D9 /* ActionCardView.swift */; };
 		8FBF13627F08E36E178F13B1 /* BraleProxyService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A24F045934613D8E8BC1978 /* BraleProxyService.swift */; };
 		90A26D567865E59B0FC9C4CB /* AppContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = F18B4B81972F35AC4535DE51 /* AppContainer.swift */; };
@@ -85,6 +86,7 @@
 /* Begin PBXFileReference section */
 		01DAD41647DF7EA5C703A9D9 /* ActionCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionCardView.swift; sourceTree = "<group>"; };
 		0AF43EFCDE6FBC7C6325A898 /* BalanceInfo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BalanceInfo.swift; sourceTree = "<group>"; };
+		126754388CFC7DB206BCA108 /* mobFFI.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = mobFFI.h; sourceTree = "<group>"; };
 		1286FBC2066DA3E22AF21E1A /* XionOAuthAPI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = XionOAuthAPI.swift; sourceTree = "<group>"; };
 		1602B45D3EF6F636EB9EACEB /* XionDemoApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = XionDemoApp.swift; sourceTree = "<group>"; };
 		19AEEAE59BE25CCBC7070322 /* SendViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SendViewModel.swift; sourceTree = "<group>"; };
@@ -110,6 +112,7 @@
 		75522E71D873C01A831E50C4 /* WalletState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalletState.swift; sourceTree = "<group>"; };
 		7A3529EE7AC2E5BC74A97451 /* uncommon-crypto */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "uncommon-crypto"; path = "vendor/uncommon-crypto"; sourceTree = SOURCE_ROOT; };
 		7B47243A696BBF12B9851043 /* SessionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionManager.swift; sourceTree = "<group>"; };
+		81DA30E71A0F48830F7EDDC3 /* NativeHttpTransport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeHttpTransport.swift; sourceTree = "<group>"; };
 		84BAF4B2A96ED64BA354E926 /* BraleModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BraleModels.swift; sourceTree = "<group>"; };
 		85240F56DCF2F8120F75E8BA /* HistoryViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryViewModel.swift; sourceTree = "<group>"; };
 		9AE3E0FAE73A24606C05DD83 /* WalletView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalletView.swift; sourceTree = "<group>"; };
@@ -133,6 +136,7 @@
 		E886FD18B4C007E3D3324904 /* SendView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SendView.swift; sourceTree = "<group>"; };
 		F18B4B81972F35AC4535DE51 /* AppContainer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppContainer.swift; sourceTree = "<group>"; };
 		F9F52F2271809128DF044A4E /* OAuthService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OAuthService.swift; sourceTree = "<group>"; };
+		FA9A6A1E7B540C062C1D2185 /* mobFFI.modulemap */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.module-map"; path = mobFFI.modulemap; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -347,6 +351,7 @@
 			children = (
 				4A24F045934613D8E8BC1978 /* BraleProxyService.swift */,
 				AB8E1EED56FDEC7F2B145F9A /* MobSigningService.swift */,
+				81DA30E71A0F48830F7EDDC3 /* NativeHttpTransport.swift */,
 				F9F52F2271809128DF044A4E /* OAuthService.swift */,
 				C230A38DFC5B10F36A67BF43 /* PlaidLinkService.swift */,
 				D84ED0A3AAA17DCDC796F086 /* SecureStorage.swift */,
@@ -359,6 +364,8 @@
 			isa = PBXGroup;
 			children = (
 				2AB5FA7FD1B1E0847A855F6C /* mob.swift */,
+				126754388CFC7DB206BCA108 /* mobFFI.h */,
+				FA9A6A1E7B540C062C1D2185 /* mobFFI.modulemap */,
 			);
 			path = MobBindings;
 			sourceTree = "<group>";
@@ -519,6 +526,7 @@
 				A0D44613411CC9F865AFE0B5 /* HistoryViewModel.swift in Sources */,
 				9A7BFC4F8BD8288854532938 /* LoadingOverlay.swift in Sources */,
 				DEBFDCC72523F4B69D052D02 /* MobSigningService.swift in Sources */,
+				8B910DBD82927E86D505B909 /* NativeHttpTransport.swift in Sources */,
 				678AA5F691DEE8E0BA5DE67A /* OAuthService.swift in Sources */,
 				2267DF2710337FFBC6AD3F60 /* OAuthTokens.swift in Sources */,
 				79CF5EE68B7AC3140A4ED016 /* OfframpView.swift in Sources */,
@@ -641,8 +649,10 @@
 				OTHER_LDFLAGS = (
 					"-lresolv",
 				);
+				OTHER_SWIFT_FLAGS = "-Xcc -fmodule-map-file=$(SRCROOT)/XionDemo/MobBindings/mobFFI.modulemap";
 				PRODUCT_BUNDLE_IDENTIFIER = com.burnt.xiondemo.ios;
 				SDKROOT = iphoneos;
+				SWIFT_INCLUDE_PATHS = "$(SRCROOT)/XionDemo/MobBindings";
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Release;
@@ -724,8 +734,10 @@
 				OTHER_LDFLAGS = (
 					"-lresolv",
 				);
+				OTHER_SWIFT_FLAGS = "-Xcc -fmodule-map-file=$(SRCROOT)/XionDemo/MobBindings/mobFFI.modulemap";
 				PRODUCT_BUNDLE_IDENTIFIER = com.burnt.xiondemo.ios;
 				SDKROOT = iphoneos;
+				SWIFT_INCLUDE_PATHS = "$(SRCROOT)/XionDemo/MobBindings";
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;
