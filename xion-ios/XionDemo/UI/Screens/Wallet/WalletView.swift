@@ -6,6 +6,7 @@ struct WalletView: View {
     let onNavigateToHistory: () -> Void
     let onNavigateToOnramp: () -> Void
     let onNavigateToOfframp: () -> Void
+    let onNavigateToLinkBank: () -> Void
     let onDisconnected: () -> Void
 
     @State private var showSendSheet = false
@@ -18,6 +19,7 @@ struct WalletView: View {
         onNavigateToHistory: @escaping () -> Void,
         onNavigateToOnramp: @escaping () -> Void,
         onNavigateToOfframp: @escaping () -> Void,
+        onNavigateToLinkBank: @escaping () -> Void,
         onDisconnected: @escaping () -> Void
     ) {
         self.viewModel = viewModel
@@ -26,6 +28,7 @@ struct WalletView: View {
         self.onNavigateToHistory = onNavigateToHistory
         self.onNavigateToOnramp = onNavigateToOnramp
         self.onNavigateToOfframp = onNavigateToOfframp
+        self.onNavigateToLinkBank = onNavigateToLinkBank
         self.onDisconnected = onDisconnected
     }
 
@@ -169,6 +172,47 @@ struct WalletView: View {
                 .listRowSeparator(.hidden)
                 .listRowInsets(EdgeInsets(top: 24, leading: 24, bottom: 0, trailing: 24))
 
+                // Bank link status
+                if !viewModel.bankLinked {
+                    HStack(spacing: 12) {
+                        Image(systemName: "building.columns.fill")
+                            .font(.system(size: 24))
+                            .foregroundStyle(Color.subtitleText)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Link Bank Account")
+                                .font(.system(size: 16, weight: .medium))
+                                .foregroundStyle(Color.greetingText)
+                            Text("Required for buying and selling stablecoins")
+                                .font(.system(size: 12))
+                                .foregroundStyle(Color.subtitleText)
+                        }
+                        Spacer()
+                        Button(action: onNavigateToLinkBank) {
+                            Text("Link")
+                                .font(.system(size: 13, weight: .semibold))
+                                .foregroundStyle(.white)
+                                .padding(.horizontal, 16)
+                                .padding(.vertical, 8)
+                                .background(Color.xionOrange)
+                                .clipShape(RoundedRectangle(cornerRadius: 8))
+                        }
+                        .buttonStyle(.plain)
+                    }
+                    .padding(16)
+                    .background(Color.cardBackground)
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                    .shadow(color: Color.cardShadow, radius: 2, y: 1)
+                } else {
+                    HStack(spacing: 8) {
+                        Image(systemName: "checkmark.circle.fill")
+                            .font(.system(size: 16))
+                            .foregroundStyle(Color.xionGreen)
+                        Text("Bank Linked")
+                            .font(.system(size: 14))
+                            .foregroundStyle(Color.subtitleText)
+                    }
+                }
+
                 // Buy and Cash Out buttons side-by-side
                 HStack(spacing: 12) {
                     Button(action: onNavigateToOnramp) {
@@ -180,11 +224,12 @@ struct WalletView: View {
                         }
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 14)
-                        .background(Color.xionGreen)
+                        .background(Color.xionGreen.opacity(viewModel.bankLinked ? 1.0 : 0.5))
                         .foregroundStyle(.white)
                         .clipShape(RoundedRectangle(cornerRadius: 12))
                     }
                     .buttonStyle(.plain)
+                    .disabled(!viewModel.bankLinked)
 
                     Button(action: onNavigateToOfframp) {
                         HStack(spacing: 6) {
@@ -195,11 +240,12 @@ struct WalletView: View {
                         }
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 14)
-                        .background(Color.mintscanBlue)
+                        .background(Color.mintscanBlue.opacity(viewModel.bankLinked ? 1.0 : 0.5))
                         .foregroundStyle(.white)
                         .clipShape(RoundedRectangle(cornerRadius: 12))
                     }
                     .buttonStyle(.plain)
+                    .disabled(!viewModel.bankLinked)
                 }
                 .listRowBackground(Color.screenBackground)
                 .listRowSeparator(.hidden)

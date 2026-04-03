@@ -17,7 +17,6 @@ struct OnrampView: View {
                 OnrampStatusContent(viewModel: viewModel, onDone: onDone)
             }
 
-            // Error overlay at top
             VStack {
                 ErrorBanner(message: viewModel.error, onDismiss: viewModel.clearError)
                     .padding(.horizontal, 24)
@@ -52,109 +51,6 @@ private struct OnrampFormContent: View {
                     .foregroundStyle(Color.subtitleText)
 
                 Spacer().frame(height: 24)
-
-                // Bank account status card
-                VStack(alignment: .leading, spacing: 0) {
-                    HStack(spacing: 12) {
-                        Image(systemName: viewModel.bankLinked ? "checkmark.circle.fill" : "building.columns.fill")
-                            .font(.system(size: 24))
-                            .foregroundStyle(viewModel.bankLinked ? Color.xionGreen : Color.subtitleText)
-
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(viewModel.bankLinked ? (viewModel.bankName ?? "Bank Account Linked") : "No Bank Account")
-                                .font(.system(size: 16, weight: .medium))
-                                .foregroundStyle(Color.greetingText)
-
-                            if !viewModel.bankLinked {
-                                Text("Link your bank account via Plaid to buy stablecoins")
-                                    .font(.system(size: 12))
-                                    .foregroundStyle(Color.subtitleText)
-                            }
-                        }
-
-                        Spacer()
-
-                        if viewModel.bankLinked {
-                            Button(action: { viewModel.unlinkBank() }) {
-                                Text("Unlink")
-                                    .font(.system(size: 13))
-                                    .foregroundStyle(Color.subtitleText)
-                            }
-                        }
-                    }
-
-                    // Form fields shown when bank not linked
-                    if !viewModel.bankLinked {
-                        Spacer().frame(height: 16)
-
-                        OnrampTextField(
-                            label: "Legal Name",
-                            placeholder: "John Doe",
-                            text: Binding(get: { viewModel.userName }, set: { viewModel.updateUserName($0) }),
-                            error: viewModel.userNameError,
-                            icon: "person.fill"
-                        )
-
-                        Spacer().frame(height: 12)
-
-                        OnrampTextField(
-                            label: "Email Address",
-                            placeholder: "you@example.com",
-                            text: Binding(get: { viewModel.userEmail }, set: { viewModel.updateUserEmail($0) }),
-                            error: viewModel.userEmailError,
-                            icon: "envelope.fill",
-                            keyboardType: .emailAddress
-                        )
-
-                        Spacer().frame(height: 12)
-
-                        OnrampTextField(
-                            label: "Phone Number",
-                            placeholder: "+15551234567",
-                            text: Binding(get: { viewModel.userPhone }, set: { viewModel.updateUserPhone($0) }),
-                            error: viewModel.userPhoneError,
-                            icon: "phone.fill",
-                            keyboardType: .phonePad
-                        )
-
-                        Spacer().frame(height: 12)
-
-                        OnrampTextField(
-                            label: "Date of Birth",
-                            placeholder: "1990-01-15",
-                            text: Binding(get: { viewModel.userDob }, set: { viewModel.updateUserDob($0) }),
-                            error: viewModel.userDobError,
-                            icon: "calendar",
-                            keyboardType: .numbersAndPunctuation
-                        )
-
-                        Spacer().frame(height: 16)
-
-                        Button(action: { viewModel.requestPlaidLinkToken() }) {
-                            if viewModel.isLoading {
-                                ProgressView()
-                                    .tint(.white)
-                                    .frame(maxWidth: .infinity)
-                                    .padding(.vertical, 12)
-                            } else {
-                                Text("Link Bank Account")
-                                    .font(.system(size: 13, weight: .semibold))
-                                    .frame(maxWidth: .infinity)
-                                    .padding(.vertical, 12)
-                            }
-                        }
-                        .background(viewModel.isLinkFormValid && !viewModel.isLoading ? Color.xionOrange : Color.xionOrange.opacity(0.5))
-                        .foregroundStyle(.white)
-                        .clipShape(RoundedRectangle(cornerRadius: 8))
-                        .disabled(!viewModel.isLinkFormValid || viewModel.isLoading)
-                    }
-                }
-                .padding(16)
-                .background(Color.cardBackground)
-                .clipShape(RoundedRectangle(cornerRadius: 12))
-                .shadow(color: Color.cardShadow, radius: 2, y: 1)
-
-                Spacer().frame(height: 20)
 
                 // Amount input (USD)
                 VStack(alignment: .leading, spacing: 4) {
@@ -228,67 +124,22 @@ private struct OnrampFormContent: View {
     }
 }
 
-// MARK: - Text Field Component
-
-private struct OnrampTextField: View {
-    let label: String
-    let placeholder: String
-    @Binding var text: String
-    let error: String?
-    let icon: String
-    var keyboardType: UIKeyboardType = .default
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            HStack(spacing: 10) {
-                Image(systemName: icon)
-                    .font(.system(size: 14))
-                    .foregroundStyle(Color.subtitleText)
-                    .frame(width: 20)
-
-                TextField(placeholder, text: $text)
-                    .font(.system(size: 15))
-                    .keyboardType(keyboardType)
-                    .autocapitalization(keyboardType == .emailAddress ? .none : .words)
-                    .disableAutocorrection(true)
-            }
-            .padding(12)
-            .overlay(
-                RoundedRectangle(cornerRadius: 12)
-                    .stroke(error != nil ? Color.red : Color(.systemGray4), lineWidth: 1)
-            )
-
-            if let error = error {
-                Text(error)
-                    .font(.system(size: 11))
-                    .foregroundStyle(.red)
-                    .padding(.leading, 4)
-            }
-        }
-    }
-}
-
 // MARK: - Processing
 
 private struct OnrampProcessingContent: View {
     var body: some View {
         VStack(spacing: 16) {
             Spacer()
-
             ProgressView()
                 .scaleEffect(1.5)
                 .tint(.xionOrange)
-
             Spacer().frame(height: 8)
-
             Text("Waiting for tokens...")
                 .font(.system(size: 16, weight: .medium))
                 .foregroundStyle(Color.greetingText)
-
             Text("Checking your wallet for incoming stablecoins")
                 .font(.system(size: 13))
                 .foregroundStyle(Color.subtitleText)
-
             Spacer()
         }
         .frame(maxWidth: .infinity)
@@ -306,13 +157,10 @@ private struct OnrampStatusContent: View {
         ScrollView {
             VStack(spacing: 0) {
                 Spacer().frame(height: 32)
-
                 Image(systemName: viewModel.tokensReceived ? "checkmark.circle.fill" : "clock.fill")
                     .font(.system(size: 64))
                     .foregroundStyle(viewModel.tokensReceived ? Color.xionGreen : Color.xionOrange)
-
                 Spacer().frame(height: 12)
-
                 Text(viewModel.tokensReceived ? "Tokens Received!" : "Transfer Submitted")
                     .font(.system(size: 20, weight: .bold))
                     .foregroundStyle(Color.greetingText)
@@ -323,7 +171,6 @@ private struct OnrampStatusContent: View {
                         .font(.system(size: 14))
                         .foregroundStyle(Color.subtitleText)
                 }
-
                 if !viewModel.tokensReceived {
                     Spacer().frame(height: 8)
                     Text("Tokens are being minted. This may take a few minutes.")

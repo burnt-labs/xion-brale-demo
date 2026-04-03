@@ -17,13 +17,16 @@ final class WalletViewModel: ObservableObject {
     @Published var sessionExpiryWarning = false
     @Published var isDisconnected = false
     @Published var transactions: [TransactionResult] = []
+    @Published var bankLinked = false
 
     private let repository: XionRepositoryProtocol
+    private let secureStorage: SecureStorage
     private var cancellables = Set<AnyCancellable>()
     private var expiryTimer: Timer?
 
-    init(repository: XionRepositoryProtocol) {
+    init(repository: XionRepositoryProtocol, secureStorage: SecureStorage) {
         self.repository = repository
+        self.secureStorage = secureStorage
 
         repository.sessionManager.$walletState
             .receive(on: DispatchQueue.main)
@@ -37,10 +40,16 @@ final class WalletViewModel: ObservableObject {
     }
 
     func refresh() {
+        checkBankLinked()
         loadBalance()
         loadSbcBalance()
         loadBlockHeight()
         loadTransactions()
+    }
+
+    private func checkBankLinked() {
+        let bankId = secureStorage.getBraleBankAddressId()
+        bankLinked = bankId != nil && !bankId!.isEmpty
     }
 
     func disconnect() {
