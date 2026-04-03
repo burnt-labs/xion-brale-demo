@@ -9,6 +9,7 @@ import com.burnt.xiondemo.ui.screens.brale.OnrampScreen
 import com.burnt.xiondemo.ui.screens.connect.ConnectScreen
 import com.burnt.xiondemo.ui.screens.contract.ContractScreen
 import com.burnt.xiondemo.ui.screens.history.HistoryScreen
+import com.burnt.xiondemo.ui.screens.linkbank.LinkBankScreen
 import com.burnt.xiondemo.ui.screens.wallet.WalletScreen
 
 object Routes {
@@ -18,6 +19,7 @@ object Routes {
     const val HISTORY = "history"
     const val ONRAMP = "onramp"
     const val OFFRAMP = "offramp"
+    const val LINK_BANK = "link_bank"
 }
 
 @Composable
@@ -44,6 +46,7 @@ fun NavGraph() {
                 onNavigateToHistory = { navController.navigate(Routes.HISTORY) },
                 onNavigateToOnramp = { navController.navigate(Routes.ONRAMP) },
                 onNavigateToOfframp = { navController.navigate(Routes.OFFRAMP) },
+                onNavigateToLinkBank = { navController.navigate(Routes.LINK_BANK) },
                 onDisconnected = {
                     navController.navigate(Routes.CONNECT) {
                         popUpTo(Routes.WALLET) { inclusive = true }
@@ -66,6 +69,10 @@ fun NavGraph() {
 
         composable(Routes.OFFRAMP) {
             OfframpScreen(onDone = { navController.popBackStack() })
+        }
+
+        composable(Routes.LINK_BANK) {
+            LinkBankScreen(onDone = { navController.popBackStack() })
         }
     }
 }

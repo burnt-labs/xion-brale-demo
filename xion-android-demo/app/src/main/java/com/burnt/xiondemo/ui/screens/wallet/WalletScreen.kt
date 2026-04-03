@@ -40,6 +40,7 @@ fun WalletScreen(
     onNavigateToHistory: () -> Unit,
     onNavigateToOnramp: () -> Unit,
     onNavigateToOfframp: () -> Unit,
+    onNavigateToLinkBank: () -> Unit,
     onDisconnected: () -> Unit,
     viewModel: WalletViewModel = hiltViewModel()
 ) {
@@ -282,6 +283,81 @@ fun WalletScreen(
             )
         }
 
+        // Bank link status
+        Spacer(modifier = Modifier.height(12.dp))
+        if (!uiState.bankLinked) {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = CardBackground),
+                shape = RoundedCornerShape(16.dp),
+                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 14.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.AccountBalance,
+                            contentDescription = null,
+                            tint = XionOrange,
+                            modifier = Modifier.size(24.dp)
+                        )
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Column {
+                            Text(
+                                text = "Link Bank Account",
+                                fontSize = 15.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = GreetingText
+                            )
+                            Text(
+                                text = "Required for buying and selling stablecoins",
+                                fontSize = 12.sp,
+                                color = SubtitleText
+                            )
+                        }
+                    }
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Button(
+                        onClick = onNavigateToLinkBank,
+                        shape = RoundedCornerShape(8.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = XionOrange),
+                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
+                    ) {
+                        Text("Link", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                    }
+                }
+            }
+        } else {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 4.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.Default.CheckCircle,
+                    contentDescription = null,
+                    tint = XionGreen,
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "Bank Linked",
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = XionGreen
+                )
+            }
+        }
+
         // Buy / Cash Out buttons
         Spacer(modifier = Modifier.height(12.dp))
         Row(
@@ -290,9 +366,13 @@ fun WalletScreen(
         ) {
             Button(
                 onClick = onNavigateToOnramp,
+                enabled = uiState.bankLinked,
                 modifier = Modifier.weight(1f),
                 shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = XionGreen)
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = XionGreen,
+                    disabledContainerColor = XionGreen.copy(alpha = 0.5f)
+                )
             ) {
                 Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
                 Spacer(modifier = Modifier.width(6.dp))
@@ -300,9 +380,13 @@ fun WalletScreen(
             }
             Button(
                 onClick = onNavigateToOfframp,
+                enabled = uiState.bankLinked,
                 modifier = Modifier.weight(1f),
                 shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = MintscanBlue)
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MintscanBlue,
+                    disabledContainerColor = MintscanBlue.copy(alpha = 0.5f)
+                )
             ) {
                 Icon(Icons.Default.AccountBalance, contentDescription = null, modifier = Modifier.size(18.dp))
                 Spacer(modifier = Modifier.width(6.dp))
