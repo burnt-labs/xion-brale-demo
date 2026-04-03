@@ -51,17 +51,18 @@ final class MobSigningService: MobSigningServiceProtocol {
                         derivationPath: Constants.derivationPath
                     )
 
-                    // Retry once on transient cold-start failure
-                    let newClient: Client
-                    do {
-                        newClient = try Client.newWithSigner(config: config, signer: newSigner, transport: self.transport)
-                    } catch {
-                        Thread.sleep(forTimeInterval: 0.5)
-                        newClient = try Client.newWithSigner(config: config, signer: newSigner, transport: self.transport)
-                    }
-
+                    // Client init queries the account on-chain, which fails for new
+                    // session keys that don't yet have an account. Save the signer
+                    // regardless — the session client created in upgradeToSessionClient
+                    // will handle session signing via the meta-account.
                     self.signer = newSigner
-                    self.client = newClient
+                    do {
+                        let newClient = try Client.newWithSigner(config: config, signer: newSigner, transport: self.transport)
+                        self.client = newClient
+                    } catch {
+                        // Account may not exist yet — that's OK for session key flow
+                        self.client = nil
+                    }
 
                     // Deferred cleanup so in-flight RPCs on old client can finish
                     if oldClient != nil || oldSigner != nil {
