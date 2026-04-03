@@ -106,4 +106,16 @@ From the House Money document:
 | **Fund isolation** | No (shared pool) | No (shared pool) | Required (per-user) |
 
 ### Recommendation
-Neither contract is suitable. A custom vault contract (`hm-vault`) should be built — see `docs/superpowers/specs/2026-04-03-vault-contract-design.md` for the full design specification.
+Neither contract is suitable. A custom vault contract (`hm-vault`) was built and deployed.
+
+### Deployed Contract
+
+| Field | Value |
+|-------|-------|
+| Chain | `xion-testnet-2` |
+| Code ID | `2106` |
+| Contract Address | `xion1snjtcrvqtlpmzkxfwwt69nffwz8tqazl3t4r38tqllvx3qx7redsmhcvgl` |
+| Allowed Denoms | `uxion`, `factory/xion17grq736740r70awldugfs3mls3stu9haewctv2/sbc` |
+| Admin | None (immutable) |
+
+See `docs/superpowers/specs/2026-04-03-vault-contract-design.md` for the full design specification.

@@ -57,7 +57,7 @@ class VaultViewModel @Inject constructor(
     fun deposit() {
         val amount = _uiState.value.amount
         if (amount.isBlank()) return
-        val microAmount = CoinFormatter.displayToMicro(amount, Constants.DECIMALS)
+        val microAmount = CoinFormatter.displayToMicro(amount)
 
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null, txHash = null) }
@@ -81,7 +81,7 @@ class VaultViewModel @Inject constructor(
     fun withdraw() {
         val amount = _uiState.value.amount
         if (amount.isBlank()) return
-        val microAmount = CoinFormatter.displayToMicro(amount, Constants.DECIMALS)
+        val microAmount = CoinFormatter.displayToMicro(amount)
 
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null, txHash = null) }

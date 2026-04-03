@@ -1,6 +1,6 @@
 # House Money — XION Demo Apps
 
-Demo wallet applications for the [XION blockchain](https://xion.burnt.com/), showcasing session-key authentication via Abstraxion, native Rust signing via the [mob library](https://github.com/burnt-labs/mob), and stablecoin on/off-ramp via [Brale](https://brale.xyz).
+Demo wallet applications for the [XION blockchain](https://xion.burnt.com/), showcasing session-key authentication via Abstraxion, native Rust signing via the [mob library](https://github.com/burnt-labs/mob), stablecoin on/off-ramp via [Brale](https://brale.xyz), and a non-custodial vault smart contract.
 
 ---
 
@@ -13,6 +13,7 @@ Demo wallet applications for the [XION blockchain](https://xion.burnt.com/), sho
 - [Configuration Reference](#configuration-reference)
 - [Session Key Authentication (Abstraxion)](#session-key-authentication-abstraxion)
 - [Native Signing via mob](#native-signing-via-mob)
+- [Non-Custodial Vault Contract](#non-custodial-vault-contract)
 - [Stablecoin On/Off-Ramp (Brale)](#stablecoin-onoff-ramp-brale)
 - [Brale Proxy API Reference](#brale-proxy-api-reference)
 - [Wallet State Machine](#wallet-state-machine)
@@ -32,6 +33,8 @@ apps/
 ├── xion-android-demo/     # Android (Kotlin/Compose) wallet app
 ├── xion-ios/              # iOS (SwiftUI) wallet app
 ├── brale-proxy/           # Node.js proxy for Brale API (holds API secrets)
+├── contracts/             # CosmWasm smart contracts
+│   └── hm-vault/          # Non-custodial per-user vault contract
 └── README.md              # This file
 ```
 
@@ -73,11 +76,12 @@ apps/
                             └───────────────┘
 ```
 
-**Three components:**
+**Four components:**
 
-1. **Mobile apps** — connect directly to XION RPC/REST for blockchain operations (balance, send, contract execution) via the mob Rust library (compiled as native code via UniFFI)
+1. **Mobile apps** — connect directly to XION RPC/REST for blockchain operations (balance, send, contract execution, vault deposit/withdraw) via the mob Rust library (compiled as native code via UniFFI)
 2. **Brale proxy** — sits between mobile apps and Brale's API. Holds OAuth2 client credentials, manages bearer token lifecycle, enforces a transfer-type allowlist to prevent accidental mainnet usage. Routes requests to per-user Brale managed accounts via a local SQLite database, using the user's XION wallet address (sent as `X-Wallet-Address` header) as the lookup key
-3. **XION testnet** — Cosmos SDK chain with account abstraction. The Abstraxion dashboard handles OAuth login and authz grant creation
+3. **Vault contract** (`hm-vault`) — CosmWasm smart contract deployed on XION. Provides non-custodial per-user storage: each user's funds are isolated, only the depositor can withdraw, no admin override. Mobile apps call it via `executeContract` (deposit/withdraw) and `queryContractSmart` (balance)
+4. **XION testnet** — Cosmos SDK chain with account abstraction. The Abstraxion dashboard handles OAuth login and authz grant creation
 
 ---
 
@@ -90,7 +94,8 @@ apps/
 | Android SDK | API 34 | Target SDK |
 | Xcode | 15+ | iOS build and simulator |
 | Node.js | 18+ | Brale proxy server |
-| Rust | 1.75+ | Only if rebuilding mob from source |
+| Rust | 1.75+ | Only if rebuilding mob from source or vault contract |
+| Docker | 20+ | Only if optimizing vault contract wasm binary |
 
 ---
 
@@ -188,6 +193,7 @@ These are compile-time constants not exposed as BuildConfig (change by editing s
 | `DECIMALS` | `6` | Decimal places for uxion → XION conversion |
 | `SESSION_GRANT_DURATION_SECONDS` | `86400` | Session key grant duration (24 hours) |
 | `OAUTH_REDIRECT_URI` | `xiondemo://callback` | Deep link URI for OAuth callback. Must match the URL scheme registered in `AndroidManifest.xml` |
+| `VAULT_CONTRACT_ADDRESS` | `xion1snjtcrvqtlpmzkxfwwt69nffwz8tqazl3t4r38tqllvx3qx7redsmhcvgl` | Non-custodial vault contract on xion-testnet-2 (code_id: 2106) |
 | `BRALE_ACH_DEBIT_TYPE` | `ach_debit` | Brale transfer type for pulling funds from a bank account |
 | `BRALE_ACH_CREDIT_TYPE` | `same_day_ach_credit` | Brale transfer type for pushing funds to a bank account (same-day settlement) |
 | `BRALE_FIAT_VALUE_TYPE` | `USD` | Fiat value type used in Brale transfer endpoints |
@@ -227,6 +233,7 @@ iOS reads configuration from `Info.plist` first (settable via xcconfig), falling
 | `treasuryAddress` | `xion1sm3qp...hqa0mj` | `XION_TREASURY_ADDRESS` |
 | `oauthAuthorizationEndpoint` | `https://auth.testnet.burnt.com/` | `XION_OAUTH_AUTHORIZATION_ENDPOINT` |
 | `braleProxyUrl` | `http://localhost:3000/` | `BRALE_PROXY_URL` |
+| `vaultContractAddress` | `xion1snjtcrvqtlpmzkxfwwt69nffwz8tqazl3t4r38tqllvx3qx7redsmhcvgl` | — (edit source) |
 | `coinType` | `118` | — (edit source) |
 | `derivationPath` | `m/44'/118'/0'/0/0` | — (edit source) |
 | `sessionGrantDurationSeconds` | `86400` | — (edit source) |
@@ -357,6 +364,101 @@ The apps don't call mob directly. A service layer wraps mob for thread safety an
 **Android**: `RealMobDataSource` (implements `MobDataSource`) — uses `DispatchQueue`-equivalent background thread pool, maps `TxResponse` → `TransactionResult`, handles retry on cold-start failures
 
 **iOS**: `MobSigningService` (implements `MobSigningServiceProtocol`) — uses `DispatchQueue(label: "com.burnt.xiondemo.mob")` for serial execution, maps mob types to app models via `withCheckedThrowingContinuation`, implements deferred cleanup (2-second delay) to prevent races with in-flight RPCs on disconnect
+
+---
+
+## Non-Custodial Vault Contract
+
+The vault contract (`contracts/hm-vault/`) implements a non-custodial per-user savings vault on XION. It is part of a hybrid custody model where each user has two account types:
+
+- **Checking Account** (custodial) — House Money controls operations: card spending, payroll, AI auto-allocation, reversals, compliance holds. Implemented via XION Meta Accounts with authz grants.
+- **Vault** (non-custodial) — User-only control for long-term storage. Excluded from card spending, automated actions, and reversals. Funds sit in the vault contract and only the depositor can withdraw.
+
+### Testnet Deployment
+
+| Field | Value |
+|-------|-------|
+| Chain | `xion-testnet-2` |
+| Code ID | `2106` |
+| Contract Address | `xion1snjtcrvqtlpmzkxfwwt69nffwz8tqazl3t4r38tqllvx3qx7redsmhcvgl` |
+| Allowed Denoms | `uxion`, `factory/xion17grq736740r70awldugfs3mls3stu9haewctv2/sbc` |
+| Admin | None (immutable) |
+
+### Contract Messages
+
+**Execute:**
+
+| Message | Caller | Behavior |
+|---------|--------|----------|
+| `Deposit {}` | Any user | Accepts native tokens sent with the tx. Credits to sender's balance. Rejects disallowed denoms. |
+| `Withdraw { coins }` | Depositor only | Deducts coins from caller's balance, sends back via `BankMsg::Send`. |
+| `WithdrawAll {}` | Depositor only | Sends all of the caller's vault balance back to them. |
+
+**Query:**
+
+| Message | Returns |
+|---------|---------|
+| `Balance { address }` | `{ coins: [{ denom, amount }] }` |
+| `Config {}` | `{ allowed_denoms: [...] }` |
+| `TotalDeposits {}` | `{ coins: [{ denom, amount }] }` |
+
+### CLI Usage
+
+```bash
+# Query config
+xiond query wasm contract-state smart \
+  xion1snjtcrvqtlpmzkxfwwt69nffwz8tqazl3t4r38tqllvx3qx7redsmhcvgl \
+  '{"config":{}}' --node https://rpc.xion-testnet-2.burnt.com:443
+
+# Deposit 1 XION
+xiond tx wasm execute \
+  xion1snjtcrvqtlpmzkxfwwt69nffwz8tqazl3t4r38tqllvx3qx7redsmhcvgl \
+  '{"deposit":{}}' --amount 1000000uxion \
+  --from <key> --chain-id xion-testnet-2 \
+  --node https://rpc.xion-testnet-2.burnt.com:443 \
+  --gas auto --gas-adjustment 1.3 --fees 50000uxion -y
+
+# Query balance
+xiond query wasm contract-state smart \
+  xion1snjtcrvqtlpmzkxfwwt69nffwz8tqazl3t4r38tqllvx3qx7redsmhcvgl \
+  '{"balance":{"address":"xion1your..."}}' \
+  --node https://rpc.xion-testnet-2.burnt.com:443
+
+# Withdraw all
+xiond tx wasm execute \
+  xion1snjtcrvqtlpmzkxfwwt69nffwz8tqazl3t4r38tqllvx3qx7redsmhcvgl \
+  '{"withdraw_all":{}}' \
+  --from <key> --chain-id xion-testnet-2 \
+  --node https://rpc.xion-testnet-2.burnt.com:443 \
+  --gas auto --gas-adjustment 1.3 --fees 50000uxion -y
+```
+
+### Building the Contract
+
+```bash
+cd contracts/hm-vault
+
+# Run tests
+cargo test
+
+# Optimize for deployment (requires Docker)
+docker run --rm -v "$(pwd)":/code \
+  --mount type=volume,source="hm_vault_cache",target=/target \
+  --mount type=volume,source=registry_cache,target=/usr/local/cargo/registry \
+  cosmwasm/optimizer:0.17.0
+
+# Output: artifacts/hm_vault.wasm
+```
+
+### Mobile Integration
+
+Both apps interact with the vault via the mob library's `executeContract` (for deposit/withdraw) and `queryContractSmart` (for balance queries). The vault balance is displayed on the wallet screen alongside XION and SBC balances, with a dedicated Vault screen for deposit/withdraw operations.
+
+**Repository methods added:**
+- `getVaultBalance()` — queries the contract for the user's vault balance (read-only)
+- `vaultDeposit(amount, denom)` — deposits tokens into the vault
+- `vaultWithdraw(amount, denom)` — withdraws specific amount from the vault
+- `vaultWithdrawAll()` — withdraws entire vault balance
 
 ---
 
@@ -886,7 +988,8 @@ app/src/main/java/com/burnt/xiondemo/
 ├── navigation/
 │   └── NavGraph.kt                     # Compose Navigation host
 │                                        # Routes: CONNECT, WALLET, CONTRACT,
-│                                        #         HISTORY, ONRAMP, OFFRAMP
+│                                        #         HISTORY, ONRAMP, OFFRAMP,
+│                                        #         LINK_BANK, VAULT
 ├── ui/
 │   ├── screens/
 │   │   ├── connect/
@@ -905,6 +1008,12 @@ app/src/main/java/com/burnt/xiondemo/
 │   │   │   ├── OnrampViewModel.kt      # Plaid link, transfer creation, polling
 │   │   │   ├── OfframpScreen.kt        # Cash out UI (4-step flow)
 │   │   │   └── OfframpViewModel.kt     # On-chain deposit, transfer, polling
+│   │   ├── vault/
+│   │   │   ├── VaultScreen.kt          # Vault deposit/withdraw UI
+│   │   │   └── VaultViewModel.kt       # Vault balance, deposit, withdraw logic
+│   │   ├── linkbank/
+│   │   │   ├── LinkBankScreen.kt       # Standalone bank linking UI
+│   │   │   └── LinkBankViewModel.kt    # Plaid link flow
 │   │   ├── contract/                   # Smart contract execution demo
 │   │   └── history/                    # Full transaction history
 │   ├── components/
@@ -918,12 +1027,12 @@ app/src/main/java/com/burnt/xiondemo/
 │
 ├── data/
 │   ├── repository/
-│   │   ├── XionRepository.kt           # Interface: balance, send, contract, tx
-│   │   ├── XionRepositoryImpl.kt       # Implementation with grant recovery
+│   │   ├── XionRepository.kt           # Interface: balance, send, contract, vault, tx
+│   │   ├── XionRepositoryImpl.kt       # Implementation with grant recovery + vault ops
 │   │   ├── BraleRepository.kt          # Interface: Plaid, addresses, transfers
 │   │   └── BraleRepositoryImpl.kt      # Implementation calling proxy API
 │   ├── datasource/
-│   │   ├── MobDataSource.kt            # Interface for mob FFI
+│   │   ├── MobDataSource.kt            # Interface for mob FFI (incl. queryContractSmart)
 │   │   └── RealMobDataSource.kt        # Rust FFI wrapper (thread-safe)
 │   ├── remote/
 │   │   ├── XionOAuthApi.kt             # Retrofit: OAuth token exchange
@@ -975,14 +1084,14 @@ XionDemo/
 │   ├── BalanceInfo.swift
 │   └── OAuthTokens.swift
 ├── Services/
-│   ├── MobSigningService.swift         # Rust FFI wrapper (DispatchQueue serial)
+│   ├── MobSigningService.swift         # Rust FFI wrapper (DispatchQueue serial, incl. queryContractSmart)
 │   ├── SessionManager.swift            # ObservableObject: auth, restore, disconnect
 │   ├── OAuthService.swift              # ASWebAuthenticationSession
 │   └── SecureStorage.swift             # Keychain wrapper (SecItem API)
 ├── Data/
 │   ├── Repository/
-│   │   ├── XionRepository.swift        # Protocol
-│   │   └── XionRepositoryImpl.swift    # Implementation with grant recovery + REST tx history
+│   │   ├── XionRepository.swift        # Protocol (incl. vault methods)
+│   │   └── XionRepositoryImpl.swift    # Implementation with grant recovery, vault ops, REST tx history
 │   └── Remote/
 │       └── XionOAuthAPI.swift
 ├── UI/
@@ -1000,6 +1109,8 @@ XionDemo/
 │       ├── Connect/                    # ConnectView + ConnectViewModel
 │       ├── Wallet/                     # WalletView + WalletViewModel (send sheet)
 │       ├── Send/                       # SendSheetContent (4-step bottom sheet)
+│       ├── Vault/                      # VaultView + VaultViewModel (deposit/withdraw)
+│       ├── LinkBank/                   # LinkBankView + LinkBankViewModel
 │       ├── Contract/                   # ContractView + ContractViewModel
 │       └── History/                    # HistoryView + HistoryViewModel
 ├── Utilities/
@@ -1030,6 +1141,24 @@ brale-proxy/
 ├── data/             # SQLite database files (gitignored)
 │   └── accounts.db   # Per-user account mappings
 └── node_modules/     # Installed dependencies
+```
+
+### Vault Contract (`contracts/hm-vault/`)
+
+```
+contracts/hm-vault/
+├── Cargo.toml          # cosmwasm-std 2.1, cw-storage-plus 2.0, cw-multi-test
+├── Cargo.lock
+├── .gitignore          # /target excluded
+├── src/
+│   ├── lib.rs          # Module declarations
+│   ├── contract.rs     # Entry points: instantiate, execute, query
+│   ├── msg.rs          # InstantiateMsg, ExecuteMsg, QueryMsg, response types
+│   ├── state.rs        # Config, BALANCES (per-user Map), CONFIG (Item)
+│   ├── error.rs        # ContractError enum
+│   └── tests.rs        # 13 unit tests (cw-multi-test)
+└── artifacts/
+    └── hm_vault.wasm   # Optimized binary (206KB, built with cosmwasm/optimizer:0.17.0)
 ```
 
 ---
