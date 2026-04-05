@@ -4,6 +4,9 @@ import Foundation
 final class VaultViewModel: ObservableObject {
 
     @Published var vaultBalance: String?
+    @Published var walletBalance: String?
+    @Published var walletSbcBalance: String?
+    @Published var selectedToken: SendToken = .xion
     @Published var amount = ""
     @Published var isLoading = false
     @Published var isBalanceLoading = false
@@ -14,10 +17,21 @@ final class VaultViewModel: ObservableObject {
 
     init(repository: XionRepositoryProtocol) {
         self.repository = repository
-        loadVaultBalance()
+        loadAllBalances()
     }
 
-    func loadVaultBalance() {
+    func selectToken(_ token: SendToken) {
+        selectedToken = token
+        amount = ""
+        error = nil
+    }
+
+    func loadAllBalances() {
+        loadVaultBalance()
+        loadWalletBalances()
+    }
+
+    private func loadVaultBalance() {
         Task {
             isBalanceLoading = true
             do {
@@ -30,6 +44,21 @@ final class VaultViewModel: ObservableObject {
         }
     }
 
+    private func loadWalletBalances() {
+        Task {
+            do {
+                let info = try await repository.getBalance()
+                walletBalance = info.amount
+            } catch {}
+        }
+        Task {
+            do {
+                let info = try await repository.getSbcBalance()
+                walletSbcBalance = info.amount
+            } catch {}
+        }
+    }
+
     func deposit() {
         guard !amount.isEmpty else { return }
         let microAmount = CoinFormatter.displayToMicro(amount, decimals: Constants.decimals)
@@ -39,11 +68,11 @@ final class VaultViewModel: ObservableObject {
             error = nil
             txHash = nil
             do {
-                let result = try await repository.vaultDeposit(amount: microAmount)
+                let result = try await repository.vaultDeposit(amount: microAmount, denom: selectedToken.denom)
                 if result.success {
                     txHash = result.txHash
                     amount = ""
-                    loadVaultBalance()
+                    loadAllBalances()
                 } else {
                     self.error = result.rawLog
                 }
@@ -63,11 +92,11 @@ final class VaultViewModel: ObservableObject {
             error = nil
             txHash = nil
             do {
-                let result = try await repository.vaultWithdraw(amount: microAmount)
+                let result = try await repository.vaultWithdraw(amount: microAmount, denom: selectedToken.denom)
                 if result.success {
                     txHash = result.txHash
                     amount = ""
-                    loadVaultBalance()
+                    loadAllBalances()
                 } else {
                     self.error = result.rawLog
                 }
@@ -88,7 +117,7 @@ final class VaultViewModel: ObservableObject {
                 if result.success {
                     txHash = result.txHash
                     amount = ""
-                    loadVaultBalance()
+                    loadAllBalances()
                 } else {
                     self.error = result.rawLog
                 }

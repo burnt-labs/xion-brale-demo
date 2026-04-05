@@ -32,6 +32,37 @@ struct VaultView: View {
                 .clipShape(RoundedRectangle(cornerRadius: 20))
                 .shadow(color: Color.cardShadow, radius: 2, y: 1)
 
+                // Available wallet balances
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("Available to Deposit")
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundStyle(Color.subtitleText)
+
+                    HStack {
+                        Text("XION")
+                            .font(.system(size: 15))
+                            .foregroundStyle(Color.greetingText)
+                        Spacer()
+                        Text(viewModel.walletBalance.map { CoinFormatter.formatWithDenom($0) } ?? "\u{2014}")
+                            .font(.system(size: 15, weight: .semibold))
+                            .foregroundStyle(Color.greetingText)
+                    }
+
+                    HStack {
+                        Text("SBC")
+                            .font(.system(size: 15))
+                            .foregroundStyle(Color.greetingText)
+                        Spacer()
+                        Text(viewModel.walletSbcBalance.map { CoinFormatter.formatWithDenom($0, denom: "SBC") } ?? "\u{2014}")
+                            .font(.system(size: 15, weight: .semibold))
+                            .foregroundStyle(Color.greetingText)
+                    }
+                }
+                .padding(16)
+                .background(Color.cardBackground)
+                .clipShape(RoundedRectangle(cornerRadius: 16))
+                .shadow(color: Color.cardShadow, radius: 2, y: 1)
+
                 if let txHash = viewModel.txHash {
                     // Success state
                     VStack(alignment: .leading, spacing: 8) {
@@ -59,8 +90,22 @@ struct VaultView: View {
                     }
                     .buttonStyle(.plain)
                 } else {
+                    // Token selector
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Token")
+                            .font(.system(size: 13, weight: .medium))
+                            .foregroundStyle(Color.subtitleText)
+
+                        Picker("Token", selection: $viewModel.selectedToken) {
+                            ForEach(SendToken.allCases, id: \.self) { token in
+                                Text(token.rawValue).tag(token)
+                            }
+                        }
+                        .pickerStyle(.segmented)
+                    }
+
                     // Amount input
-                    TextField("Amount (XION)", text: $viewModel.amount)
+                    TextField("Amount (\(viewModel.selectedToken.rawValue))", text: $viewModel.amount)
                         .keyboardType(.decimalPad)
                         .textFieldStyle(.roundedBorder)
                         .disabled(viewModel.isLoading)
@@ -132,6 +177,6 @@ struct VaultView: View {
         .background(Color.screenBackground)
         .navigationTitle("Vault")
         .navigationBarTitleDisplayMode(.inline)
-        .onAppear { viewModel.loadVaultBalance() }
+        .onAppear { viewModel.loadAllBalances() }
     }
 }
