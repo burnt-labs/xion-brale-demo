@@ -61,7 +61,7 @@ final class VaultViewModel: ObservableObject {
 
     func deposit() {
         guard !amount.isEmpty else { return }
-        let microAmount = CoinFormatter.displayToMicro(amount, decimals: Constants.decimals)
+        let microAmount = CoinFormatter.displayToMicro(amount)
 
         Task {
             isLoading = true
@@ -85,7 +85,7 @@ final class VaultViewModel: ObservableObject {
 
     func withdraw() {
         guard !amount.isEmpty else { return }
-        let microAmount = CoinFormatter.displayToMicro(amount, decimals: Constants.decimals)
+        let microAmount = CoinFormatter.displayToMicro(amount)
 
         Task {
             isLoading = true

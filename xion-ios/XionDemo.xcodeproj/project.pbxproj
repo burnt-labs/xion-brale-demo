@@ -10,6 +10,8 @@
 		00562C3F5EF96138C18F324B /* mob.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2AB5FA7FD1B1E0847A855F6C /* mob.swift */; };
 		014E098FA2F2B060AFD86D9F /* BraleRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C8938EF7FEC159E30B83A79 /* BraleRepository.swift */; };
 		02CBDE06E843872BD50F8332 /* LinkBankView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3709F6E5BBB8C716C2EFBEB1 /* LinkBankView.swift */; };
+		A1B2C3D4E5F60001A1B2C3D4 /* VaultView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60003A1B2C3D4 /* VaultView.swift */; };
+		A1B2C3D4E5F60002A1B2C3D4 /* VaultViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60004A1B2C3D4 /* VaultViewModel.swift */; };
 		03B1A93A10236CB947410836 /* ContractViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 25E785FF9EF98B235BD860F8 /* ContractViewModel.swift */; };
 		094F8DC308DE5F200AA879B3 /* XionDemoTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = ADD7DE0D48508FC058EB8AB2 /* XionDemoTests.swift */; };
 		0ABFD60BCEDE203FC168AC55 /* XionDemoApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1602B45D3EF6F636EB9EACEB /* XionDemoApp.swift */; };
@@ -99,6 +101,8 @@
 		2AB5FA7FD1B1E0847A855F6C /* mob.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = mob.swift; sourceTree = "<group>"; };
 		3271C53EAC0A8B24F6763043 /* HistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryView.swift; sourceTree = "<group>"; };
 		3709F6E5BBB8C716C2EFBEB1 /* LinkBankView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LinkBankView.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F60003A1B2C3D4 /* VaultView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VaultView.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F60004A1B2C3D4 /* VaultViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VaultViewModel.swift; sourceTree = "<group>"; };
 		3736E3B2AB010F41909D4EE3 /* Constants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Constants.swift; sourceTree = "<group>"; };
 		3C8938EF7FEC159E30B83A79 /* BraleRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BraleRepository.swift; sourceTree = "<group>"; };
 		4109D21057DDFFED09E0233D /* XionRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = XionRepository.swift; sourceTree = "<group>"; };
@@ -223,6 +227,7 @@
 				F6784800ECAF43483BF79E2D /* History */,
 				6DA4C258A2B3D735DABC47B8 /* LinkBank */,
 				0E613E97034CE3B8EB1C2763 /* Send */,
+				A1B2C3D4E5F60005A1B2C3D4 /* Vault */,
 				FD9E9FAF935D6887D952F18B /* Wallet */,
 			);
 			path = Screens;
@@ -235,6 +240,15 @@
 				D7FEA57EDE12DCB8956D12E3 /* LinkBankViewModel.swift */,
 			);
 			path = LinkBank;
+			sourceTree = "<group>";
+		};
+		A1B2C3D4E5F60005A1B2C3D4 /* Vault */ = {
+			isa = PBXGroup;
+			children = (
+				A1B2C3D4E5F60003A1B2C3D4 /* VaultView.swift */,
+				A1B2C3D4E5F60004A1B2C3D4 /* VaultViewModel.swift */,
+			);
+			path = Vault;
 			sourceTree = "<group>";
 		};
 		7336C49749B671F0B0D69D75 /* Components */ = {
@@ -554,6 +568,8 @@
 				62AC25CBB6218068D226EE73 /* SecureStorage.swift in Sources */,
 				778758408CE359368BBE62C8 /* SendView.swift in Sources */,
 				2954FBBCFE018DAF441FBD90 /* SendViewModel.swift in Sources */,
+				A1B2C3D4E5F60001A1B2C3D4 /* VaultView.swift in Sources */,
+				A1B2C3D4E5F60002A1B2C3D4 /* VaultViewModel.swift in Sources */,
 				79FD5EDDF88C418741DB9C69 /* SessionManager.swift in Sources */,
 				A00D03509A43183B1CD2E2A3 /* TransactionResult.swift in Sources */,
 				16C6E1117C8181ED87D54778 /* TransactionRow.swift in Sources */,
