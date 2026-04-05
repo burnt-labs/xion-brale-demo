@@ -210,7 +210,7 @@ struct WalletView: View {
                 .buttonStyle(.plain)
                 .listRowBackground(Color.screenBackground)
                 .listRowSeparator(.hidden)
-                .listRowInsets(EdgeInsets(top: 8, leading: 24, bottom: 0, trailing: 24))
+                .listRowInsets(EdgeInsets(top: 8, leading: 24, bottom: 12, trailing: 24))
 
                 // Bank link status
                 if !viewModel.bankLinked {
@@ -242,6 +242,9 @@ struct WalletView: View {
                     .background(Color.cardBackground)
                     .clipShape(RoundedRectangle(cornerRadius: 12))
                     .shadow(color: Color.cardShadow, radius: 2, y: 1)
+                    .listRowBackground(Color.screenBackground)
+                    .listRowSeparator(.hidden)
+                    .listRowInsets(EdgeInsets(top: 0, leading: 24, bottom: 0, trailing: 24))
                 } else {
                     HStack(spacing: 8) {
                         Image(systemName: "checkmark.circle.fill")
@@ -251,6 +254,9 @@ struct WalletView: View {
                             .font(.system(size: 14))
                             .foregroundStyle(Color.subtitleText)
                     }
+                    .listRowBackground(Color.screenBackground)
+                    .listRowSeparator(.hidden)
+                    .listRowInsets(EdgeInsets(top: 0, leading: 24, bottom: 0, trailing: 24))
                 }
 
                 // Buy and Cash Out buttons side-by-side
