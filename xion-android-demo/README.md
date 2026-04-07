@@ -117,7 +117,10 @@ UI (Compose) -> ViewModels -> XionRepository -> MobDataSource (all signing)
 ## Screens
 
 1. **Connect** — "Sign in with XION" OAuth button, session restore on launch
-2. **Wallet** — Meta Account dashboard with balance, grant status, and inline Send bottom sheet
+2. **Wallet** — Meta Account dashboard with XION, SBC, and vault balances (vault always shown), grant status, recent transactions (up to 3), and inline Send bottom sheet
 3. **Send** — Token transfer bottom sheet (height-constrained, IME-aware) with gasless signing via Treasury
-4. **Contract** — Smart contract execution with JSON editor
-5. **History** — Session transaction list with detail view
+4. **Vault** — Deposit/withdraw tokens to non-custodial vault. iOS shows confirmation alert before each operation
+5. **Link Bank** — Plaid-powered bank account linking for on/off-ramp
+6. **Buy / Cash Out** — Stablecoin on-ramp (ACH → SBC) and off-ramp (SBC → bank)
+7. **Contract** — Smart contract execution with JSON editor
+8. **History** — Session transaction list with detail view

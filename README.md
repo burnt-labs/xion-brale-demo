@@ -237,6 +237,8 @@ iOS reads configuration from `Info.plist` first (settable via xcconfig), falling
 | `coinType` | `118` | — (edit source) |
 | `derivationPath` | `m/44'/118'/0'/0/0` | — (edit source) |
 | `sessionGrantDurationSeconds` | `86400` | — (edit source) |
+| `defaultSendGasLimit` | `200000` | — (edit source) |
+| `defaultExecuteGasLimit` | `400000` | — (edit source) |
 
 ---
 
@@ -363,7 +365,7 @@ The apps don't call mob directly. A service layer wraps mob for thread safety an
 
 **Android**: `RealMobDataSource` (implements `MobDataSource`) — uses `DispatchQueue`-equivalent background thread pool, maps `TxResponse` → `TransactionResult`, handles retry on cold-start failures
 
-**iOS**: `MobSigningService` (implements `MobSigningServiceProtocol`) — uses `DispatchQueue(label: "com.burnt.xiondemo.mob")` for serial execution, maps mob types to app models via `withCheckedThrowingContinuation`, implements deferred cleanup (2-second delay) to prevent races with in-flight RPCs on disconnect
+**iOS**: `MobSigningService` (implements `MobSigningServiceProtocol`) — uses `DispatchQueue(label: "com.burnt.xiondemo.mob")` for serial execution, maps mob types to app models via `withCheckedThrowingContinuation`, implements deferred cleanup (2-second delay) to prevent races with in-flight RPCs on disconnect. Supports optional `gasLimit` parameter on `send()` and `executeContract()` — when provided, bypasses gas simulation entirely (see [iOS Simulator QUIC Issue](#ios-simulator-quic-issue) below). For `send()` with a gas limit, uses `buildSendMessage` + `signAndBroadcastMulti` since the `client.send()` FFI has no gas limit parameter
 
 ---
 
@@ -467,13 +469,17 @@ docker run --rm -v "$(pwd)":/code \
 
 ### Mobile Integration
 
-Both apps interact with the vault via the mob library's `executeContract` (for deposit/withdraw) and `queryContractSmart` (for balance queries). The vault balance is displayed on the wallet screen alongside XION and SBC balances, with a dedicated Vault screen for deposit/withdraw operations.
+Both apps interact with the vault via the mob library's `executeContract` (for deposit/withdraw) and `queryContractSmart` (for balance queries). The vault balance is always displayed on the home wallet screen alongside XION and SBC balances (even when zero), with a dedicated Vault screen for deposit/withdraw operations.
 
-**Repository methods added:**
+**Repository methods:**
 - `getVaultBalance()` — queries the contract for the user's vault balance (read-only)
 - `vaultDeposit(amount, denom)` — deposits tokens into the vault
 - `vaultWithdraw(amount, denom)` — withdraws specific amount from the vault
 - `vaultWithdrawAll()` — withdraws entire vault balance
+
+**iOS vault operations** use explicit gas limits (400,000) to bypass gas simulation, which fails on the iOS simulator due to the QUIC transport issue. Deposit, withdraw, and withdraw-all show a native confirmation alert before submitting. After a successful vault transaction, the balance reload is delayed by 3 seconds to allow the block to be committed.
+
+**Gas limits:** Send operations use 200,000 gas, contract execute operations use 400,000 gas. These are defined in `Constants.swift` (`defaultSendGasLimit`, `defaultExecuteGasLimit`) and `Constants.kt`. The fee granter (treasury) pays all gas fees, so over-estimation has no cost to the user.
 
 ---
 
@@ -1099,9 +1105,12 @@ XionDemo/
 │   ├── BalanceInfo.swift
 │   └── OAuthTokens.swift
 ├── Services/
-│   ├── MobSigningService.swift         # Rust FFI wrapper (DispatchQueue serial, incl. queryContractSmart)
+│   ├── MobSigningService.swift         # Rust FFI wrapper (serial DispatchQueue, gasLimit support)
+│   ├── NativeHttpTransport.swift       # HTTP/1.1 via NWConnection (avoids QUIC),
+│   │                                    # POST for mob FFI, GET for REST, chunked decoder
 │   ├── SessionManager.swift            # ObservableObject: auth, restore, disconnect
 │   ├── OAuthService.swift              # ASWebAuthenticationSession
+│   ├── BraleProxyService.swift         # Brale proxy HTTP client
 │   └── SecureStorage.swift             # Keychain wrapper (SecItem API)
 ├── Data/
 │   ├── Repository/
@@ -1227,6 +1236,27 @@ The built `.so` files go into `app/src/main/jniLibs/<abi>/libmob.so`.
 
 ## Troubleshooting
 
+### iOS Simulator QUIC Issue
+
+The iOS simulator has a known bug with HTTP/3 (QUIC) connections to Cloudflare-fronted endpoints (including `rpc.xion-testnet-2.burnt.com` and `api.xion-testnet-2.burnt.com`). Symptoms include "Simulate query failed", "The request timed out", "cannot parse response", or transactions/balances failing to load.
+
+**How it's handled in the codebase:**
+
+| Component | Problem | Solution |
+|-----------|---------|----------|
+| mob RPC calls (balance, contract queries, broadcast) | QUIC connections fail silently | `NativeHttpTransport` uses `NWConnection` with TCP+TLS, explicitly negotiating `http/1.1` via ALPN. Avoids QUIC entirely. |
+| Gas estimation (simulate) | ABCI query for `/cosmos.tx.v1beta1.Service/Simulate` fails via NativeHttpTransport | Bypassed entirely — explicit gas limits are passed for all `send()` and `executeContract()` calls (200k and 400k respectively) |
+| REST transaction history | `URLSession.shared` uses HTTP/3 by default, times out or returns unparseable responses | Replaced with `NativeHttpTransport.get()` — a static async helper that makes GET requests via `NWConnection` + HTTP/1.1 |
+| Grant polling (SessionManager) | Same URLSession QUIC issue | Also uses `NativeHttpTransport.get()` |
+| Chunked transfer encoding | REST API responses use `Transfer-Encoding: chunked` (no Content-Length), raw chunk markers corrupt JSON parsing | `NativeHttpTransport.extractResponseBody()` detects chunked encoding via headers and decodes chunk frames before returning the body |
+
+**Key files:**
+- `NativeHttpTransport.swift` — HTTP/1.1 transport via NWConnection, with `post()` (for mob FFI), `get()` (for REST calls), and chunked encoding decoder
+- `Constants.swift` — `defaultSendGasLimit` (200,000) and `defaultExecuteGasLimit` (400,000)
+- `MobSigningService.swift` — `gasLimit` parameter on `send()` and `executeContract()`
+
+**Note:** This is an iOS simulator-specific issue. On physical devices, QUIC works correctly. The NativeHttpTransport approach works on both simulator and device.
+
 ### Simulator/Emulator Can't Connect to Network
 
 **iOS Simulator**: If `ASWebAuthenticationSession` shows "Safari can't open the page because the network connection was lost":
@@ -1277,6 +1307,18 @@ The vendor SPM package can't find the xcframework. Ensure:
 ### Balance Shows "0" After Onramp
 
 Onramp mints stablecoins (SBC denomination), not XION. The wallet screen shows XION (uxion) balance. The stablecoin balance is tracked by Brale — query it via `GET /addresses/:id/balance?transfer_type=xion_testnet&value_type=SBC`.
+
+### Vault Balance Shows "0" After Deposit (iOS)
+
+If vault deposits show as successful but the vault balance remains 0, check that `getVaultBalance()` in `XionRepositoryImpl.swift` properly unwraps the optional `metaAccountAddress`. A previous bug interpolated `Optional("xion1...")` into the contract query JSON instead of the unwrapped address, causing the vault contract to return no coins. The fix: use `guard let address = sessionManager.walletState.metaAccountAddress` instead of `state.metaAccountAddress` directly in string interpolation.
+
+### "Could not connect to the server" on Link Bank (iOS)
+
+The Brale proxy server at `localhost:3000` is not running. Start it with `cd brale-proxy && npm start`. This is not a QUIC issue — the proxy runs locally over HTTP.
+
+### Recent Transactions Not Loading (iOS Simulator)
+
+If the home screen shows "No transactions yet" despite having on-chain transactions, this is the QUIC issue. The REST API calls via `URLSession` time out or return unparseable HTTP/3 responses. The fix replaces `URLSession.shared` with `NativeHttpTransport.get()` which forces HTTP/1.1. See [iOS Simulator QUIC Issue](#ios-simulator-quic-issue).
 
 ---
 
