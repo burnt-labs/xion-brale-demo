@@ -88,7 +88,12 @@ final class SendViewModel: ObservableObject {
                 )
                 txResult = result
             } catch {
-                self.error = error.localizedDescription
+                self.error = (error as? MobError).flatMap { e -> String? in
+                    if case .Network(let msg) = e { return msg }
+                    if case .Transaction(let msg) = e { return msg }
+                    if case .InsufficientFunds(let msg) = e { return msg }
+                    return nil
+                } ?? error.localizedDescription
             }
             isLoading = false
         }

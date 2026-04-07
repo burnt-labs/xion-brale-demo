@@ -79,6 +79,91 @@ final class NativeHttpTransport: HttpTransport {
         }
     }
 
+    // MARK: - Static GET helper (avoids QUIC/HTTP3 for REST calls)
+
+    static func get(url urlString: String) async throws -> Data {
+        try await withCheckedThrowingContinuation { continuation in
+            DispatchQueue(label: "com.burnt.xiondemo.http.get", qos: .userInitiated).async {
+                do {
+                    let data = try NativeHttpTransport().performGet(url: urlString)
+                    continuation.resume(returning: data)
+                } catch {
+                    continuation.resume(throwing: error)
+                }
+            }
+        }
+    }
+
+    private func performGet(url urlString: String) throws -> Data {
+        guard let parsedUrl = URL(string: urlString),
+              let host = parsedUrl.host else {
+            throw TransportError.RequestFailed(message: "Invalid URL: \(urlString)")
+        }
+
+        let port = UInt16(parsedUrl.port ?? (parsedUrl.scheme == "https" ? 443 : 80))
+        let usesTLS = parsedUrl.scheme == "https"
+
+        let params: NWParameters
+        if usesTLS {
+            let tlsOptions = NWProtocolTLS.Options()
+            sec_protocol_options_add_tls_application_protocol(
+                tlsOptions.securityProtocolOptions, "http/1.1"
+            )
+            params = NWParameters(tls: tlsOptions, tcp: NWProtocolTCP.Options())
+        } else {
+            params = NWParameters(tls: nil, tcp: NWProtocolTCP.Options())
+        }
+
+        let connection = NWConnection(host: .name(host, nil), port: .init(rawValue: port)!, using: params)
+
+        let semaphore = DispatchSemaphore(value: 0)
+        var result: Result<Data, TransportError> = .failure(.RequestFailed(message: "Connection timed out"))
+
+        connection.stateUpdateHandler = { state in
+            switch state {
+            case .ready:
+                let path = parsedUrl.path.isEmpty ? "/" : parsedUrl.path
+                let query = parsedUrl.query.map { "?\($0)" } ?? ""
+                var header = "GET \(path)\(query) HTTP/1.1\r\n"
+                header += "Host: \(host)\r\n"
+                header += "Accept: application/json\r\n"
+                header += "Connection: close\r\n"
+                header += "\r\n"
+
+                connection.send(content: header.data(using: .utf8)!, completion: .contentProcessed { error in
+                    if let error = error {
+                        result = .failure(.NetworkError(message: error.localizedDescription))
+                        semaphore.signal()
+                        return
+                    }
+                    self.readResponse(connection: connection, buffer: Data()) { res in
+                        result = res
+                        semaphore.signal()
+                    }
+                })
+            case .failed(let error):
+                result = .failure(.NetworkError(message: error.localizedDescription))
+                semaphore.signal()
+            default:
+                break
+            }
+        }
+
+        let queue = DispatchQueue(label: "com.burnt.xiondemo.http.getconn", qos: .userInitiated)
+        connection.start(queue: queue)
+
+        if semaphore.wait(timeout: .now() + .seconds(15)) == .timedOut {
+            connection.cancel()
+            throw TransportError.NetworkError(message: "GET request timed out after 15s")
+        }
+        connection.cancel()
+
+        switch result {
+        case .success(let data): return data
+        case .failure(let error): throw error
+        }
+    }
+
     // MARK: - Private
 
     private func sendRequest(
@@ -161,7 +246,50 @@ final class NativeHttpTransport: HttpTransport {
         guard let range = data.range(of: Data(separator)) else { return nil }
         let bodyStart = range.upperBound
         guard bodyStart <= data.count else { return nil }
-        return data.subdata(in: bodyStart..<data.count)
+
+        let headerData = data.subdata(in: data.startIndex..<range.lowerBound)
+        let headers = String(data: headerData, encoding: .utf8)?.lowercased() ?? ""
+        let rawBody = data.subdata(in: bodyStart..<data.count)
+
+        // Decode chunked transfer encoding if needed
+        if headers.contains("transfer-encoding: chunked") || headers.contains("transfer-encoding:chunked") {
+            return decodeChunked(rawBody)
+        }
+        return rawBody
+    }
+
+    /// Decode HTTP chunked transfer encoding: size\r\ndata\r\nsize\r\ndata\r\n0\r\n\r\n
+    private func decodeChunked(_ data: Data) -> Data? {
+        var result = Data()
+        var offset = 0
+        let bytes = [UInt8](data)
+        let crlf: [UInt8] = [0x0D, 0x0A]
+
+        while offset < bytes.count {
+            // Find end of chunk size line
+            guard let crlfIndex = findSequence(crlf, in: bytes, from: offset) else { break }
+            let sizeLine = String(bytes: bytes[offset..<crlfIndex], encoding: .ascii)?.trimmingCharacters(in: .whitespaces) ?? ""
+            // Chunk size may include extensions after semicolon
+            let sizeHex = sizeLine.components(separatedBy: ";").first ?? sizeLine
+            guard let chunkSize = UInt(sizeHex, radix: 16) else { break }
+            if chunkSize == 0 { break } // Terminal chunk
+
+            let chunkStart = crlfIndex + 2
+            let chunkEnd = chunkStart + Int(chunkSize)
+            guard chunkEnd <= bytes.count else { break }
+
+            result.append(contentsOf: bytes[chunkStart..<chunkEnd])
+            offset = chunkEnd + 2 // skip trailing \r\n
+        }
+        return result.isEmpty ? nil : result
+    }
+
+    private func findSequence(_ seq: [UInt8], in bytes: [UInt8], from start: Int) -> Int? {
+        guard seq.count > 0, start + seq.count <= bytes.count else { return nil }
+        for i in start...(bytes.count - seq.count) {
+            if bytes[i..<(i + seq.count)].elementsEqual(seq) { return i }
+        }
+        return nil
     }
 
     private func extractCompleteBody(from data: Data) -> Data? {

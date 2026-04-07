@@ -151,13 +151,11 @@ final class SessionManager: ObservableObject {
             do {
                 let urlString = "\(Constants.restUrl)cosmos/authz/v1beta1/grants?granter=\(granter)&grantee=\(grantee)"
                 guard let url = URL(string: urlString) else { continue }
-                let (data, response) = try await URLSession.shared.data(from: url)
-                if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 {
-                    if let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-                       let grants = json["grants"] as? [[String: Any]],
-                       !grants.isEmpty {
-                        return true
-                    }
+                let data = try await NativeHttpTransport.get(url: urlString)
+                if let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+                   let grants = json["grants"] as? [[String: Any]],
+                   !grants.isEmpty {
+                    return true
                 }
             } catch {
                 // Network error, retry

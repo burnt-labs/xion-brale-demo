@@ -91,8 +91,9 @@ final class WalletViewModel: ObservableObject {
             do {
                 let info = try await repository.getVaultBalance()
                 vaultBalance = info.amount
+                NSLog("[WalletVM] vault balance: %@ %@", info.amount, info.denom)
             } catch {
-                // Non-critical
+                NSLog("[WalletVM] loadVaultBalance error: %@", String(describing: error))
             }
         }
     }
@@ -108,12 +109,17 @@ final class WalletViewModel: ObservableObject {
     }
 
     private func loadTransactions() {
-        guard let addr = address else { return }
+        guard let addr = address else {
+            NSLog("[WalletVM] loadTransactions skipped — address is nil")
+            return
+        }
         Task {
             do {
-                transactions = try await repository.getRecentTransactions(address: addr)
+                let results = try await repository.getRecentTransactions(address: addr)
+                transactions = results
+                NSLog("[WalletVM] loaded %d transactions for %@...", results.count, String(addr.prefix(16)))
             } catch {
-                // Non-critical — don't show error for history failure
+                NSLog("[WalletVM] loadTransactions error: %@", String(describing: error))
             }
         }
     }

@@ -46,7 +46,8 @@ final class XionRepositoryImpl: XionRepositoryProtocol {
             try await self.mobService.send(
                 toAddress: toAddress,
                 coins: coins,
-                memo: memo.isEmpty ? nil : memo
+                memo: memo.isEmpty ? nil : memo,
+                gasLimit: Constants.defaultSendGasLimit
             )
         }
         let confirmed = result.success ? (await awaitTxConfirmation(txHash: result.txHash) ?? result) : result
@@ -65,7 +66,8 @@ final class XionRepositoryImpl: XionRepositoryProtocol {
                 contractAddress: contractAddress,
                 msg: msgData,
                 funds: fundsCoins,
-                memo: nil
+                memo: nil,
+                gasLimit: Constants.defaultExecuteGasLimit
             )
         }
         let confirmed = result.success ? (await awaitTxConfirmation(txHash: result.txHash) ?? result) : result
@@ -74,9 +76,10 @@ final class XionRepositoryImpl: XionRepositoryProtocol {
     }
 
     func getVaultBalance() async throws -> BalanceInfo {
-        let state = sessionManager.walletState
-        guard state.isConnected else { throw RepositoryError.notConnected }
-        let query = "{\"balance\":{\"address\":\"\(state.metaAccountAddress)\"}}"
+        guard let address = sessionManager.walletState.metaAccountAddress else {
+            throw RepositoryError.notConnected
+        }
+        let query = "{\"balance\":{\"address\":\"\(address)\"}}"
         let queryData = Data(query.utf8)
         let responseData = try await mobService.queryContractSmart(
             contractAddress: Constants.vaultContractAddress,
@@ -100,7 +103,8 @@ final class XionRepositoryImpl: XionRepositoryProtocol {
                 contractAddress: Constants.vaultContractAddress,
                 msg: Data(msg.utf8),
                 funds: funds,
-                memo: nil
+                memo: nil,
+                gasLimit: Constants.defaultExecuteGasLimit
             )
         }
         let confirmed = result.success ? (await awaitTxConfirmation(txHash: result.txHash) ?? result) : result
@@ -115,7 +119,8 @@ final class XionRepositoryImpl: XionRepositoryProtocol {
                 contractAddress: Constants.vaultContractAddress,
                 msg: Data(msg.utf8),
                 funds: [],
-                memo: nil
+                memo: nil,
+                gasLimit: Constants.defaultExecuteGasLimit
             )
         }
         let confirmed = result.success ? (await awaitTxConfirmation(txHash: result.txHash) ?? result) : result
@@ -130,7 +135,8 @@ final class XionRepositoryImpl: XionRepositoryProtocol {
                 contractAddress: Constants.vaultContractAddress,
                 msg: Data(msg.utf8),
                 funds: [],
-                memo: nil
+                memo: nil,
+                gasLimit: Constants.defaultExecuteGasLimit
             )
         }
         let confirmed = result.success ? (await awaitTxConfirmation(txHash: result.txHash) ?? result) : result
@@ -184,13 +190,19 @@ final class XionRepositoryImpl: XionRepositoryProtocol {
     private func fetchTxsByQuery(address: String, queryKey: String) async throws -> [TransactionResult] {
         let encodedQuery = "\(queryKey)%3D%27\(address)%27"
         let urlString = "\(Constants.restUrl)cosmos/tx/v1beta1/txs?query=\(encodedQuery)&order_by=ORDER_BY_DESC&pagination.limit=3"
-        guard let url = URL(string: urlString) else { return [] }
+        guard let url = URL(string: urlString) else {
+            NSLog("[Repo] fetchTxsByQuery: invalid URL for %@", queryKey)
+            return []
+        }
 
-        let (data, response) = try await URLSession.shared.data(from: url)
-        guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else { return [] }
+        let data = try await NativeHttpTransport.get(url: urlString)
 
         guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-              let txResponses = json["tx_responses"] as? [[String: Any]] else { return [] }
+              let txResponses = json["tx_responses"] as? [[String: Any]] else {
+            NSLog("[Repo] fetchTxsByQuery %@: failed to parse JSON, %d bytes", queryKey, data.count)
+            return []
+        }
+        NSLog("[Repo] fetchTxsByQuery %@: %d results", queryKey, txResponses.count)
 
         let txs = json["txs"] as? [[String: Any]]
 

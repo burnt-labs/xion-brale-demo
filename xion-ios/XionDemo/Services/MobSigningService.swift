@@ -6,12 +6,13 @@ protocol MobSigningServiceProtocol {
     func upgradeToSessionClient(metaAccountAddress: String, treasuryAddress: String, sessionExpiresAt: Int64) async throws
     func getBalance(address: String, denom: String) async throws -> BalanceInfo
     func getHeight() async throws -> Int64
-    func send(toAddress: String, coins: [Coin], memo: String?) async throws -> TransactionResult
+    func send(toAddress: String, coins: [Coin], memo: String?, gasLimit: UInt64?) async throws -> TransactionResult
     func executeContract(
         contractAddress: String,
         msg: Data,
         funds: [Coin],
-        memo: String?
+        memo: String?,
+        gasLimit: UInt64?
     ) async throws -> TransactionResult
     func queryContractSmart(contractAddress: String, queryMsg: Data) async throws -> Data
     func getTx(txHash: String) async throws -> TransactionResult
@@ -168,14 +169,20 @@ final class MobSigningService: MobSigningServiceProtocol {
         }
     }
 
-    func send(toAddress: String, coins: [Coin], memo: String?) async throws -> TransactionResult {
+    func send(toAddress: String, coins: [Coin], memo: String?, gasLimit: UInt64? = nil) async throws -> TransactionResult {
         try await withCheckedThrowingContinuation { continuation in
             queue.async {
                 do {
                     guard let client = self.client else {
                         throw MobServiceError.clientNotInitialized
                     }
-                    let response = try client.send(toAddress: toAddress, amount: coins, memo: memo)
+                    let response: TxResponse
+                    if let gasLimit = gasLimit {
+                        let message = try client.buildSendMessage(toAddress: toAddress, amount: coins)
+                        response = try client.signAndBroadcastMulti(messages: [message], memo: memo, gasLimit: gasLimit)
+                    } else {
+                        response = try client.send(toAddress: toAddress, amount: coins, memo: memo)
+                    }
                     continuation.resume(returning: TransactionResult(
                         txHash: response.txhash,
                         success: response.code == 0,
@@ -185,6 +192,7 @@ final class MobSigningService: MobSigningServiceProtocol {
                         rawLog: response.rawLog
                     ))
                 } catch {
+                    print("[MobSigningService] send error: \(error)")
                     continuation.resume(throwing: error)
                 }
             }
@@ -195,7 +203,8 @@ final class MobSigningService: MobSigningServiceProtocol {
         contractAddress: String,
         msg: Data,
         funds: [Coin],
-        memo: String?
+        memo: String?,
+        gasLimit: UInt64? = nil
     ) async throws -> TransactionResult {
         try await withCheckedThrowingContinuation { continuation in
             queue.async {
@@ -208,7 +217,7 @@ final class MobSigningService: MobSigningServiceProtocol {
                         msg: msg,
                         funds: funds,
                         memo: memo,
-                        gasLimit: nil
+                        gasLimit: gasLimit
                     )
                     continuation.resume(returning: TransactionResult(
                         txHash: response.txhash,
@@ -219,6 +228,7 @@ final class MobSigningService: MobSigningServiceProtocol {
                         rawLog: response.rawLog
                     ))
                 } catch {
+                    print("[MobSigningService] executeContract error: \(error)")
                     continuation.resume(throwing: error)
                 }
             }

@@ -265,9 +265,15 @@ private struct SuccessContent: View {
 
                         DetailRow(label: "Status", value: tx.success ? "Success" : "Failed",
                                   valueColor: tx.success ? .green : .red)
-                        DetailRow(label: "Block Height", value: formatNumber(tx.height))
-                        DetailRow(label: "Gas Used", value: formatNumber(Int64(tx.gasUsed) ?? 0))
-                        DetailRow(label: "Gas Wanted", value: formatNumber(Int64(tx.gasWanted) ?? 0))
+                        if tx.height > 0 {
+                            DetailRow(label: "Block Height", value: formatNumber(tx.height))
+                        }
+                        if let gasUsed = Int64(tx.gasUsed), gasUsed > 0 {
+                            DetailRow(label: "Gas Used", value: formatNumber(gasUsed))
+                        }
+                        if let gasWanted = Int64(tx.gasWanted), gasWanted > 0 {
+                            DetailRow(label: "Gas Wanted", value: formatNumber(gasWanted))
+                        }
                     }
                     .padding(16)
                     .background(Color(.systemGray6))

@@ -11,6 +11,8 @@ enum Constants {
     static let gasPrice = "0.025"
     static let addressPrefix = "xion"
     static let decimals = 6
+    static let defaultSendGasLimit: UInt64 = 200_000
+    static let defaultExecuteGasLimit: UInt64 = 400_000
     static let coinType: UInt32 = 118
     static let derivationPath = "m/44'/118'/0'/0/0"
 

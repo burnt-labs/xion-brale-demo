@@ -112,7 +112,7 @@ struct VaultView: View {
 
                     // Deposit / Withdraw
                     HStack(spacing: 12) {
-                        Button(action: viewModel.deposit) {
+                        Button(action: viewModel.requestDeposit) {
                             Group {
                                 if viewModel.isLoading {
                                     ProgressView().tint(.white)
@@ -130,7 +130,7 @@ struct VaultView: View {
                         .buttonStyle(.plain)
                         .disabled(viewModel.amount.isEmpty || viewModel.isLoading)
 
-                        Button(action: viewModel.withdraw) {
+                        Button(action: viewModel.requestWithdraw) {
                             Group {
                                 if viewModel.isLoading {
                                     ProgressView().tint(.white)
@@ -150,7 +150,7 @@ struct VaultView: View {
                     }
 
                     // Withdraw All
-                    Button(action: viewModel.withdrawAll) {
+                    Button(action: viewModel.requestWithdrawAll) {
                         Text("Withdraw All")
                             .font(.system(size: 16, weight: .semibold))
                             .frame(maxWidth: .infinity)
@@ -178,5 +178,14 @@ struct VaultView: View {
         .navigationTitle("Vault")
         .navigationBarTitleDisplayMode(.inline)
         .onAppear { viewModel.loadAllBalances() }
+        .alert(viewModel.confirmTitle, isPresented: Binding(
+            get: { viewModel.pendingAction != nil },
+            set: { if !$0 { viewModel.cancelPending() } }
+        )) {
+            Button("Cancel", role: .cancel) { viewModel.cancelPending() }
+            Button("Confirm") { viewModel.confirmPending() }
+        } message: {
+            Text(viewModel.confirmDetails.map { "\($0.0): \($0.1)" }.joined(separator: "\n"))
+        }
     }
 }

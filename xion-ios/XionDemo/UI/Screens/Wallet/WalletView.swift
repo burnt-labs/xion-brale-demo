@@ -141,26 +141,24 @@ struct WalletView: View {
                             .lineLimit(1)
                     }
 
-                    if let vaultBal = viewModel.vaultBalance, vaultBal != "0" {
-                        Divider()
-                            .padding(.vertical, 8)
+                    Divider()
+                        .padding(.vertical, 8)
 
-                        HStack {
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text("Vault Balance")
-                                    .font(.system(size: 14))
-                                    .foregroundStyle(Color.subtitleText)
-
-                                Text(CoinFormatter.formatWithDenom(vaultBal))
-                                    .font(.system(size: 22, weight: .bold))
-                                    .foregroundStyle(Color.greetingText)
-                                    .lineLimit(1)
-                            }
-                            Spacer()
-                            Image(systemName: "lock.fill")
-                                .font(.system(size: 16))
+                    HStack {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Vault Balance")
+                                .font(.system(size: 14))
                                 .foregroundStyle(Color.subtitleText)
+
+                            Text(CoinFormatter.formatWithDenom(viewModel.vaultBalance ?? "0"))
+                                .font(.system(size: 22, weight: .bold))
+                                .foregroundStyle(Color.greetingText)
+                                .lineLimit(1)
                         }
+                        Spacer()
+                        Image(systemName: "lock.fill")
+                            .font(.system(size: 16))
+                            .foregroundStyle(Color.subtitleText)
                     }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)

@@ -254,37 +254,35 @@ fun WalletScreen(
                     )
                 }
 
-                if (uiState.vaultBalance != null && uiState.vaultBalance != "0") {
-                    Spacer(modifier = Modifier.height(16.dp))
-                    HorizontalDivider(color = SubtitleText.copy(alpha = 0.2f))
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Column {
-                            Text(
-                                text = "Vault Balance",
-                                fontSize = 14.sp,
-                                color = SubtitleText
-                            )
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text(
-                                text = CoinFormatter.formatWithDenom(uiState.vaultBalance!!),
-                                fontSize = 22.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = GreetingText,
-                                maxLines = 1
-                            )
-                        }
-                        Icon(
-                            imageVector = Icons.Default.Lock,
-                            contentDescription = "Vault",
-                            tint = SubtitleText,
-                            modifier = Modifier.size(20.dp)
+                Spacer(modifier = Modifier.height(16.dp))
+                HorizontalDivider(color = SubtitleText.copy(alpha = 0.2f))
+                Spacer(modifier = Modifier.height(16.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column {
+                        Text(
+                            text = "Vault Balance",
+                            fontSize = 14.sp,
+                            color = SubtitleText
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = CoinFormatter.formatWithDenom(uiState.vaultBalance ?: "0"),
+                            fontSize = 22.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = GreetingText,
+                            maxLines = 1
                         )
                     }
+                    Icon(
+                        imageVector = Icons.Default.Lock,
+                        contentDescription = "Vault",
+                        tint = SubtitleText,
+                        modifier = Modifier.size(20.dp)
+                    )
                 }
             }
         }
