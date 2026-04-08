@@ -626,6 +626,9 @@ internal interface UniffiCallbackInterfaceCryptoSignerMethod3 : com.sun.jna.Call
 internal interface UniffiCallbackInterfaceHttpTransportMethod0 : com.sun.jna.Callback {
     fun callback(`uniffiHandle`: Long,`url`: RustBuffer.ByValue,`body`: RustBuffer.ByValue,`uniffiOutReturn`: RustBuffer,uniffiCallStatus: UniffiRustCallStatus,)
 }
+internal interface UniffiCallbackInterfaceHttpTransportMethod1 : com.sun.jna.Callback {
+    fun callback(`uniffiHandle`: Long,`url`: RustBuffer.ByValue,`uniffiOutReturn`: RustBuffer,uniffiCallStatus: UniffiRustCallStatus,)
+}
 @Structure.FieldOrder("uniffiFree", "uniffiClone", "address", "publicKey", "addressPrefix", "signBytes")
 internal open class UniffiVTableCallbackInterfaceCryptoSigner(
     @JvmField internal var `uniffiFree`: UniffiCallbackInterfaceFree? = null,
@@ -654,22 +657,25 @@ internal open class UniffiVTableCallbackInterfaceCryptoSigner(
     }
 
 }
-@Structure.FieldOrder("uniffiFree", "uniffiClone", "post")
+@Structure.FieldOrder("uniffiFree", "uniffiClone", "post", "get")
 internal open class UniffiVTableCallbackInterfaceHttpTransport(
     @JvmField internal var `uniffiFree`: UniffiCallbackInterfaceFree? = null,
     @JvmField internal var `uniffiClone`: UniffiCallbackInterfaceClone? = null,
     @JvmField internal var `post`: UniffiCallbackInterfaceHttpTransportMethod0? = null,
+    @JvmField internal var `get`: UniffiCallbackInterfaceHttpTransportMethod1? = null,
 ) : Structure() {
     class UniffiByValue(
         `uniffiFree`: UniffiCallbackInterfaceFree? = null,
         `uniffiClone`: UniffiCallbackInterfaceClone? = null,
         `post`: UniffiCallbackInterfaceHttpTransportMethod0? = null,
-    ): UniffiVTableCallbackInterfaceHttpTransport(`uniffiFree`,`uniffiClone`,`post`,), Structure.ByValue
+        `get`: UniffiCallbackInterfaceHttpTransportMethod1? = null,
+    ): UniffiVTableCallbackInterfaceHttpTransport(`uniffiFree`,`uniffiClone`,`post`,`get`,), Structure.ByValue
 
    internal fun uniffiSetValue(other: UniffiVTableCallbackInterfaceHttpTransport) {
         `uniffiFree` = other.`uniffiFree`
         `uniffiClone` = other.`uniffiClone`
         `post` = other.`post`
+        `get` = other.`get`
     }
 
 }
@@ -697,14 +703,6 @@ internal object IntegrityCheckingUniffiLib {
         uniffiCheckApiChecksums(this)
     }
     external fun uniffi_mob_checksum_method_client_attach_signer(
-    ): Short
-    external fun uniffi_mob_checksum_method_client_build_execute_contract_message(
-    ): Short
-    external fun uniffi_mob_checksum_method_client_build_instantiate_contract_message(
-    ): Short
-    external fun uniffi_mob_checksum_method_client_build_send_message(
-    ): Short
-    external fun uniffi_mob_checksum_method_client_build_store_code_message(
     ): Short
     external fun uniffi_mob_checksum_method_client_execute_contract(
     ): Short
@@ -743,6 +741,8 @@ internal object IntegrityCheckingUniffiLib {
     external fun uniffi_mob_checksum_method_cryptosigner_sign_bytes(
     ): Short
     external fun uniffi_mob_checksum_method_httptransport_post(
+    ): Short
+    external fun uniffi_mob_checksum_method_httptransport_get(
     ): Short
     external fun uniffi_mob_checksum_method_mobsessionmanager_activate(
     ): Short
@@ -842,15 +842,7 @@ external fun uniffi_mob_fn_constructor_client_new_with_signer(`config`: RustBuff
 ): Long
 external fun uniffi_mob_fn_method_client_attach_signer(`ptr`: Long,`signer`: Long,uniffi_out_err: UniffiRustCallStatus, 
 ): Unit
-external fun uniffi_mob_fn_method_client_build_execute_contract_message(`ptr`: Long,`contractAddress`: RustBuffer.ByValue,`msg`: RustBuffer.ByValue,`funds`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
-): RustBuffer.ByValue
-external fun uniffi_mob_fn_method_client_build_instantiate_contract_message(`ptr`: Long,`admin`: RustBuffer.ByValue,`codeId`: Long,`label`: RustBuffer.ByValue,`msg`: RustBuffer.ByValue,`funds`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
-): RustBuffer.ByValue
-external fun uniffi_mob_fn_method_client_build_send_message(`ptr`: Long,`toAddress`: RustBuffer.ByValue,`amount`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
-): RustBuffer.ByValue
-external fun uniffi_mob_fn_method_client_build_store_code_message(`ptr`: Long,`wasmByteCode`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
-): RustBuffer.ByValue
-external fun uniffi_mob_fn_method_client_execute_contract(`ptr`: Long,`contractAddress`: RustBuffer.ByValue,`msg`: RustBuffer.ByValue,`funds`: RustBuffer.ByValue,`memo`: RustBuffer.ByValue,`gasLimit`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+external fun uniffi_mob_fn_method_client_execute_contract(`ptr`: Long,`contractAddress`: RustBuffer.ByValue,`msg`: RustBuffer.ByValue,`funds`: RustBuffer.ByValue,`granter`: RustBuffer.ByValue,`feeGranter`: RustBuffer.ByValue,`memo`: RustBuffer.ByValue,`gasLimit`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
 ): RustBuffer.ByValue
 external fun uniffi_mob_fn_method_client_get_account(`ptr`: Long,`address`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
 ): RustBuffer.ByValue
@@ -899,6 +891,8 @@ external fun uniffi_mob_fn_free_httptransport(`handle`: Long,uniffi_out_err: Uni
 external fun uniffi_mob_fn_init_callback_vtable_httptransport(`vtable`: UniffiVTableCallbackInterfaceHttpTransport,
 ): Unit
 external fun uniffi_mob_fn_method_httptransport_post(`ptr`: Long,`url`: RustBuffer.ByValue,`body`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+): RustBuffer.ByValue
+external fun uniffi_mob_fn_method_httptransport_get(`ptr`: Long,`url`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
 ): RustBuffer.ByValue
 external fun uniffi_mob_fn_clone_mobsessionmanager(`handle`: Long,uniffi_out_err: UniffiRustCallStatus, 
 ): Long
@@ -1086,19 +1080,7 @@ private fun uniffiCheckApiChecksums(lib: IntegrityCheckingUniffiLib) {
     if (lib.uniffi_mob_checksum_method_client_attach_signer() != 61507.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_mob_checksum_method_client_build_execute_contract_message() != 30392.toShort()) {
-        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
-    }
-    if (lib.uniffi_mob_checksum_method_client_build_instantiate_contract_message() != 33987.toShort()) {
-        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
-    }
-    if (lib.uniffi_mob_checksum_method_client_build_send_message() != 64106.toShort()) {
-        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
-    }
-    if (lib.uniffi_mob_checksum_method_client_build_store_code_message() != 20893.toShort()) {
-        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
-    }
-    if (lib.uniffi_mob_checksum_method_client_execute_contract() != 20103.toShort()) {
+    if (lib.uniffi_mob_checksum_method_client_execute_contract() != 49361.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_mob_checksum_method_client_get_account() != 2621.toShort()) {
@@ -1153,6 +1135,9 @@ private fun uniffiCheckApiChecksums(lib: IntegrityCheckingUniffiLib) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_mob_checksum_method_httptransport_post() != 8015.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_mob_checksum_method_httptransport_get() != 50031.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_mob_checksum_method_mobsessionmanager_activate() != 32786.toShort()) {
@@ -1715,29 +1700,11 @@ public interface ClientInterface {
     fun `attachSigner`(`signer`: RustSigner)
     
     /**
-     * Build an FFI-safe execute-contract message for use with `sign_and_broadcast_multi`.
+     * Execute a CosmWasm contract (synchronous wrapper).
+     * If `granter` is set, wraps MsgExecuteContract in MsgExec (authz).
+     * If `fee_granter` is set, the fee granter pays gas.
      */
-    fun `buildExecuteContractMessage`(`contractAddress`: kotlin.String, `msg`: kotlin.ByteArray, `funds`: List<Coin>): Message
-    
-    /**
-     * Build an FFI-safe instantiate-contract message for use with `sign_and_broadcast_multi`.
-     */
-    fun `buildInstantiateContractMessage`(`admin`: kotlin.String?, `codeId`: kotlin.ULong, `label`: kotlin.String?, `msg`: kotlin.ByteArray, `funds`: List<Coin>): Message
-    
-    /**
-     * Build an FFI-safe send message for use with `sign_and_broadcast_multi`.
-     */
-    fun `buildSendMessage`(`toAddress`: kotlin.String, `amount`: List<Coin>): Message
-    
-    /**
-     * Build an FFI-safe store-code message for use with `sign_and_broadcast_multi`.
-     */
-    fun `buildStoreCodeMessage`(`wasmByteCode`: kotlin.ByteArray): Message
-    
-    /**
-     * Execute a CosmWasm contract (synchronous wrapper)
-     */
-    fun `executeContract`(`contractAddress`: kotlin.String, `msg`: kotlin.ByteArray, `funds`: List<Coin>, `memo`: kotlin.String?, `gasLimit`: kotlin.ULong?): TxResponse
+    fun `executeContract`(`contractAddress`: kotlin.String, `msg`: kotlin.ByteArray, `funds`: List<Coin>, `granter`: kotlin.String?, `feeGranter`: kotlin.String?, `memo`: kotlin.String?, `gasLimit`: kotlin.ULong?): TxResponse
     
     /**
      * Query account information (synchronous wrapper)
@@ -1938,83 +1905,17 @@ open class Client: Disposable, AutoCloseable, ClientInterface
 
     
     /**
-     * Build an FFI-safe execute-contract message for use with `sign_and_broadcast_multi`.
+     * Execute a CosmWasm contract (synchronous wrapper).
+     * If `granter` is set, wraps MsgExecuteContract in MsgExec (authz).
+     * If `fee_granter` is set, the fee granter pays gas.
      */
-    @Throws(MobException::class)override fun `buildExecuteContractMessage`(`contractAddress`: kotlin.String, `msg`: kotlin.ByteArray, `funds`: List<Coin>): Message {
-            return FfiConverterTypeMessage.lift(
-    callWithHandle {
-    uniffiRustCallWithError(MobException) { _status ->
-    UniffiLib.uniffi_mob_fn_method_client_build_execute_contract_message(
-        it,
-        FfiConverterString.lower(`contractAddress`),FfiConverterByteArray.lower(`msg`),FfiConverterSequenceTypeCoin.lower(`funds`),_status)
-}
-    }
-    )
-    }
-    
-
-    
-    /**
-     * Build an FFI-safe instantiate-contract message for use with `sign_and_broadcast_multi`.
-     */
-    @Throws(MobException::class)override fun `buildInstantiateContractMessage`(`admin`: kotlin.String?, `codeId`: kotlin.ULong, `label`: kotlin.String?, `msg`: kotlin.ByteArray, `funds`: List<Coin>): Message {
-            return FfiConverterTypeMessage.lift(
-    callWithHandle {
-    uniffiRustCallWithError(MobException) { _status ->
-    UniffiLib.uniffi_mob_fn_method_client_build_instantiate_contract_message(
-        it,
-        FfiConverterOptionalString.lower(`admin`),FfiConverterULong.lower(`codeId`),FfiConverterOptionalString.lower(`label`),FfiConverterByteArray.lower(`msg`),FfiConverterSequenceTypeCoin.lower(`funds`),_status)
-}
-    }
-    )
-    }
-    
-
-    
-    /**
-     * Build an FFI-safe send message for use with `sign_and_broadcast_multi`.
-     */
-    @Throws(MobException::class)override fun `buildSendMessage`(`toAddress`: kotlin.String, `amount`: List<Coin>): Message {
-            return FfiConverterTypeMessage.lift(
-    callWithHandle {
-    uniffiRustCallWithError(MobException) { _status ->
-    UniffiLib.uniffi_mob_fn_method_client_build_send_message(
-        it,
-        FfiConverterString.lower(`toAddress`),FfiConverterSequenceTypeCoin.lower(`amount`),_status)
-}
-    }
-    )
-    }
-    
-
-    
-    /**
-     * Build an FFI-safe store-code message for use with `sign_and_broadcast_multi`.
-     */
-    @Throws(MobException::class)override fun `buildStoreCodeMessage`(`wasmByteCode`: kotlin.ByteArray): Message {
-            return FfiConverterTypeMessage.lift(
-    callWithHandle {
-    uniffiRustCallWithError(MobException) { _status ->
-    UniffiLib.uniffi_mob_fn_method_client_build_store_code_message(
-        it,
-        FfiConverterByteArray.lower(`wasmByteCode`),_status)
-}
-    }
-    )
-    }
-    
-
-    
-    /**
-     * Execute a CosmWasm contract (synchronous wrapper)
-     */
-    @Throws(MobException::class)override fun `executeContract`(`contractAddress`: kotlin.String, `msg`: kotlin.ByteArray, `funds`: List<Coin>, `memo`: kotlin.String?, `gasLimit`: kotlin.ULong?): TxResponse {
+    @Throws(MobException::class)override fun `executeContract`(`contractAddress`: kotlin.String, `msg`: kotlin.ByteArray, `funds`: List<Coin>, `granter`: kotlin.String?, `feeGranter`: kotlin.String?, `memo`: kotlin.String?, `gasLimit`: kotlin.ULong?): TxResponse {
             return FfiConverterTypeTxResponse.lift(
     callWithHandle {
     uniffiRustCallWithError(MobException) { _status ->
     UniffiLib.uniffi_mob_fn_method_client_execute_contract(
         it,
-        FfiConverterString.lower(`contractAddress`),FfiConverterByteArray.lower(`msg`),FfiConverterSequenceTypeCoin.lower(`funds`),FfiConverterOptionalString.lower(`memo`),FfiConverterOptionalULong.lower(`gasLimit`),_status)
+        FfiConverterString.lower(`contractAddress`),FfiConverterByteArray.lower(`msg`),FfiConverterSequenceTypeCoin.lower(`funds`),FfiConverterOptionalString.lower(`granter`),FfiConverterOptionalString.lower(`feeGranter`),FfiConverterOptionalString.lower(`memo`),FfiConverterOptionalULong.lower(`gasLimit`),_status)
 }
     }
     )
@@ -3022,6 +2923,13 @@ public interface HttpTransport {
      */
     fun `post`(`url`: kotlin.String, `body`: kotlin.ByteArray): kotlin.ByteArray
     
+    /**
+     * GET a URL and return the response bytes.
+     *
+     * Used for LCD/REST API queries (e.g., account info).
+     */
+    fun `get`(`url`: kotlin.String): kotlin.ByteArray
+    
     companion object
 }
 
@@ -3155,6 +3063,25 @@ open class HttpTransportImpl: Disposable, AutoCloseable, HttpTransport
     
 
     
+    /**
+     * GET a URL and return the response bytes.
+     *
+     * Used for LCD/REST API queries (e.g., account info).
+     */
+    @Throws(TransportException::class)override fun `get`(`url`: kotlin.String): kotlin.ByteArray {
+            return FfiConverterByteArray.lift(
+    callWithHandle {
+    uniffiRustCallWithError(TransportException) { _status ->
+    UniffiLib.uniffi_mob_fn_method_httptransport_get(
+        it,
+        FfiConverterString.lower(`url`),_status)
+}
+    }
+    )
+    }
+    
+
+    
 
     
 
@@ -3190,6 +3117,23 @@ internal object uniffiCallbackInterfaceHttpTransport {
             )
         }
     }
+    internal object `get`: UniffiCallbackInterfaceHttpTransportMethod1 {
+        override fun callback(`uniffiHandle`: Long,`url`: RustBuffer.ByValue,`uniffiOutReturn`: RustBuffer,uniffiCallStatus: UniffiRustCallStatus,) {
+            val uniffiObj = FfiConverterTypeHttpTransport.handleMap.get(uniffiHandle)
+            val makeCall = { ->
+                uniffiObj.`get`(
+                    FfiConverterString.lift(`url`),
+                )
+            }
+            val writeReturn = { value: kotlin.ByteArray -> uniffiOutReturn.setValue(FfiConverterByteArray.lower(value)) }
+            uniffiTraitInterfaceCallWithError(
+                uniffiCallStatus,
+                makeCall,
+                writeReturn,
+                { e: TransportException -> FfiConverterTypeTransportError.lower(e) }
+            )
+        }
+    }
 
     internal object uniffiFree: UniffiCallbackInterfaceFree {
         override fun callback(handle: Long) {
@@ -3207,6 +3151,7 @@ internal object uniffiCallbackInterfaceHttpTransport {
         uniffiFree,
         uniffiClone,
         `post`,
+        `get`,
     )
 
     // Registers the foreign callback with the Rust side.

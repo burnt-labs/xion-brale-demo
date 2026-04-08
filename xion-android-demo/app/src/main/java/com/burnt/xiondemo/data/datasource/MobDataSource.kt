@@ -153,7 +153,7 @@ class RealMobDataSource @Inject constructor() : MobDataSource {
         memo: String?
     ): TransactionResult = withContext(Dispatchers.IO) {
         val c = client ?: throw IllegalStateException("Client not initialized")
-        val response = c.executeContract(contractAddress, msg, funds, memo, null)
+        val response = c.executeContract(contractAddress, msg, funds, null, null, memo, null)
         TransactionResult(
             txHash = response.txhash,
             success = response.code == 0u,

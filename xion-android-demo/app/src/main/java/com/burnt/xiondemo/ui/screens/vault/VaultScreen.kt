@@ -205,7 +205,7 @@ fun VaultScreen(
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
-                    enabled = !uiState.isLoading,
+                    enabled = uiState.activeAction == null,
                     textStyle = TextStyle(color = GreetingText, fontSize = 16.sp),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedTextColor = GreetingText,
@@ -226,8 +226,8 @@ fun VaultScreen(
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     Button(
-                        onClick = { viewModel.deposit() },
-                        enabled = uiState.amount.isNotBlank() && !uiState.isLoading,
+                        onClick = { viewModel.requestDeposit() },
+                        enabled = uiState.amount.isNotBlank() && uiState.activeAction == null,
                         modifier = Modifier.weight(1f),
                         shape = RoundedCornerShape(12.dp),
                         colors = ButtonDefaults.buttonColors(
@@ -237,7 +237,7 @@ fun VaultScreen(
                             disabledContentColor = Color.White.copy(alpha = 0.6f)
                         )
                     ) {
-                        if (uiState.isLoading) {
+                        if (uiState.activeAction == PendingVaultAction.DEPOSIT) {
                             CircularProgressIndicator(
                                 modifier = Modifier.size(18.dp),
                                 strokeWidth = 2.dp,
@@ -248,8 +248,8 @@ fun VaultScreen(
                         }
                     }
                     Button(
-                        onClick = { viewModel.withdraw() },
-                        enabled = uiState.amount.isNotBlank() && !uiState.isLoading,
+                        onClick = { viewModel.requestWithdraw() },
+                        enabled = uiState.amount.isNotBlank() && uiState.activeAction == null,
                         modifier = Modifier.weight(1f),
                         shape = RoundedCornerShape(12.dp),
                         colors = ButtonDefaults.buttonColors(
@@ -259,7 +259,7 @@ fun VaultScreen(
                             disabledContentColor = Color.White.copy(alpha = 0.6f)
                         )
                     ) {
-                        if (uiState.isLoading) {
+                        if (uiState.activeAction == PendingVaultAction.WITHDRAW) {
                             CircularProgressIndicator(
                                 modifier = Modifier.size(18.dp),
                                 strokeWidth = 2.dp,
@@ -275,13 +275,21 @@ fun VaultScreen(
 
                 // Withdraw All button
                 OutlinedButton(
-                    onClick = { viewModel.withdrawAll() },
-                    enabled = !uiState.isLoading && uiState.vaultBalance != null && uiState.vaultBalance != "0",
+                    onClick = { viewModel.requestWithdrawAll() },
+                    enabled = uiState.activeAction == null && uiState.vaultBalance != null && uiState.vaultBalance != "0",
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp),
                     border = BorderStroke(1.dp, SubtitleText.copy(alpha = 0.3f))
                 ) {
-                    Text("Withdraw All", fontWeight = FontWeight.SemiBold, color = GreetingText)
+                    if (uiState.activeAction == PendingVaultAction.WITHDRAW_ALL) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(18.dp),
+                            strokeWidth = 2.dp,
+                            color = GreetingText
+                        )
+                    } else {
+                        Text("Withdraw All", fontWeight = FontWeight.SemiBold, color = GreetingText)
+                    }
                 }
             }
 
@@ -295,5 +303,64 @@ fun VaultScreen(
 
             Spacer(modifier = Modifier.height(32.dp))
         }
+    }
+
+    // Confirmation dialog
+    uiState.pendingAction?.let { action ->
+        val title = when (action) {
+            PendingVaultAction.DEPOSIT -> "Confirm Deposit"
+            PendingVaultAction.WITHDRAW -> "Confirm Withdrawal"
+            PendingVaultAction.WITHDRAW_ALL -> "Confirm Withdraw All"
+        }
+        val details = when (action) {
+            PendingVaultAction.WITHDRAW_ALL -> "Withdraw all funds from vault"
+            else -> "${uiState.amount} ${uiState.selectedToken.displayName}"
+        }
+        AlertDialog(
+            onDismissRequest = { viewModel.dismissConfirmation() },
+            title = { Text(title, fontWeight = FontWeight.SemiBold, color = GreetingText) },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    ConfirmDetailRow(
+                        "Action",
+                        when (action) {
+                            PendingVaultAction.DEPOSIT -> "Deposit"
+                            PendingVaultAction.WITHDRAW -> "Withdraw"
+                            PendingVaultAction.WITHDRAW_ALL -> "Withdraw All"
+                        }
+                    )
+                    ConfirmDetailRow("Token", uiState.selectedToken.displayName)
+                    if (action != PendingVaultAction.WITHDRAW_ALL) {
+                        ConfirmDetailRow("Amount", details)
+                    }
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = { viewModel.confirmPending() },
+                    colors = ButtonDefaults.buttonColors(containerColor = XionOrange)
+                ) {
+                    Text("Confirm", fontWeight = FontWeight.SemiBold)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { viewModel.dismissConfirmation() }) {
+                    Text("Cancel", color = SubtitleText)
+                }
+            },
+            containerColor = CardBackground,
+            shape = RoundedCornerShape(16.dp)
+        )
+    }
+}
+
+@Composable
+private fun ConfirmDetailRow(label: String, value: String) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(label, fontSize = 14.sp, color = SubtitleText)
+        Text(value, fontSize = 14.sp, fontWeight = FontWeight.Medium, color = GreetingText)
     }
 }

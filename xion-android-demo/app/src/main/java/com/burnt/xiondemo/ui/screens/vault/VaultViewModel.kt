@@ -14,16 +14,19 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+enum class PendingVaultAction { DEPOSIT, WITHDRAW, WITHDRAW_ALL }
+
 data class VaultUiState(
     val vaultBalance: String? = null,
     val walletBalance: String? = null,
     val walletSbcBalance: String? = null,
     val selectedToken: SendToken = SendToken.XION,
     val amount: String = "",
-    val isLoading: Boolean = false,
+    val activeAction: PendingVaultAction? = null,
     val isBalanceLoading: Boolean = false,
     val txHash: String? = null,
-    val error: String? = null
+    val error: String? = null,
+    val pendingAction: PendingVaultAction? = null
 )
 
 @HiltViewModel
@@ -87,68 +90,96 @@ class VaultViewModel @Inject constructor(
         }
     }
 
-    fun deposit() {
+    fun requestDeposit() {
+        if (_uiState.value.amount.isBlank()) return
+        _uiState.update { it.copy(pendingAction = PendingVaultAction.DEPOSIT) }
+    }
+
+    fun requestWithdraw() {
+        if (_uiState.value.amount.isBlank()) return
+        _uiState.update { it.copy(pendingAction = PendingVaultAction.WITHDRAW) }
+    }
+
+    fun requestWithdrawAll() {
+        _uiState.update { it.copy(pendingAction = PendingVaultAction.WITHDRAW_ALL) }
+    }
+
+    fun dismissConfirmation() {
+        _uiState.update { it.copy(pendingAction = null) }
+    }
+
+    fun confirmPending() {
+        when (_uiState.value.pendingAction) {
+            PendingVaultAction.DEPOSIT -> deposit()
+            PendingVaultAction.WITHDRAW -> withdraw()
+            PendingVaultAction.WITHDRAW_ALL -> withdrawAll()
+            null -> {}
+        }
+        _uiState.update { it.copy(pendingAction = null) }
+    }
+
+    private fun deposit() {
         val state = _uiState.value
         if (state.amount.isBlank()) return
         val microAmount = CoinFormatter.displayToMicro(state.amount)
 
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, error = null, txHash = null) }
+            _uiState.update { it.copy(activeAction = PendingVaultAction.DEPOSIT, error = null, txHash = null) }
             when (val result = repository.vaultDeposit(microAmount, state.selectedToken.denom)) {
                 is Result.Success -> {
                     if (result.data.success) {
-                        _uiState.update { it.copy(isLoading = false, txHash = result.data.txHash, amount = "") }
+                        _uiState.update { it.copy(activeAction = null, txHash = result.data.txHash, amount = "") }
                         loadAllBalances()
                     } else {
-                        _uiState.update { it.copy(isLoading = false, error = result.data.rawLog) }
+                        _uiState.update { it.copy(activeAction = null, error = result.data.rawLog) }
                     }
                 }
                 is Result.Error -> {
-                    _uiState.update { it.copy(isLoading = false, error = result.message) }
+                    _uiState.update { it.copy(activeAction = null, error = result.message) }
                 }
                 is Result.Loading -> {}
             }
         }
     }
 
-    fun withdraw() {
+    private fun withdraw() {
         val state = _uiState.value
         if (state.amount.isBlank()) return
         val microAmount = CoinFormatter.displayToMicro(state.amount)
 
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, error = null, txHash = null) }
+            _uiState.update { it.copy(activeAction = PendingVaultAction.WITHDRAW, error = null, txHash = null) }
             when (val result = repository.vaultWithdraw(microAmount, state.selectedToken.denom)) {
                 is Result.Success -> {
                     if (result.data.success) {
-                        _uiState.update { it.copy(isLoading = false, txHash = result.data.txHash, amount = "") }
+                        _uiState.update { it.copy(activeAction = null, txHash = result.data.txHash, amount = "") }
                         loadAllBalances()
                     } else {
-                        _uiState.update { it.copy(isLoading = false, error = result.data.rawLog) }
+                        _uiState.update { it.copy(activeAction = null, error = result.data.rawLog) }
                     }
                 }
                 is Result.Error -> {
-                    _uiState.update { it.copy(isLoading = false, error = result.message) }
+                    _uiState.update { it.copy(activeAction = null, error = result.message) }
                 }
                 is Result.Loading -> {}
             }
         }
     }
 
-    fun withdrawAll() {
+    private fun withdrawAll() {
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, error = null, txHash = null) }
+            _uiState.update { it.copy(activeAction = PendingVaultAction.WITHDRAW_ALL, error = null, txHash = null) }
             when (val result = repository.vaultWithdrawAll()) {
                 is Result.Success -> {
                     if (result.data.success) {
-                        _uiState.update { it.copy(isLoading = false, txHash = result.data.txHash, amount = "") }
+                        _uiState.update { it.copy(activeAction = null, txHash = result.data.txHash, amount = "") }
                         loadAllBalances()
                     } else {
-                        _uiState.update { it.copy(isLoading = false, error = result.data.rawLog) }
+                        _uiState.update { it.copy(activeAction = null, error = result.data.rawLog) }
                     }
                 }
                 is Result.Error -> {
-                    _uiState.update { it.copy(isLoading = false, error = result.message) }
+                    _uiState.update { it.copy(activeAction = null, error = result.message) }
                 }
                 is Result.Loading -> {}
             }
