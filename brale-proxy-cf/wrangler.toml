@@ -1,0 +1,25 @@
+name = "brale-proxy"
+main = "src/index.ts"
+compatibility_date = "2024-12-01"
+
+# D1 database for wallet → Brale account mappings
+[[d1_databases]]
+binding = "DB"
+database_name = "brale-proxy-db"
+database_id = "8ccac6d6-555b-431f-bcbd-f20ba12da96d"
+
+# KV namespace for Brale bearer token cache
+[[kv_namespaces]]
+binding = "TOKEN_CACHE"
+id = "72988941001d4fd28cd22491d7a75704"
+
+# Non-secret environment variables
+[vars]
+BRALE_API_URL = "https://api.brale.xyz"
+BRALE_AUTH_URL = "https://auth.brale.xyz"
+ALLOWED_TRANSFER_TYPES = "xion_testnet,ach_debit,ach_credit,same_day_ach_credit,rtp_credit"
+
+# Secrets (set via `wrangler secret put <NAME>`):
+# - BRALE_CLIENT_ID
+# - BRALE_CLIENT_SECRET
+# - BRALE_ACCOUNT_ID

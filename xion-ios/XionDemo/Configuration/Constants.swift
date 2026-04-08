@@ -27,7 +27,7 @@ enum Constants {
     static let oauthCallbackScheme = "xiondemo"
 
     // Brale onramp/offramp
-    static let braleProxyUrl = envString("BRALE_PROXY_URL") ?? "http://localhost:3000/"
+    static let braleProxyUrl = envString("BRALE_PROXY_URL") ?? "https://brale-proxy.demo-burnt.workers.dev/"
     static let braleTransferType = "xion_testnet"
     static let braleStablecoinDenom = "SBC"
     static let braleSbcOnChainDenom = "factory/xion17grq736740r70awldugfs3mls3stu9haewctv2/sbc"

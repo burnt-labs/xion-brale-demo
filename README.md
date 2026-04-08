@@ -175,7 +175,7 @@ curl -s "https://api.brale.xyz/accounts" -H "Authorization: Bearer $TOKEN"
 | `XION_TREASURY_ADDRESS` | String | `xion1sm3qp...hqa0mj` | Address that pays gas fees via the Cosmos fee grant module. Set by the Abstraxion dashboard during grant creation |
 | `XION_OAUTH_CLIENT_ID` | String | `""` (empty) | OAuth2 client ID for the Abstraxion dashboard. Leave empty if using the default public client |
 | `XION_OAUTH_AUTHORIZATION_ENDPOINT` | String | `https://auth.testnet.burnt.com/` | Base URL of the Abstraxion authentication dashboard |
-| `BRALE_PROXY_URL` | String | `http://192.168.100.199:3000/` | URL of the Brale proxy server. Set this to your machine's LAN IP for physical device testing, or `http://10.0.2.2:3000/` for Android emulator (host loopback). Must match a domain in `network_security_config.xml` |
+| `BRALE_PROXY_URL` | String | `http://192.168.100.208:3000/` | URL of the Brale proxy server. Set this to your machine's LAN IP for physical device testing, or `http://10.0.2.2:3000/` for Android emulator (host loopback). Must match a domain in `network_security_config.xml`. Update when your IP changes |
 | `BRALE_TRANSFER_TYPE` | String | `xion_testnet` | Brale transfer type for on-chain stablecoin operations. Use `xion_testnet` for testnet, `xion` for mainnet |
 | `BRALE_STABLECOIN_DENOM` | String | `SBC` | Brale stablecoin denomination identifier used in transfer `value_type` fields |
 | `BRALE_SBC_ON_CHAIN_DENOM` | String | `factory/xion17grq736740r70awldugfs3mls3stu9haewctv2/sbc` | Full on-chain denomination for the SBC token (Cosmos token factory format). Used to query on-chain SBC balance via the LCD REST API |
@@ -207,11 +207,12 @@ The Android app includes a network security config that allows cleartext HTTP tr
 | Domain | Purpose |
 |--------|---------|
 | `10.0.2.2` | Android emulator host loopback |
-| `192.168.100.199` | Developer LAN IP (change to yours) |
+| `192.168.100.199` | Developer LAN IP example |
+| `192.168.100.208` | Developer LAN IP example |
 | `localhost` | Local testing |
 | `127.0.0.1` | Local testing |
 
-**For physical device testing:** Add your machine's LAN IP to the `<domain-config>` block in this file. The domain must match the IP in `BRALE_PROXY_URL` in `build.gradle.kts`.
+**For physical device testing:** Add your machine's current LAN IP to the `<domain-config>` block in this file. The domain **must match** the IP in `BRALE_PROXY_URL` in `build.gradle.kts`. Your LAN IP may change when switching networks — update both files if you get "CLEARTEXT communication not permitted" or connection refused errors.
 
 Referenced from `AndroidManifest.xml` via `android:networkSecurityConfig="@xml/network_security_config"`.
 
@@ -343,8 +344,8 @@ Transaction Envelope:
 
 [mob](https://github.com/burnt-labs/mob) is a Rust library compiled for each platform:
 
-- **Android**: `.so` shared libraries for `arm64-v8a`, `armeabi-v7a`, `x86_64` (loaded via JNI)
-- **iOS**: `libmob.xcframework` static library for `arm64` (device) and `arm64+x86_64` (simulator)
+- **Android**: `.so` shared libraries for `arm64-v8a`, `armeabi-v7a`, `x86_64`, `x86` (loaded via JNI)
+- **iOS**: `libmob.xcframework` dynamic library for `arm64` (device) and `arm64+x86_64` (simulator), integrated as a local SPM package (`vendor/mob`)
 
 UniFFI generates idiomatic bindings — Kotlin classes for Android, Swift classes for iOS — from the Rust API.
 
@@ -352,9 +353,11 @@ UniFFI generates idiomatic bindings — Kotlin classes for Android, Swift classe
 
 | Type | Description |
 |------|-------------|
-| `ChainConfig` | Connection parameters: `chainId`, `rpcEndpoint`, `grpcEndpoint?`, `addressPrefix`, `coinType`, `gasPrice` |
-| `Client` | RPC client. Methods: `getBalance()`, `getHeight()`, `send()`, `executeContract()`, `getTx()`, `getAccount()`, `getAllBalances()`, `isSynced()`, `getChainId()` |
-| `Signer` | Key manager. Created from mnemonic via `Signer.fromMnemonic(mnemonic, addressPrefix, derivationPath?)`. Methods: `address()`, `publicKeyHex()`, `signBytes()` |
+| `ChainConfig` | Connection parameters: `chainId`, `rpcEndpoint`, `grpcEndpoint?`, `addressPrefix`, `coinType`, `gasPrice`, `feeGranter?` |
+| `Client` | RPC client. Methods: `getBalance()`, `getHeight()`, `send()`, `executeContract(granter?, feeGranter?, memo?, gasLimit?)`, `queryContractSmart()`, `signAndBroadcastMulti()`, `hasGrants()`, `getTx()`, `getAccount()`, `getAllBalances()`, `isSynced()`, `getChainId()` |
+| `RustSigner` | Key manager. Created via `RustSigner.fromMnemonic(mnemonic, addressPrefix, derivationPath?)`. Methods: `address()`, `publicKeyHex()`, `signBytes()` |
+| `SessionMetadata` | Session grant metadata: `granter`, `grantee`, `feeGranter?`, `feePayer?`, `createdAt`, `expiresAt`, `description?` |
+| `HttpTransport` | Protocol for platform-native HTTP. Implementations: `NativeHttpTransport` (URLSession on iOS, HttpURLConnection on Android). Methods: `post(url, body)`, `get(url)` |
 | `Coin` | `{denom: String, amount: String}` — represents a token amount |
 | `TxResponse` | `{txhash, code, rawLog, gasWanted, gasUsed, height}` — code=0 means success |
 | `MobError` | Rich error enum: `Rpc`, `Transaction`, `Signing`, `KeyDerivation`, `Address`, `Serialization`, `InvalidInput`, `Account`, `Network`, `GasEstimation`, `InsufficientFunds`, `Timeout`, `Generic` |
@@ -363,9 +366,9 @@ UniFFI generates idiomatic bindings — Kotlin classes for Android, Swift classe
 
 The apps don't call mob directly. A service layer wraps mob for thread safety and type mapping:
 
-**Android**: `RealMobDataSource` (implements `MobDataSource`) — uses `DispatchQueue`-equivalent background thread pool, maps `TxResponse` → `TransactionResult`, handles retry on cold-start failures
+**Android**: `RealMobDataSource` (implements `MobDataSource`) — uses coroutines on `Dispatchers.IO`, maps `TxResponse` → `TransactionResult`, passes `NativeHttpTransport` (HttpURLConnection-based) to all `Client` constructors. `executeContract()` accepts `granter`/`feeGranter` parameters (passed as `null` — the session client handles authz wrapping internally)
 
-**iOS**: `MobSigningService` (implements `MobSigningServiceProtocol`) — uses `DispatchQueue(label: "com.burnt.xiondemo.mob")` for serial execution, maps mob types to app models via `withCheckedThrowingContinuation`, implements deferred cleanup (2-second delay) to prevent races with in-flight RPCs on disconnect. Supports optional `gasLimit` parameter on `send()` and `executeContract()` — when provided, bypasses gas simulation entirely (see [iOS Simulator QUIC Issue](#ios-simulator-quic-issue) below). For `send()` with a gas limit, uses `buildSendMessage` + `signAndBroadcastMulti` since the `client.send()` FFI has no gas limit parameter
+**iOS**: `MobSigningService` (implements `MobSigningServiceProtocol`) — uses `DispatchQueue(label: "com.burnt.xiondemo.mob")` for serial execution, maps mob types to app models via `withCheckedThrowingContinuation`, implements deferred cleanup (2-second delay) to prevent races with in-flight RPCs on disconnect. The mob SPM package's `Compat.swift` provides convenience constructors that auto-inject `NativeHttpTransport` (URLSession-based), so `MobSigningService` no longer manages the transport directly. Gas estimation is handled automatically by the library. `executeContract()` accepts `granter`/`feeGranter` parameters (passed as `nil` — the session client handles authz wrapping internally)
 
 ---
 
@@ -477,9 +480,9 @@ Both apps interact with the vault via the mob library's `executeContract` (for d
 - `vaultWithdraw(amount, denom)` — withdraws specific amount from the vault
 - `vaultWithdrawAll()` — withdraws entire vault balance
 
-**iOS vault operations** use explicit gas limits (400,000) to bypass gas simulation, which fails on the iOS simulator due to the QUIC transport issue. Deposit, withdraw, and withdraw-all show a native confirmation alert before submitting. After a successful vault transaction, the balance reload is delayed by 3 seconds to allow the block to be committed.
+**Confirmation dialogs:** Both platforms show a confirmation dialog before executing vault transactions. The dialog displays the action (Deposit/Withdraw/Withdraw All), token, and amount. On iOS this uses a native `.alert()` sheet; on Android it uses a Material3 `AlertDialog`. During a transaction, only the active button shows a loading spinner — the other buttons are disabled but display their normal text.
 
-**Gas limits:** Send operations use 200,000 gas, contract execute operations use 400,000 gas. These are defined in `Constants.swift` (`defaultSendGasLimit`, `defaultExecuteGasLimit`) and `Constants.kt`. The fee granter (treasury) pays all gas fees, so over-estimation has no cost to the user.
+**Gas handling:** Gas estimation is handled automatically by the mob library. The `executeContract` method accepts an optional `gasLimit` parameter. The fee granter (treasury) pays all gas fees via the session's authz/feegrant setup.
 
 ---
 
@@ -1030,8 +1033,8 @@ app/src/main/java/com/burnt/xiondemo/
 │   │   │   ├── OfframpScreen.kt        # Cash out UI (4-step flow)
 │   │   │   └── OfframpViewModel.kt     # On-chain deposit, transfer, polling
 │   │   ├── vault/
-│   │   │   ├── VaultScreen.kt          # Vault deposit/withdraw UI
-│   │   │   └── VaultViewModel.kt       # Vault balance, deposit, withdraw logic
+│   │   │   ├── VaultScreen.kt          # Vault deposit/withdraw UI with confirmation dialog
+│   │   │   └── VaultViewModel.kt       # Vault balance, deposit, withdraw with pending action state
 │   │   ├── linkbank/
 │   │   │   ├── LinkBankScreen.kt       # Standalone bank linking UI
 │   │   │   └── LinkBankViewModel.kt    # Plaid link flow
@@ -1086,6 +1089,16 @@ app/src/main/java/com/burnt/xiondemo/
     ├── Constants.kt                    # All configuration (from BuildConfig + compile-time)
     ├── CoinFormatter.kt               # uxion ↔ XION conversion with comma formatting
     └── Result.kt                       # Result<T> sealed class (Success/Error/Loading)
+
+# Also in app/src/main/:
+jniLibs/
+├── arm64-v8a/libmob.so               # ARM 64-bit (most devices)
+├── armeabi-v7a/libmob.so             # ARM 32-bit
+├── x86_64/libmob.so                  # Intel 64-bit (emulator)
+└── x86/libmob.so                     # Intel 32-bit (emulator)
+
+java/uniffi/mob/mob.kt                 # Auto-generated UniFFI Kotlin bindings (~5400 lines)
+java/com/burnt/mob/NativeHttpTransport.kt  # HttpURLConnection-based HTTP transport
 ```
 
 ### iOS App (`xion-ios/`)
@@ -1105,9 +1118,7 @@ XionDemo/
 │   ├── BalanceInfo.swift
 │   └── OAuthTokens.swift
 ├── Services/
-│   ├── MobSigningService.swift         # Rust FFI wrapper (serial DispatchQueue, gasLimit support)
-│   ├── NativeHttpTransport.swift       # HTTP/1.1 via NWConnection (avoids QUIC),
-│   │                                    # POST for mob FFI, GET for REST, chunked decoder
+│   ├── MobSigningService.swift         # Rust FFI wrapper (serial DispatchQueue, session support)
 │   ├── SessionManager.swift            # ObservableObject: auth, restore, disconnect
 │   ├── OAuthService.swift              # ASWebAuthenticationSession
 │   ├── BraleProxyService.swift         # Brale proxy HTTP client
@@ -1140,16 +1151,18 @@ XionDemo/
 ├── Utilities/
 │   ├── CoinFormatter.swift             # NumberFormatter with comma grouping, 6 decimals
 │   └── PkceUtil.swift                  # PKCE challenge generation for OAuth
-├── MobBindings/
-│   └── mob.swift                       # Auto-generated UniFFI bindings (1803 lines)
-├── Frameworks/
-│   └── libmob.xcframework/            # Pre-built Rust static library
-│       ├── ios-arm64/                  # Device
-│       └── ios-arm64_x86_64-simulator/ # Simulator
 └── vendor/
     ├── bip39/                          # BIP39 SPM package
     ├── uncommon-crypto/                # HMAC, PBKDF2, SHA
-    └── mob/                            # SPM package wrapping xcframework
+    └── mob/                            # SPM package (mob library)
+        ├── Package.swift               # Mob target with libmob binary dependency
+        ├── Sources/Mob/
+        │   ├── mob.swift               # Auto-generated UniFFI bindings (~3900 lines)
+        │   ├── NativeHttpTransport.swift  # URLSession-based HTTP transport
+        │   └── Compat.swift            # Convenience extensions (auto-injects transport)
+        └── lib/libmob.xcframework/    # Pre-built Rust dynamic library
+            ├── ios-arm64/              # Device
+            └── ios-arm64_x86_64-simulator/  # Simulator
 ```
 
 ### Brale Proxy (`brale-proxy/`)
@@ -1201,61 +1214,76 @@ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 rustup target add aarch64-apple-ios aarch64-apple-ios-sim x86_64-apple-ios
 
 # Android targets (requires Android NDK)
-rustup target add aarch64-linux-android armv7-linux-androideabi x86_64-linux-android
+rustup target add aarch64-linux-android armv7-linux-androideabi x86_64-linux-android i686-linux-android
+
+# Android cross-compilation tool
+cargo install cargo-ndk
 ```
 
 ### iOS Build
 
+The mob library source lives at `third_party/mob/` (symlinked from the Android demo). Build and copy artifacts into the iOS vendor package:
+
 ```bash
-cd xion-ios
-./scripts/build-mob-ios.sh
+cd xion-android-demo/third_party/mob
+./scripts/build-ios.sh
 ```
 
 This script:
-1. Builds `libmob.a` for 3 iOS targets (device arm64, simulator arm64, simulator x86_64)
+1. Builds `libmob.dylib` for 3 iOS targets (device arm64, simulator arm64, simulator x86_64)
 2. Creates a universal simulator binary via `lipo`
 3. Generates Swift bindings via `uniffi-bindgen`
 4. Packages as `libmob.xcframework`
 
-Output:
-- `XionDemo/Frameworks/libmob.xcframework` — static library
-- `XionDemo/MobBindings/mob.swift` — generated Swift bindings
+Output lands in `react-native/ios/`. Copy to the iOS vendor package:
+
+```bash
+# From the mob repo root
+cp -R react-native/ios/Frameworks/libmob.xcframework ../../xion-ios/vendor/mob/lib/
+cp react-native/ios/generated/mob.swift ../../xion-ios/vendor/mob/Sources/Mob/
+cp react-native/ios/generated/mobFFI.h ../../xion-ios/vendor/mob/Sources/MobFFI/include/
+cp react-native/ios/generated/mobFFI.modulemap ../../xion-ios/vendor/mob/Sources/MobFFI/include/module.modulemap
+cp swift/Sources/Mob/NativeHttpTransport.swift ../../xion-ios/vendor/mob/Sources/Mob/
+cp swift/Sources/Mob/Compat.swift ../../xion-ios/vendor/mob/Sources/Mob/
+```
+
+Then regenerate the Xcode project: `cd xion-ios && xcodegen generate`
 
 ### Android Build
 
 ```bash
 cd xion-android-demo/third_party/mob
-# Requires ANDROID_NDK_HOME set and proper linker configs
-cargo build --release --target aarch64-linux-android
-# Repeat for armv7-linux-androideabi, x86_64-linux-android
+export ANDROID_NDK_HOME=$HOME/Library/Android/sdk/ndk/<version>
+./scripts/build-android.sh
 ```
 
-The built `.so` files go into `app/src/main/jniLibs/<abi>/libmob.so`.
+This script:
+1. Builds `.so` files for 4 ABIs (arm64-v8a, armeabi-v7a, x86_64, x86)
+2. Generates Kotlin bindings via `uniffi-bindgen`
+
+Output lands in `react-native/android/src/main/`. Copy to the Android app:
+
+```bash
+cp -R react-native/android/src/main/jniLibs/* ../../app/src/main/jniLibs/
+cp react-native/android/src/main/java/uniffi/mob/mob.kt ../../app/src/main/java/uniffi/mob/mob.kt
+```
 
 ---
 
 ## Troubleshooting
 
-### iOS Simulator QUIC Issue
+### iOS Simulator QUIC Issue (Resolved)
 
-The iOS simulator has a known bug with HTTP/3 (QUIC) connections to Cloudflare-fronted endpoints (including `rpc.xion-testnet-2.burnt.com` and `api.xion-testnet-2.burnt.com`). Symptoms include "Simulate query failed", "The request timed out", "cannot parse response", or transactions/balances failing to load.
+The iOS simulator previously had issues with HTTP/3 (QUIC) connections to Cloudflare-fronted endpoints. This caused failures with mob RPC calls, gas estimation, and REST queries.
 
-**How it's handled in the codebase:**
+**This is now resolved.** The mob library delegates all HTTP to the platform via the `HttpTransport` protocol. On iOS, the mob package provides `NativeHttpTransport` which uses `URLSession` — Apple's native networking stack handles HTTP/3 negotiation properly. The previous workaround (a 320-line `NWConnection`-based transport that forced HTTP/1.1 via ALPN) has been removed.
 
-| Component | Problem | Solution |
-|-----------|---------|----------|
-| mob RPC calls (balance, contract queries, broadcast) | QUIC connections fail silently | `NativeHttpTransport` uses `NWConnection` with TCP+TLS, explicitly negotiating `http/1.1` via ALPN. Avoids QUIC entirely. |
-| Gas estimation (simulate) | ABCI query for `/cosmos.tx.v1beta1.Service/Simulate` fails via NativeHttpTransport | Bypassed entirely — explicit gas limits are passed for all `send()` and `executeContract()` calls (200k and 400k respectively) |
-| REST transaction history | `URLSession.shared` uses HTTP/3 by default, times out or returns unparseable responses | Replaced with `NativeHttpTransport.get()` — a static async helper that makes GET requests via `NWConnection` + HTTP/1.1 |
-| Grant polling (SessionManager) | Same URLSession QUIC issue | Also uses `NativeHttpTransport.get()` |
-| Chunked transfer encoding | REST API responses use `Transfer-Encoding: chunked` (no Content-Length), raw chunk markers corrupt JSON parsing | `NativeHttpTransport.extractResponseBody()` detects chunked encoding via headers and decodes chunk frames before returning the body |
+Other changes as part of this fix:
+- Gas estimation now works natively — the manual `gasLimit` bypass on `send()` has been removed
+- REST calls (transaction history, grant polling) use `URLSession.shared` directly
+- No more chunked transfer encoding decoder needed — `URLSession` handles this transparently
 
-**Key files:**
-- `NativeHttpTransport.swift` — HTTP/1.1 transport via NWConnection, with `post()` (for mob FFI), `get()` (for REST calls), and chunked encoding decoder
-- `Constants.swift` — `defaultSendGasLimit` (200,000) and `defaultExecuteGasLimit` (400,000)
-- `MobSigningService.swift` — `gasLimit` parameter on `send()` and `executeContract()`
-
-**Note:** This is an iOS simulator-specific issue. On physical devices, QUIC works correctly. The NativeHttpTransport approach works on both simulator and device.
+If you encounter network issues on the simulator, try resetting it: `xcrun simctl shutdown all && xcrun simctl erase all`.
 
 ### Simulator/Emulator Can't Connect to Network
 
@@ -1299,10 +1327,12 @@ The proxy's `ALLOWED_TRANSFER_TYPES` is blocking the request. This is a safety f
 
 ### iOS Build Fails with "No such module 'Mob'"
 
-The vendor SPM package can't find the xcframework. Ensure:
-1. `XionDemo/Frameworks/libmob.xcframework/` exists and contains both `ios-arm64/` and `ios-arm64_x86_64-simulator/` slices
-2. In Xcode, check that libmob.xcframework is listed under "Frameworks, Libraries, and Embedded Content" as "Do Not Embed" (it's a static library)
-3. Linker flags include `-lresolv`
+The mob SPM package can't resolve. Ensure:
+1. `vendor/mob/lib/libmob.xcframework/` exists and contains both `ios-arm64/` and `ios-arm64_x86_64-simulator/` slices with `libmob.dylib` files
+2. `vendor/mob/Package.swift` lists `mob.swift`, `NativeHttpTransport.swift`, and `Compat.swift` in the `sources` array
+3. `project.yml` includes `Mob` in the `packages` section and as a dependency of the `XionDemo` target
+4. Regenerate the Xcode project: `cd xion-ios && xcodegen generate`
+5. Linker flags include `-lresolv` (configured in `project.yml`)
 
 ### Balance Shows "0" After Onramp
 
@@ -1318,7 +1348,7 @@ The Brale proxy server at `localhost:3000` is not running. Start it with `cd bra
 
 ### Recent Transactions Not Loading (iOS Simulator)
 
-If the home screen shows "No transactions yet" despite having on-chain transactions, this is the QUIC issue. The REST API calls via `URLSession` time out or return unparseable HTTP/3 responses. The fix replaces `URLSession.shared` with `NativeHttpTransport.get()` which forces HTTP/1.1. See [iOS Simulator QUIC Issue](#ios-simulator-quic-issue).
+If the home screen shows "No transactions yet" despite having on-chain transactions, the REST API calls may be failing. This was previously caused by a QUIC issue (now resolved — see [iOS Simulator QUIC Issue](#ios-simulator-quic-issue-resolved)). If it persists, check network connectivity from the simulator and verify the REST endpoint is reachable.
 
 ---
 

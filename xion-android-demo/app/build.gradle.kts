@@ -29,7 +29,7 @@ android {
 
         // Brale onramp/offramp — 10.0.2.2 is the Android emulator host loopback.
         // For physical device testing, replace with your machine's LAN IP or deployed URL.
-        buildConfigField("String", "BRALE_PROXY_URL", "\"http://192.168.100.208:3000/\"")
+        buildConfigField("String", "BRALE_PROXY_URL", "\"https://brale-proxy.demo-burnt.workers.dev/\"")
         buildConfigField("String", "BRALE_TRANSFER_TYPE", "\"xion_testnet\"")
         buildConfigField("String", "BRALE_STABLECOIN_DENOM", "\"SBC\"")
         buildConfigField("String", "BRALE_SBC_ON_CHAIN_DENOM", "\"factory/xion17grq736740r70awldugfs3mls3stu9haewctv2/sbc\"")
