@@ -1,4 +1,5 @@
 import Foundation
+import Mob
 
 
 protocol MobSigningServiceProtocol {
@@ -6,7 +7,7 @@ protocol MobSigningServiceProtocol {
     func upgradeToSessionClient(metaAccountAddress: String, treasuryAddress: String, sessionExpiresAt: Int64) async throws
     func getBalance(address: String, denom: String) async throws -> BalanceInfo
     func getHeight() async throws -> Int64
-    func send(toAddress: String, coins: [Coin], memo: String?, gasLimit: UInt64?) async throws -> TransactionResult
+    func send(toAddress: String, coins: [Coin], memo: String?) async throws -> TransactionResult
     func executeContract(
         contractAddress: String,
         msg: Data,
@@ -23,7 +24,6 @@ protocol MobSigningServiceProtocol {
 final class MobSigningService: MobSigningServiceProtocol {
 
     private let queue = DispatchQueue(label: "com.burnt.xiondemo.mob", qos: .userInitiated)
-    private let transport = NativeHttpTransport()
 
     private var client: Client?
     private var signer: RustSigner?
@@ -59,7 +59,7 @@ final class MobSigningService: MobSigningServiceProtocol {
                     // will handle session signing via the meta-account.
                     self.signer = newSigner
                     do {
-                        let newClient = try Client.newWithSigner(config: config, signer: newSigner, transport: self.transport)
+                        let newClient = try Client.newWithSigner(config: config, signer: newSigner)
                         self.client = newClient
                     } catch {
                         // Account may not exist yet — that's OK for session key flow
@@ -117,8 +117,7 @@ final class MobSigningService: MobSigningServiceProtocol {
                     let sessionClient = try Client.newWithSessionSigner(
                         config: config,
                         signer: currentSigner,
-                        metadata: metadata,
-                        transport: self.transport
+                        metadata: metadata
                     )
                     self.client = sessionClient
 
@@ -169,20 +168,14 @@ final class MobSigningService: MobSigningServiceProtocol {
         }
     }
 
-    func send(toAddress: String, coins: [Coin], memo: String?, gasLimit: UInt64? = nil) async throws -> TransactionResult {
+    func send(toAddress: String, coins: [Coin], memo: String?) async throws -> TransactionResult {
         try await withCheckedThrowingContinuation { continuation in
             queue.async {
                 do {
                     guard let client = self.client else {
                         throw MobServiceError.clientNotInitialized
                     }
-                    let response: TxResponse
-                    if let gasLimit = gasLimit {
-                        let message = try client.buildSendMessage(toAddress: toAddress, amount: coins)
-                        response = try client.signAndBroadcastMulti(messages: [message], memo: memo, gasLimit: gasLimit)
-                    } else {
-                        response = try client.send(toAddress: toAddress, amount: coins, memo: memo)
-                    }
+                    let response = try client.send(toAddress: toAddress, amount: coins, memo: memo)
                     continuation.resume(returning: TransactionResult(
                         txHash: response.txhash,
                         success: response.code == 0,
@@ -216,6 +209,8 @@ final class MobSigningService: MobSigningServiceProtocol {
                         contractAddress: contractAddress,
                         msg: msg,
                         funds: funds,
+                        granter: nil,
+                        feeGranter: nil,
                         memo: memo,
                         gasLimit: gasLimit
                     )

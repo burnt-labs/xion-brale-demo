@@ -1,4 +1,5 @@
 import Foundation
+import Mob
 
 
 final class XionRepositoryImpl: XionRepositoryProtocol {
@@ -46,8 +47,7 @@ final class XionRepositoryImpl: XionRepositoryProtocol {
             try await self.mobService.send(
                 toAddress: toAddress,
                 coins: coins,
-                memo: memo.isEmpty ? nil : memo,
-                gasLimit: Constants.defaultSendGasLimit
+                memo: memo.isEmpty ? nil : memo
             )
         }
         let confirmed = result.success ? (await awaitTxConfirmation(txHash: result.txHash) ?? result) : result
@@ -195,7 +195,7 @@ final class XionRepositoryImpl: XionRepositoryProtocol {
             return []
         }
 
-        let data = try await NativeHttpTransport.get(url: urlString)
+        let (data, _) = try await URLSession.shared.data(from: URL(string: urlString)!)
 
         guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
               let txResponses = json["tx_responses"] as? [[String: Any]] else {

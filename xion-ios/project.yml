@@ -12,6 +12,8 @@ settings:
     GENERATE_INFOPLIST_FILE: YES
 
 packages:
+  Mob:
+    path: vendor/mob
   UncommonCrypto.swift:
     path: vendor/uncommon-crypto
   Bip39:
@@ -30,11 +32,12 @@ targets:
           - Frameworks
           - Info.plist
     dependencies:
+      - package: Mob
+        product: Mob
       - package: Bip39
         product: Bip39
       - package: LinkKit
         product: LinkKit
-      - framework: XionDemo/Frameworks/libmob.xcframework
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.burnt.xiondemo.ios
@@ -42,8 +45,6 @@ targets:
         MARKETING_VERSION: "1.0.0"
         CURRENT_PROJECT_VERSION: 1
         DEVELOPMENT_TEAM: ""
-        SWIFT_INCLUDE_PATHS: "$(SRCROOT)/XionDemo/MobBindings"
-        OTHER_SWIFT_FLAGS: "-Xcc -fmodule-map-file=$(SRCROOT)/XionDemo/MobBindings/mobFFI.modulemap"
         OTHER_LDFLAGS:
           - "-lresolv"
     info:

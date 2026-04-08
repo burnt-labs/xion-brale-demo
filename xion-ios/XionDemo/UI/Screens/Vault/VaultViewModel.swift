@@ -1,4 +1,5 @@
 import Foundation
+import Mob
 
 @MainActor
 final class VaultViewModel: ObservableObject {

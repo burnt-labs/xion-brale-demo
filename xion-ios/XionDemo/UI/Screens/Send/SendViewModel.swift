@@ -1,4 +1,5 @@
 import Foundation
+import Mob
 
 enum SendToken: String, CaseIterable {
     case xion = "XION"
