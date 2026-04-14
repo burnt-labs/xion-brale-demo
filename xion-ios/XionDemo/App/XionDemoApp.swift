@@ -8,6 +8,10 @@ struct XionDemoApp: App {
         WindowGroup {
             AppNavigation(container: container)
                 .preferredColorScheme(.light)
+                .onContinueUserActivity(NSUserActivityTypeBrowsingWeb) { activity in
+                    guard let url = activity.webpageURL else { return }
+                    container.plaidLinkService.continueFromRedirectUri(url)
+                }
         }
     }
 }

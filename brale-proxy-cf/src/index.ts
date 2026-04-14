@@ -57,11 +57,76 @@ app.get("/health", async (c) => {
 });
 
 // ---------------------------------------------------------------------------
+// Apple App Site Association — enables iOS Universal Links for Plaid OAuth
+// redirect back to the XionDemo app. Served at the well-known path with
+// Content-Type application/json and no extension, per Apple's requirements.
+// ---------------------------------------------------------------------------
+
+const AASA = {
+  applinks: {
+    details: [
+      {
+        appIDs: ["85A34A7PB2.com.burnt.xiondemo.ios"],
+        components: [
+          { "/": "/plaid-oauth", comment: "Plaid OAuth redirect" },
+          { "/": "/plaid-oauth*", comment: "Plaid OAuth redirect with query" },
+        ],
+      },
+    ],
+  },
+};
+
+app.get("/.well-known/apple-app-site-association", (c) => {
+  return new Response(JSON.stringify(AASA), {
+    headers: { "content-type": "application/json" },
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Plaid OAuth redirect landing page — browser fallback when the Universal
+// Link does not auto-open the app (e.g. user navigated here manually or the
+// device hasn't fetched the AASA yet). Renders a tap-to-return link that
+// iOS will intercept as a Universal Link.
+// ---------------------------------------------------------------------------
+
+app.get("/plaid-oauth", (c) => {
+  const query = c.req.url.split("?")[1] ?? "";
+  const returnUrl = `https://brale-proxy.demo-burnt.workers.dev/plaid-oauth${query ? "?" + query : ""}`;
+  const html = `<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Return to XionDemo</title>
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #111; color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; margin: 0; padding: 24px; text-align: center; }
+  h1 { font-size: 22px; margin: 0 0 8px; }
+  p { opacity: 0.7; margin: 0 0 24px; }
+  a.btn { display: inline-block; background: #6d4ef2; color: #fff; text-decoration: none; padding: 14px 28px; border-radius: 12px; font-weight: 600; }
+</style>
+</head>
+<body>
+  <h1>Bank linked</h1>
+  <p>Tap below to return to XionDemo.</p>
+  <a class="btn" href="${returnUrl}">Return to app</a>
+</body>
+</html>`;
+  return new Response(html, {
+    headers: { "content-type": "text/html; charset=utf-8" },
+  });
+});
+
+// ---------------------------------------------------------------------------
 // Wallet address middleware — resolves per-user Brale account
 // ---------------------------------------------------------------------------
 
 app.use("*", async (c, next) => {
-  if (c.req.path === "/health") return next();
+  const publicPaths = new Set([
+    "/health",
+    "/plaid-oauth",
+    "/.well-known/apple-app-site-association",
+  ]);
+  if (publicPaths.has(c.req.path)) return next();
 
   const walletAddress = c.req.header("x-wallet-address");
 

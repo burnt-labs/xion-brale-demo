@@ -60,6 +60,15 @@ final class PlaidLinkService {
         }
     }
 
+    /// Forward a Plaid OAuth Universal Link back into the active Plaid Link
+    /// handler so the hand-off from Safari completes. Called from
+    /// `.onContinueUserActivity(NSUserActivityTypeBrowsingWeb)` when the
+    /// bank redirects to our iOS redirect URI.
+    @MainActor
+    func continueFromRedirectUri(_ url: URL) {
+        handler?.resumeAfterTermination(from: url)
+    }
+
     private static func topViewController() -> UIViewController? {
         guard let scene = UIApplication.shared.connectedScenes
             .compactMap({ $0 as? UIWindowScene })

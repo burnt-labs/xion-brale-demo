@@ -31,6 +31,7 @@ targets:
         excludes:
           - Frameworks
           - Info.plist
+          - XionDemo.entitlements
     dependencies:
       - package: Mob
         product: Mob
@@ -42,9 +43,10 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.burnt.xiondemo.ios
         INFOPLIST_FILE: XionDemo/Info.plist
+        CODE_SIGN_ENTITLEMENTS: XionDemo/XionDemo.entitlements
         MARKETING_VERSION: "1.0.0"
         CURRENT_PROJECT_VERSION: 1
-        DEVELOPMENT_TEAM: ""
+        DEVELOPMENT_TEAM: "85A34A7PB2"
         OTHER_LDFLAGS:
           - "-lresolv"
     info:
