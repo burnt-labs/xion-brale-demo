@@ -85,7 +85,8 @@ data class PlaidLinkTokenRequest(
 @Serializable
 data class PlaidLinkTokenResponse(
     @SerialName("link_token") val linkToken: String,
-    val expiration: String? = null
+    val expiration: String? = null,
+    @SerialName("request_id") val requestId: String? = null
 )
 
 @Serializable

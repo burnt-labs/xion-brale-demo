@@ -1,6 +1,7 @@
 package com.burnt.xiondemo.ui.screens.linkbank
 
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -41,26 +42,30 @@ fun LinkBankScreen(
         when (result) {
             is LinkSuccess -> {
                 val publicToken = result.publicToken
-                viewModel.onPlaidSuccess(publicToken)
+                val sessionId = result.metadata.linkSessionId
+                android.util.Log.d("PlaidLink", "success linkSessionId=$sessionId")
+                viewModel.onPlaidSuccess(publicToken, sessionId)
             }
             is LinkExit -> {
                 val error = result.error
                 val metadata = result.metadata
-                val errorMsg = buildString {
-                    append("[PLAID EXIT] ")
-                    if (error != null) {
-                        append("code=${error.errorCode}, ")
-                        append("message=${error.errorMessage}, ")
-                        append("display=${error.displayMessage}")
-                    } else {
-                        append("No error (user closed)")
-                    }
-                    append(" | institutionId=${metadata.institution?.id}")
-                    append(", institutionName=${metadata.institution?.name}")
-                    append(", linkSessionId=${metadata.linkSessionId}")
-                    append(", status=${metadata.status}")
+                android.util.Log.d(
+                    "PlaidLink",
+                    "exit linkSessionId=${metadata.linkSessionId ?: "nil"} requestId=${metadata.requestId ?: "nil"} error=${error?.errorMessage ?: "nil"}"
+                )
+                if (error != null) {
+                    val msg = "${error.errorCode}: ${error.errorMessage}"
+                    viewModel.onPlaidExit(
+                        linkSessionId = metadata.linkSessionId,
+                        exitRequestId = metadata.requestId,
+                        errorMessage = msg
+                    )
+                } else {
+                    viewModel.onPlaidCancelled(
+                        linkSessionId = metadata.linkSessionId,
+                        exitRequestId = metadata.requestId
+                    )
                 }
-                viewModel.onPlaidExit(errorMsg)
             }
         }
     }
@@ -253,6 +258,11 @@ private fun LinkBankForm(
                 Text("Link Bank Account", fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
             }
         }
+
+        if (uiState.diagnostics.isNotEmpty()) {
+            Spacer(modifier = Modifier.height(24.dp))
+            PlaidDiagnosticsCard(uiState = uiState, viewModel = viewModel)
+        }
     }
 }
 
@@ -329,5 +339,129 @@ private fun LinkedContent(
                 }
             }
         }
+
+        if (uiState.diagnostics.isNotEmpty()) {
+            Spacer(modifier = Modifier.height(24.dp))
+            PlaidDiagnosticsCard(uiState = uiState, viewModel = viewModel)
+        }
+    }
+}
+
+@Composable
+private fun PlaidDiagnosticsCard(
+    uiState: LinkBankUiState,
+    viewModel: LinkBankViewModel,
+    modifier: Modifier = Modifier
+) {
+    val clipboard = androidx.compose.ui.platform.LocalClipboardManager.current
+    var copied by remember { mutableStateOf(false) }
+
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = CardBackground),
+        shape = RoundedCornerShape(12.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Plaid Debug — last ${uiState.diagnostics.size} session${if (uiState.diagnostics.size == 1) "" else "s"}",
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = GreetingText,
+                    modifier = Modifier.weight(1f)
+                )
+                TextButton(
+                    onClick = {
+                        clipboard.setText(androidx.compose.ui.text.AnnotatedString(formatDiagnostics(uiState.diagnostics)))
+                        copied = true
+                    }
+                ) {
+                    Text(
+                        text = if (copied) "Copied!" else "Copy All",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = XionOrange
+                    )
+                }
+                TextButton(
+                    onClick = {
+                        viewModel.clearDiagnostics()
+                        copied = false
+                    }
+                ) {
+                    Text(
+                        text = "Clear",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = SubtitleText
+                    )
+                }
+            }
+
+            uiState.diagnostics.forEach { entry ->
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(ScreenBackground, RoundedCornerShape(8.dp))
+                        .padding(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Text(
+                        text = "${entry.outcome} — ${entry.phone}",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = GreetingText
+                    )
+                    Text(
+                        text = "token req_id: ${entry.tokenRequestId ?: "<not provided>"}",
+                        fontSize = 10.sp,
+                        fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
+                        color = SubtitleText
+                    )
+                    Text(
+                        text = "session_id:   ${entry.linkSessionId ?: "<not provided>"}",
+                        fontSize = 10.sp,
+                        fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
+                        color = SubtitleText
+                    )
+                    if (entry.exitRequestId != null) {
+                        Text(
+                            text = "exit req_id:  ${entry.exitRequestId}",
+                            fontSize = 10.sp,
+                            fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
+                            color = SubtitleText
+                        )
+                    }
+                    if (entry.errorMessage != null) {
+                        Text(
+                            text = "error: ${entry.errorMessage}",
+                            fontSize = 10.sp,
+                            fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+private fun formatDiagnostics(entries: List<PlaidDiagnostic>): String {
+    val fmt = java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss", java.util.Locale.US)
+    return entries.joinToString(separator = "\n\n") { d ->
+        """
+        [${fmt.format(java.util.Date(d.timestamp))}] ${d.outcome}
+          phone:        ${d.phone}
+          token req_id: ${d.tokenRequestId ?: "<not provided>"}
+          session_id:   ${d.linkSessionId ?: "<not provided>"}
+          exit req_id:  ${d.exitRequestId ?: "<n/a>"}
+          error:        ${d.errorMessage ?: "<none>"}
+        """.trimIndent()
     }
 }

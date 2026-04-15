@@ -12,6 +12,17 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+data class PlaidDiagnostic(
+    val id: String = java.util.UUID.randomUUID().toString(),
+    val timestamp: Long = System.currentTimeMillis(),
+    val phone: String,
+    val outcome: String,
+    val tokenRequestId: String?,
+    val linkSessionId: String?,
+    val exitRequestId: String?,
+    val errorMessage: String?
+)
+
 data class LinkBankUiState(
     val userName: String = "",
     val userEmail: String = "",
@@ -25,8 +36,10 @@ data class LinkBankUiState(
     val bankAddressId: String? = null,
     val bankName: String? = null,
     val plaidLinkToken: String? = null,
+    val plaidTokenRequestId: String? = null,
     val isLoading: Boolean = false,
-    val error: String? = null
+    val error: String? = null,
+    val diagnostics: List<PlaidDiagnostic> = emptyList()
 )
 
 @HiltViewModel
@@ -118,6 +131,7 @@ class LinkBankViewModel @Inject constructor(
                 val response = braleRepository.createPlaidLinkToken(name = name, email = email, phone = phone, dob = dob)
                 _uiState.value = _uiState.value.copy(
                     plaidLinkToken = response.linkToken,
+                    plaidTokenRequestId = response.requestId,
                     isLoading = false
                 )
             } catch (e: Exception) {
@@ -129,9 +143,24 @@ class LinkBankViewModel @Inject constructor(
         }
     }
 
-    fun onPlaidSuccess(publicToken: String) {
+    fun onPlaidSuccess(publicToken: String, linkSessionId: String) {
+        val tokenReqId = _uiState.value.plaidTokenRequestId
+        val phone = _uiState.value.userPhone
+        recordDiagnostic(
+            phone = phone,
+            outcome = "Linked",
+            tokenRequestId = tokenReqId,
+            linkSessionId = linkSessionId,
+            exitRequestId = null,
+            errorMessage = null
+        )
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isLoading = true, error = null, plaidLinkToken = null)
+            _uiState.value = _uiState.value.copy(
+                isLoading = true,
+                error = null,
+                plaidLinkToken = null,
+                plaidTokenRequestId = null
+            )
             try {
                 val addressId = braleRepository.registerBankAccount(publicToken)
                 secureStorage.putString(Constants.PREF_BRALE_BANK_ADDRESS_ID, addressId)
@@ -149,16 +178,69 @@ class LinkBankViewModel @Inject constructor(
         }
     }
 
-    fun onPlaidCancelled() {
-        _uiState.value = _uiState.value.copy(plaidLinkToken = null, isLoading = false)
-    }
-
-    fun onPlaidExit(errorMessage: String?) {
+    fun onPlaidCancelled(linkSessionId: String?, exitRequestId: String?) {
+        val tokenReqId = _uiState.value.plaidTokenRequestId
+        val phone = _uiState.value.userPhone
+        recordDiagnostic(
+            phone = phone,
+            outcome = "Cancelled",
+            tokenRequestId = tokenReqId,
+            linkSessionId = linkSessionId,
+            exitRequestId = exitRequestId,
+            errorMessage = null
+        )
         _uiState.value = _uiState.value.copy(
             plaidLinkToken = null,
-            isLoading = false,
-            error = errorMessage ?: "Plaid Link was closed"
+            plaidTokenRequestId = null,
+            isLoading = false
         )
+    }
+
+    fun onPlaidExit(linkSessionId: String?, exitRequestId: String?, errorMessage: String) {
+        val tokenReqId = _uiState.value.plaidTokenRequestId
+        val phone = _uiState.value.userPhone
+        recordDiagnostic(
+            phone = phone,
+            outcome = "Error",
+            tokenRequestId = tokenReqId,
+            linkSessionId = linkSessionId,
+            exitRequestId = exitRequestId,
+            errorMessage = errorMessage
+        )
+        _uiState.value = _uiState.value.copy(
+            plaidLinkToken = null,
+            plaidTokenRequestId = null,
+            isLoading = false,
+            error = errorMessage
+        )
+    }
+
+    private fun recordDiagnostic(
+        phone: String,
+        outcome: String,
+        tokenRequestId: String?,
+        linkSessionId: String?,
+        exitRequestId: String?,
+        errorMessage: String?
+    ) {
+        val entry = PlaidDiagnostic(
+            phone = phone,
+            outcome = outcome,
+            tokenRequestId = tokenRequestId,
+            linkSessionId = linkSessionId,
+            exitRequestId = exitRequestId,
+            errorMessage = errorMessage
+        )
+        val updated = (listOf(entry) + _uiState.value.diagnostics).take(10)
+        _uiState.value = _uiState.value.copy(diagnostics = updated)
+        android.util.Log.d(
+            "PlaidLink",
+            "diag phone=$phone outcome=$outcome tokenReqId=${tokenRequestId ?: "nil"} sessionId=${linkSessionId ?: "nil"} exitReqId=${exitRequestId ?: "nil"}"
+        )
+    }
+
+    fun clearDiagnostics() {
+        _uiState.value = _uiState.value.copy(diagnostics = emptyList())
     }
 
     fun unlinkBank() {
