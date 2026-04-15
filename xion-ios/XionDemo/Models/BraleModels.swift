@@ -69,6 +69,7 @@ struct PlaidLinkTokenRequest: Codable {
 struct PlaidLinkTokenResponse: Codable {
     let linkToken: String
     let expiration: String?
+    let requestId: String?
 }
 
 struct PlaidRegisterRequest: Codable {

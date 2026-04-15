@@ -111,10 +111,84 @@ private struct LinkFormContent: View {
                 .clipShape(RoundedRectangle(cornerRadius: 12))
                 .shadow(color: Color.cardShadow, radius: 2, y: 1)
 
+                if !viewModel.diagnostics.isEmpty {
+                    Spacer().frame(height: 24)
+                    PlaidDiagnosticsCard(viewModel: viewModel)
+                }
+
                 Spacer().frame(height: 32)
             }
             .padding(24)
         }
+    }
+}
+
+// MARK: - Plaid Diagnostics Card
+
+private struct PlaidDiagnosticsCard: View {
+    @ObservedObject var viewModel: LinkBankViewModel
+    @State private var copied = false
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Text("Plaid Debug — last \(viewModel.diagnostics.count) session\(viewModel.diagnostics.count == 1 ? "" : "s")")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(Color.greetingText)
+                Spacer()
+                Button(copied ? "Copied!" : "Copy All") {
+                    viewModel.copyDiagnosticsToClipboard()
+                    copied = true
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { copied = false }
+                }
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundStyle(Color.xionOrange)
+
+                Button("Clear") { viewModel.clearDiagnostics() }
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(Color.subtitleText)
+            }
+
+            ForEach(viewModel.diagnostics) { entry in
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("\(entry.outcome) — \(entry.phone)")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(Color.greetingText)
+
+                    Text("token req_id: \(entry.tokenRequestId ?? "<not provided>")")
+                        .font(.system(size: 10, design: .monospaced))
+                        .foregroundStyle(Color.subtitleText)
+                        .textSelection(.enabled)
+
+                    Text("session_id:   \(entry.linkSessionId ?? "<not provided>")")
+                        .font(.system(size: 10, design: .monospaced))
+                        .foregroundStyle(Color.subtitleText)
+                        .textSelection(.enabled)
+
+                    if let exitId = entry.exitRequestId {
+                        Text("exit req_id:  \(exitId)")
+                            .font(.system(size: 10, design: .monospaced))
+                            .foregroundStyle(Color.subtitleText)
+                            .textSelection(.enabled)
+                    }
+
+                    if let err = entry.errorMessage {
+                        Text("error: \(err)")
+                            .font(.system(size: 10, design: .monospaced))
+                            .foregroundStyle(.red)
+                            .textSelection(.enabled)
+                    }
+                }
+                .padding(8)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(Color.screenBackground)
+                .clipShape(RoundedRectangle(cornerRadius: 8))
+            }
+        }
+        .padding(16)
+        .background(Color.cardBackground)
+        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .shadow(color: Color.cardShadow, radius: 2, y: 1)
     }
 }
 

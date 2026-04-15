@@ -2,14 +2,27 @@ import Foundation
 import LinkKit
 import UIKit
 
+struct PlaidLinkSuccessInfo {
+    let publicToken: String
+    let linkSessionId: String
+}
+
+struct PlaidLinkExitInfo {
+    let linkSessionId: String?
+    let requestId: String?
+    let errorMessage: String?
+    let errorCode: String?
+}
+
 enum PlaidLinkResult {
-    case success(publicToken: String)
-    case cancelled
+    case success(PlaidLinkSuccessInfo)
+    case cancelled(PlaidLinkExitInfo)
 }
 
 enum PlaidLinkError: LocalizedError {
     case handlerCreationFailed(Error)
     case noPresenter
+    case linkKitError(PlaidLinkExitInfo)
 
     var errorDescription: String? {
         switch self {
@@ -17,6 +30,8 @@ enum PlaidLinkError: LocalizedError {
             return "Failed to create Plaid Link: \(error.localizedDescription)"
         case .noPresenter:
             return "Unable to present Plaid Link"
+        case .linkKitError(let info):
+            return info.errorMessage ?? "Plaid Link error"
         }
     }
 }
@@ -28,19 +43,28 @@ final class PlaidLinkService {
     @MainActor
     func openLink(token: String) async throws -> PlaidLinkResult {
         return try await withCheckedThrowingContinuation { [weak self] continuation in
-            var configuration = LinkTokenConfiguration(token: token) { success in
+            var configuration = LinkTokenConfiguration(token: token) { [weak self] success in
                 self?.handler = nil
-                continuation.resume(returning: .success(publicToken: success.publicToken))
+                let info = PlaidLinkSuccessInfo(
+                    publicToken: success.publicToken,
+                    linkSessionId: success.metadata.linkSessionID
+                )
+                print("[PlaidLink] success linkSessionID=\(info.linkSessionId)")
+                continuation.resume(returning: .success(info))
             }
             configuration.onExit = { [weak self] exit in
                 self?.handler = nil
-                if let error = exit.error {
-                    continuation.resume(throwing: PlaidLinkError.handlerCreationFailed(
-                        NSError(domain: "PlaidLink", code: 0,
-                                userInfo: [NSLocalizedDescriptionKey: error.errorMessage])
-                    ))
+                let info = PlaidLinkExitInfo(
+                    linkSessionId: exit.metadata.linkSessionID,
+                    requestId: exit.metadata.requestID,
+                    errorMessage: exit.error?.errorMessage,
+                    errorCode: exit.error.map { "\($0.errorCode)" }
+                )
+                print("[PlaidLink] exit linkSessionID=\(info.linkSessionId ?? "nil") requestID=\(info.requestId ?? "nil") error=\(info.errorMessage ?? "nil")")
+                if exit.error != nil {
+                    continuation.resume(throwing: PlaidLinkError.linkKitError(info))
                 } else {
-                    continuation.resume(returning: .cancelled)
+                    continuation.resume(returning: .cancelled(info))
                 }
             }
 

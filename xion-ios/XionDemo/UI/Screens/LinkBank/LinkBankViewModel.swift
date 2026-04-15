@@ -1,4 +1,16 @@
 import Foundation
+import UIKit
+
+struct PlaidDiagnostic: Identifiable {
+    let id = UUID()
+    let timestamp: Date
+    let phone: String
+    let outcome: String
+    let tokenRequestId: String?
+    let linkSessionId: String?
+    let exitRequestId: String?
+    let errorMessage: String?
+}
 
 @MainActor
 final class LinkBankViewModel: ObservableObject {
@@ -19,6 +31,9 @@ final class LinkBankViewModel: ObservableObject {
     @Published var bankName: String?
     @Published var isLoading = false
     @Published var error: String?
+
+    // Plaid diagnostics — last 10 sessions, newest first, in-memory only
+    @Published var diagnostics: [PlaidDiagnostic] = []
 
     private let braleRepository: BraleRepositoryProtocol
     private let secureStorage: SecureStorage
@@ -118,22 +133,109 @@ final class LinkBankViewModel: ObservableObject {
         Task {
             isLoading = true
             error = nil
+            var tokenRequestId: String? = nil
             do {
                 let response = try await braleRepository.createPlaidLinkToken(
                     name: name, email: email, phone: phone, dob: dob
                 )
+                tokenRequestId = response.requestId
                 let result = try await plaidLinkService.openLink(token: response.linkToken)
                 switch result {
-                case .success(let publicToken):
-                    onPlaidSuccess(publicToken: publicToken)
-                case .cancelled:
+                case .success(let info):
+                    recordDiagnostic(
+                        phone: phone,
+                        outcome: "Linked",
+                        tokenRequestId: tokenRequestId,
+                        linkSessionId: info.linkSessionId
+                    )
+                    onPlaidSuccess(publicToken: info.publicToken)
+                case .cancelled(let info):
+                    recordDiagnostic(
+                        phone: phone,
+                        outcome: "Cancelled",
+                        tokenRequestId: tokenRequestId,
+                        linkSessionId: info.linkSessionId,
+                        exitRequestId: info.requestId
+                    )
                     onPlaidCancelled()
                 }
+            } catch let plaidError as PlaidLinkError {
+                if case .linkKitError(let info) = plaidError {
+                    recordDiagnostic(
+                        phone: phone,
+                        outcome: "Error",
+                        tokenRequestId: tokenRequestId,
+                        linkSessionId: info.linkSessionId,
+                        exitRequestId: info.requestId,
+                        errorMessage: info.errorMessage
+                    )
+                } else {
+                    recordDiagnostic(
+                        phone: phone,
+                        outcome: "Error",
+                        tokenRequestId: tokenRequestId,
+                        linkSessionId: nil,
+                        errorMessage: plaidError.localizedDescription
+                    )
+                }
+                self.error = plaidError.localizedDescription
+                isLoading = false
             } catch {
+                recordDiagnostic(
+                    phone: phone,
+                    outcome: "Error",
+                    tokenRequestId: tokenRequestId,
+                    linkSessionId: nil,
+                    errorMessage: error.localizedDescription
+                )
                 self.error = error.localizedDescription
                 isLoading = false
             }
         }
+    }
+
+    private func recordDiagnostic(
+        phone: String,
+        outcome: String,
+        tokenRequestId: String?,
+        linkSessionId: String?,
+        exitRequestId: String? = nil,
+        errorMessage: String? = nil
+    ) {
+        let entry = PlaidDiagnostic(
+            timestamp: Date(),
+            phone: phone,
+            outcome: outcome,
+            tokenRequestId: tokenRequestId,
+            linkSessionId: linkSessionId,
+            exitRequestId: exitRequestId,
+            errorMessage: errorMessage
+        )
+        diagnostics.insert(entry, at: 0)
+        if diagnostics.count > 10 {
+            diagnostics = Array(diagnostics.prefix(10))
+        }
+        print("[PlaidLink] diag phone=\(phone) outcome=\(outcome) tokenReqId=\(tokenRequestId ?? "nil") sessionId=\(linkSessionId ?? "nil") exitReqId=\(exitRequestId ?? "nil")")
+    }
+
+    func copyDiagnosticsToClipboard() {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
+        let lines = diagnostics.map { d -> String in
+            """
+            [\(formatter.string(from: d.timestamp))] \(d.outcome)
+              phone:        \(d.phone)
+              token req_id: \(d.tokenRequestId ?? "<not provided>")
+              session_id:   \(d.linkSessionId ?? "<not provided>")
+              exit req_id:  \(d.exitRequestId ?? "<n/a>")
+              error:        \(d.errorMessage ?? "<none>")
+            """
+        }
+        UIPasteboard.general.string = lines.joined(separator: "\n\n")
+    }
+
+    func clearDiagnostics() {
+        diagnostics.removeAll()
     }
 
     func onPlaidSuccess(publicToken: String) {
