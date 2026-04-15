@@ -14,12 +14,12 @@ let package = Package(
     ],
     targets: [
         .binaryTarget(
-            name: "libmob",
+            name: "mobFFI",
             path: "lib/libmob.xcframework"
         ),
         .target(
             name: "Mob",
-            dependencies: ["libmob"],
+            dependencies: ["mobFFI"],
             path: "Sources/Mob",
             sources: ["mob.swift", "NativeHttpTransport.swift", "Compat.swift"]
         ),

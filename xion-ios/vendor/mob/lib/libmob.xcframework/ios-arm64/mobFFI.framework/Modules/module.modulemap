@@ -1,0 +1,5 @@
+framework module mobFFI {
+    umbrella header "mobFFI.h"
+    export *
+    module * { export * }
+}
