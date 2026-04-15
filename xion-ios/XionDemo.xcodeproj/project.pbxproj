@@ -29,6 +29,7 @@
 		62AC25CBB6218068D226EE73 /* SecureStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = D84ED0A3AAA17DCDC796F086 /* SecureStorage.swift */; };
 		63182FA82E509D87D9CC4BD8 /* XionRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4109D21057DDFFED09E0233D /* XionRepository.swift */; };
 		64220AACD42E7D8FA5A6D0A6 /* ContractView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 742BCAD321F8ADE8C3AFF970 /* ContractView.swift */; };
+		652E1340C244ADFF6FDE63BA /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 4AC85FB51C54F5970022B30F /* Assets.xcassets */; };
 		678AA5F691DEE8E0BA5DE67A /* OAuthService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F9F52F2271809128DF044A4E /* OAuthService.swift */; };
 		7095A51245073EC37A8A8340 /* XionTypography.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2CE2E126287BFF118BDCACB /* XionTypography.swift */; };
 		76B7B08C6D08C9CFA1671293 /* LinkKit in Frameworks */ = {isa = PBXBuildFile; productRef = B525C37EB6DF653161479047 /* LinkKit */; };
@@ -87,6 +88,7 @@
 		4109D21057DDFFED09E0233D /* XionRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = XionRepository.swift; sourceTree = "<group>"; };
 		492DF6A9CF9F6B427704D7FD /* VaultViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VaultViewModel.swift; sourceTree = "<group>"; };
 		4A24F045934613D8E8BC1978 /* BraleProxyService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BraleProxyService.swift; sourceTree = "<group>"; };
+		4AC85FB51C54F5970022B30F /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		4E47CB82D6662B9CEE3F4CC6 /* VaultView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VaultView.swift; sourceTree = "<group>"; };
 		547759FB6A926523455BCAB0 /* BalanceCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BalanceCard.swift; sourceTree = "<group>"; };
 		5C03806F11CD471B10D00F8A /* XionColors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = XionColors.swift; sourceTree = "<group>"; };
@@ -286,6 +288,7 @@
 		84C22ED7F4AB21BF33ECF2E2 /* XionDemo */ = {
 			isa = PBXGroup;
 			children = (
+				4AC85FB51C54F5970022B30F /* Assets.xcassets */,
 				01188E3312CDF3A89C0E0708 /* App */,
 				E5A4CA3FF839677C15F960AF /* Configuration */,
 				400ACFA93D7AEBF65D801AD4 /* Data */,
@@ -407,6 +410,7 @@
 			buildConfigurationList = 60F5B4676EB43E2A51B813B9 /* Build configuration list for PBXNativeTarget "XionDemo" */;
 			buildPhases = (
 				B34EB543C6720AF9EEE2CEA7 /* Sources */,
+				FB555FDC2086B845EB3026E6 /* Resources */,
 				763902336A3DFA088C35AFE6 /* Frameworks */,
 			);
 			buildRules = (
@@ -480,6 +484,17 @@
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		FB555FDC2086B845EB3026E6 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				652E1340C244ADFF6FDE63BA /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		8DCED570D366087731C23D93 /* Sources */ = {
@@ -625,7 +640,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = XionDemo/XionDemo.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				CURRENT_PROJECT_VERSION = 5;
+				CURRENT_PROJECT_VERSION = 6;
 				DEVELOPMENT_TEAM = 85A34A7PB2;
 				INFOPLIST_FILE = XionDemo/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -638,7 +653,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.burnt.xiondemo.ios;
 				SDKROOT = iphoneos;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Release;
 		};
@@ -705,7 +720,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = XionDemo/XionDemo.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				CURRENT_PROJECT_VERSION = 5;
+				CURRENT_PROJECT_VERSION = 6;
 				DEVELOPMENT_TEAM = 85A34A7PB2;
 				INFOPLIST_FILE = XionDemo/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -718,7 +733,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.burnt.xiondemo.ios;
 				SDKROOT = iphoneos;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Debug;
 		};

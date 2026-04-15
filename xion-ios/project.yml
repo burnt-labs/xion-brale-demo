@@ -45,14 +45,19 @@ targets:
         INFOPLIST_FILE: XionDemo/Info.plist
         CODE_SIGN_ENTITLEMENTS: XionDemo/XionDemo.entitlements
         MARKETING_VERSION: "1.0.0"
-        CURRENT_PROJECT_VERSION: 5
+        CURRENT_PROJECT_VERSION: 6
         DEVELOPMENT_TEAM: "85A34A7PB2"
+        TARGETED_DEVICE_FAMILY: "1"
         OTHER_LDFLAGS:
           - "-lresolv"
     info:
       path: XionDemo/Info.plist
       properties:
         ITSAppUsesNonExemptEncryption: false
+        CFBundleIconName: AppIcon
+        UILaunchScreen: {}
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
         CFBundleURLTypes:
           - CFBundleURLSchemes:
               - xiondemo
