@@ -289,6 +289,12 @@ private struct LinkedContent: View {
                 }
                 .padding(.horizontal, 24)
 
+                if !viewModel.diagnostics.isEmpty {
+                    Spacer().frame(height: 24)
+                    PlaidDiagnosticsCard(viewModel: viewModel)
+                        .padding(.horizontal, 24)
+                }
+
                 Spacer().frame(height: 32)
             }
         }
