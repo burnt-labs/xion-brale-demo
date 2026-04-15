@@ -97,8 +97,8 @@ final class LinkBankViewModel: ObservableObject {
             userPhoneError = "Must start with + (e.g. +15551234567)"
         } else if !trimmed.dropFirst().allSatisfy(\.isNumber) {
             userPhoneError = "Only digits after +"
-        } else if trimmed.count < 11 {
-            userPhoneError = "Enter full number with country code"
+        } else if trimmed.count < 12 {
+            userPhoneError = "E.164 format with country code (e.g. +15551234567)"
         } else {
             userPhoneError = nil
         }

@@ -10,6 +10,14 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
+import retrofit2.HttpException
 import javax.inject.Inject
 
 data class PlaidDiagnostic(
@@ -86,7 +94,7 @@ class LinkBankViewModel @Inject constructor(
             value.isBlank() -> "Phone number is required"
             !value.startsWith("+") -> "Must start with + (e.g. +15551234567)"
             !value.drop(1).all { it.isDigit() } -> "Only digits after +"
-            value.length < 11 -> "Enter full number with country code"
+            value.length < 12 -> "E.164 format with country code (e.g. +15551234567)"
             else -> null
         }
         _uiState.value = _uiState.value.copy(userPhone = value, userPhoneError = error)
@@ -134,6 +142,11 @@ class LinkBankViewModel @Inject constructor(
                     plaidTokenRequestId = response.requestId,
                     isLoading = false
                 )
+            } catch (e: HttpException) {
+                val rawBody = runCatching { e.response()?.errorBody()?.string() }.getOrNull()
+                val friendly = rawBody?.let { parseBraleErrorBody(it) } ?: "Brale API error ${e.code()}"
+                android.util.Log.d("PlaidLink", "createLinkToken HTTP ${e.code()}: $rawBody")
+                _uiState.value = _uiState.value.copy(error = friendly, isLoading = false)
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
                     error = e.message ?: "Failed to create Plaid link",
@@ -255,4 +268,50 @@ class LinkBankViewModel @Inject constructor(
     fun clearError() {
         _uiState.value = _uiState.value.copy(error = null)
     }
+}
+
+// ---------------------------------------------------------------------------
+// Brale error envelope parsing
+// ---------------------------------------------------------------------------
+//
+// The brale-proxy wraps Brale (which wraps Plaid) validation errors as:
+//   { "error": "Brale API error (422)",
+//     "details": { "code": "...", "detail": "{\"phone_numbers\":{\"0\":{\"phone_number\":\"...\"}}}" } }
+// We dig into details.detail (a JSON-encoded string), parse it, and return the
+// first "field: message" we find, or fall back to the outer error string.
+
+private val braleErrorJson = Json { ignoreUnknownKeys = true; isLenient = true }
+
+internal fun parseBraleErrorBody(body: String): String? {
+    val outer = runCatching { braleErrorJson.parseToJsonElement(body).jsonObject }.getOrNull() ?: return null
+    val details = outer["details"] as? JsonObject
+    if (details != null) {
+        val detailStr = (details["detail"] as? JsonPrimitive)?.let { if (it.isString) it.content else null }
+        if (detailStr != null) {
+            val inner = runCatching { braleErrorJson.parseToJsonElement(detailStr) }.getOrNull()
+            if (inner != null) {
+                findFirstFieldMessage(inner)?.let { return it }
+            }
+            return detailStr
+        }
+        findFirstFieldMessage(details)?.let { return it }
+    }
+    return (outer["error"] as? JsonPrimitive)?.let { if (it.isString) it.content else null }
+}
+
+private fun findFirstFieldMessage(element: JsonElement, lastKey: String? = null): String? {
+    if (element is JsonPrimitive && element.isString && lastKey != null) {
+        return "$lastKey: ${element.content}"
+    }
+    if (element is JsonObject) {
+        for ((key, value) in element) {
+            findFirstFieldMessage(value, key)?.let { return it }
+        }
+    }
+    if (element is JsonArray) {
+        for (value in element) {
+            findFirstFieldMessage(value, lastKey)?.let { return it }
+        }
+    }
+    return null
 }

@@ -136,7 +136,58 @@ enum BraleServiceError: LocalizedError {
         case .invalidResponse:
             return "Invalid response from Brale API"
         case .httpError(let statusCode, let body):
-            return "Brale API error \(statusCode): \(body)"
+            if let parsed = parseBraleErrorBody(body) {
+                return parsed
+            }
+            return "Brale API error \(statusCode)"
         }
     }
+}
+
+/// Parse the brale-proxy error envelope and extract a user-friendly field message.
+/// Brale wraps Plaid validation errors as:
+///   { "error": "Brale API error (422)",
+///     "details": { "code": "...", "detail": "{\"phone_numbers\":{\"0\":{\"phone_number\":\"...\"}}}" } }
+/// We dig into `details.detail` (a JSON-encoded string), parse it, and return the first
+/// "field: message" we find, or fall back to the outer error string.
+private func parseBraleErrorBody(_ body: String) -> String? {
+    guard let bodyData = body.data(using: .utf8) else { return nil }
+    guard let outer = try? JSONSerialization.jsonObject(with: bodyData) as? [String: Any] else {
+        return nil
+    }
+    if let details = outer["details"] as? [String: Any] {
+        if let detailString = details["detail"] as? String {
+            if let detailData = detailString.data(using: .utf8),
+               let detailJson = try? JSONSerialization.jsonObject(with: detailData),
+               let leaf = findFirstFieldMessage(detailJson) {
+                return leaf
+            }
+            return detailString
+        }
+        if let leaf = findFirstFieldMessage(details) {
+            return leaf
+        }
+    }
+    return outer["error"] as? String
+}
+
+private func findFirstFieldMessage(_ obj: Any, lastKey: String? = nil) -> String? {
+    if let str = obj as? String, let key = lastKey {
+        return "\(key): \(str)"
+    }
+    if let dict = obj as? [String: Any] {
+        for (key, value) in dict {
+            if let result = findFirstFieldMessage(value, lastKey: key) {
+                return result
+            }
+        }
+    }
+    if let arr = obj as? [Any] {
+        for value in arr {
+            if let result = findFirstFieldMessage(value, lastKey: lastKey) {
+                return result
+            }
+        }
+    }
+    return nil
 }
