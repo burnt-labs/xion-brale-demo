@@ -376,7 +376,7 @@ The apps don't call mob directly. A service layer wraps mob for thread safety an
 
 The vault contract (`contracts/hm-vault/`) implements a non-custodial per-user savings vault on XION. It is part of a hybrid custody model where each user has two account types:
 
-- **Checking Account** (custodial) — House Money controls operations: card spending, payroll, AI auto-allocation, reversals, compliance holds. Implemented via XION Meta Accounts with authz grants.
+- **Checking Account** (custodial) — Card spending, payroll, AI auto-allocation, reversals, compliance holds. Implemented via XION Meta Accounts with authz grants.
 - **Vault** (non-custodial) — User-only control for long-term storage. Excluded from card spending, automated actions, and reversals. Funds sit in the vault contract and only the depositor can withdraw.
 
 ### Testnet Deployment
@@ -509,7 +509,7 @@ Brale provides stablecoin infrastructure on XION. The same Brale account and API
 **Key constraints:**
 - **Plaid is mandatory** for pulling money from banks (ACH debit). No Plaid = no bank pulls.
 - **$50k max** per transaction.
-- **The `brand` field** is optional — it controls what name appears on the user's bank statement (e.g., "HOUSE MONEY" instead of "BRALE"). This is a premium feature.
+- **The `brand` field** is optional — it controls what name appears on the user's bank statement. This is a premium feature.
 - **Idempotency-Key header** — prevents duplicate transfers if a request is accidentally sent twice.
 
 **What this looks like in our app:**
