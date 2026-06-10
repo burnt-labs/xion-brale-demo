@@ -1,4 +1,4 @@
-# House Money — XION Demo Apps
+# Brale Demo Apps
 
 Demo wallet applications for the [XION blockchain](https://xion.burnt.com/), showcasing session-key authentication via Abstraxion, native Rust signing via the [mob library](https://github.com/burnt-labs/mob), stablecoin on/off-ramp via [Brale](https://brale.xyz), and a non-custodial vault smart contract.
 
