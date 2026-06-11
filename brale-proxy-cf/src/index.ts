@@ -2,9 +2,21 @@ import { Hono } from "hono";
 import { cors } from "hono/cors";
 import type { Env } from "./types";
 import { braleRequest, BraleError } from "./auth";
-import { getAccountId, saveAccountMapping, getMappingCount } from "./db";
+import {
+  getAccountId,
+  saveAccountMapping,
+  getMappingCount,
+  recordOwner,
+  getOwnedIds,
+} from "./db";
+import { verifyWalletAuth } from "./walletauth";
 
-type HonoEnv = { Bindings: Env; Variables: { braleAccountId: string } };
+type HonoEnv = {
+  Bindings: Env;
+  // braleAccountId: the (shared) Brale account. authWallet: the verified caller
+  // wallet (meta account), or null when unauthenticated in soft mode.
+  Variables: { braleAccountId: string; authWallet: string | null };
+};
 
 const app = new Hono<HonoEnv>();
 
@@ -142,6 +154,28 @@ app.use("*", async (c, next) => {
   if (publicPaths.has(c.req.path)) return next();
 
   const walletAddress = c.req.header("x-wallet-address");
+  const requireAuth = c.env.REQUIRE_WALLET_AUTH === "true";
+
+  // Verify signed wallet auth: proves the caller controls the meta account via a
+  // session key that signed a fresh challenge and holds an on-chain authz grant.
+  const authWallet = await verifyWalletAuth(
+    c.env,
+    {
+      wallet: walletAddress,
+      timestamp: c.req.header("x-auth-timestamp"),
+      sessionAddress: c.req.header("x-auth-session-address"),
+      signatureHex: c.req.header("x-auth-signature"),
+    },
+    Math.floor(Date.now() / 1000)
+  );
+
+  if (c.req.header("x-auth-signature") && !authWallet) {
+    console.log(`[walletauth] verification failed (require=${requireAuth})`);
+  }
+  if (requireAuth && !authWallet) {
+    return c.json({ error: "Wallet authentication required" }, 401);
+  }
+  c.set("authWallet", authWallet);
 
   if (!walletAddress) {
     c.set("braleAccountId", c.env.BRALE_ACCOUNT_ID);
@@ -163,13 +197,22 @@ app.use("*", async (c, next) => {
     return next();
   }
 
-  // Stub: map all new wallets to the partner account
-  // Replace with actual Brale managed account creation when API is available
+  // All wallets share the partner account today (per-user Brale sub-accounts would
+  // require per-user KYB, which isn't possible here). Isolation is instead enforced
+  // by signed wallet auth + per-wallet ownership scoping on read endpoints.
   const accountId = c.env.BRALE_ACCOUNT_ID;
   await saveAccountMapping(c.env.DB, walletAddress, accountId);
   c.set("braleAccountId", accountId);
   return next();
 });
+
+// Wallet whose resources a read should be scoped to, or null to skip scoping
+// (soft mode, unauthenticated). Writes attribute to the verified or header wallet.
+function scopeWallet(c: {
+  get: (k: "authWallet") => string | null;
+}): string | null {
+  return c.get("authWallet");
+}
 
 // ---------------------------------------------------------------------------
 // Routes — Plaid
@@ -222,6 +265,10 @@ app.post("/plaid/register", async (c) => {
       },
       true
     );
+    const owner = c.get("authWallet") ?? c.req.header("x-wallet-address");
+    const id = (data as { id?: string; address_id?: string })?.id ??
+      (data as { address_id?: string })?.address_id;
+    if (owner && id) await recordOwner(c.env.DB, String(id), owner, "address");
     return c.json(data);
   } catch (err) {
     const { error, details, _status } = errorResponse(err);
@@ -240,6 +287,20 @@ app.get("/addresses", async (c) => {
     let path = `/accounts/${accountId}/addresses`;
     if (type) path += `?type=${type}`;
     const data = await braleRequest(c.env, "GET", path);
+    // Scope to the caller's own resources. Always keep internal custodial
+    // addresses (shared infra, needed for offramp deposits) and the caller's own
+    // on-chain wallet; otherwise only addresses this wallet created.
+    const scope = scopeWallet(c);
+    const list = data as { addresses?: Array<Record<string, unknown>> };
+    if (scope && Array.isArray(list.addresses)) {
+      const owned = await getOwnedIds(c.env.DB, scope, "address");
+      list.addresses = list.addresses.filter(
+        (a) =>
+          a?.type === "internal" ||
+          a?.address === scope ||
+          owned.has(String(a?.id))
+      );
+    }
     return c.json(data);
   } catch (err) {
     const { error, details, _status } = errorResponse(err);
@@ -258,6 +319,10 @@ app.post("/addresses/external", async (c) => {
       body,
       true
     );
+    const owner = c.get("authWallet") ?? c.req.header("x-wallet-address");
+    const id = (data as { id?: string; address_id?: string })?.id ??
+      (data as { address_id?: string })?.address_id;
+    if (owner && id) await recordOwner(c.env.DB, String(id), owner, "address");
     return c.json(data);
   } catch (err) {
     const { error, details, _status } = errorResponse(err);
@@ -322,6 +387,9 @@ app.post("/transfers", async (c) => {
       transferBody,
       true
     );
+    const owner = c.get("authWallet") ?? c.req.header("x-wallet-address");
+    const id = (data as { id?: string })?.id;
+    if (owner && id) await recordOwner(c.env.DB, String(id), owner, "transfer");
     return c.json(data);
   } catch (err) {
     const { error, details, _status } = errorResponse(err);
@@ -354,6 +422,13 @@ app.get("/transfers", async (c) => {
     let path = `/accounts/${accountId}/transfers`;
     if (params.toString()) path += `?${params}`;
     const data = await braleRequest(c.env, "GET", path);
+    // Scope to transfers this wallet created.
+    const scope = scopeWallet(c);
+    const list = data as { transfers?: Array<Record<string, unknown>> };
+    if (scope && Array.isArray(list.transfers)) {
+      const owned = await getOwnedIds(c.env.DB, scope, "transfer");
+      list.transfers = list.transfers.filter((t) => owned.has(String(t?.id)));
+    }
     return c.json(data);
   } catch (err) {
     const { error, details, _status } = errorResponse(err);

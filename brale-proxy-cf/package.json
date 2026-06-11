@@ -9,6 +9,9 @@
     "db:migrate:remote": "wrangler d1 execute brale-proxy-db --remote --file=migrations/0001_init.sql"
   },
   "dependencies": {
+    "@noble/curves": "^1.9.7",
+    "@noble/hashes": "^1.8.0",
+    "@scure/base": "^1.1.9",
     "hono": "^4.4.0"
   },
   "devDependencies": {
