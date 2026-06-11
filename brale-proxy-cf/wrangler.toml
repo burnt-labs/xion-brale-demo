@@ -17,7 +17,10 @@ id = "72988941001d4fd28cd22491d7a75704"
 [vars]
 BRALE_API_URL = "https://api.brale.xyz"
 BRALE_AUTH_URL = "https://auth.brale.xyz"
-ALLOWED_TRANSFER_TYPES = "xion_testnet,ach_debit,ach_credit,same_day_ach_credit,rtp_credit"
+# "xion" (mainnet) added 2026-06-10 to enable real-money testing from the iOS app
+ALLOWED_TRANSFER_TYPES = "xion_testnet,xion,ach_debit,ach_credit,same_day_ach_credit,rtp_credit"
+# Brale requires customer_webhook_url on Plaid register-account; point at our own receiver
+BRALE_CUSTOMER_WEBHOOK_URL = "https://brale-proxy.demo-burnt.workers.dev/webhooks/brale"
 
 # Secrets (set via `wrangler secret put <NAME>`):
 # - BRALE_CLIENT_ID

@@ -49,7 +49,7 @@ final class BraleProxyService {
     }
 
     func createExternalAddress(request: CreateAddressRequest) async throws -> BraleAddress {
-        try await post(path: "/addresses", body: request)
+        try await post(path: "/addresses/external", body: request)
     }
 
     func getAddressBalance(id: String, transferType: String, valueType: String) async throws -> BraleBalance {

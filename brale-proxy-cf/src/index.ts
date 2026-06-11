@@ -89,6 +89,18 @@ app.get("/.well-known/apple-app-site-association", (c) => {
 // iOS will intercept as a Universal Link.
 // ---------------------------------------------------------------------------
 
+// Receiver for Brale customer/transfer status webhooks. We don't act on these
+// yet — just acknowledge with 200 so Brale considers delivery successful.
+app.post("/webhooks/brale", async (c) => {
+  try {
+    const payload = await c.req.json().catch(() => null);
+    console.log("[webhooks/brale]", JSON.stringify(payload));
+  } catch {
+    // ignore body parse errors — still ack
+  }
+  return c.json({ received: true });
+});
+
 app.get("/plaid-oauth", (c) => {
   const query = c.req.url.split("?")[1] ?? "";
   const returnUrl = `https://brale-proxy.demo-burnt.workers.dev/plaid-oauth${query ? "?" + query : ""}`;
@@ -124,6 +136,7 @@ app.use("*", async (c, next) => {
   const publicPaths = new Set([
     "/health",
     "/plaid-oauth",
+    "/webhooks/brale",
     "/.well-known/apple-app-site-association",
   ]);
   if (publicPaths.has(c.req.path)) return next();
@@ -200,6 +213,12 @@ app.post("/plaid/register", async (c) => {
           "ach_credit",
           "same_day_ach_credit",
         ],
+        // Brale now requires this field; it's where they POST account/transfer
+        // status updates. Defaults to this proxy's own receiver (see /webhooks/brale).
+        customer_webhook_url:
+          body.customer_webhook_url ||
+          c.env.BRALE_CUSTOMER_WEBHOOK_URL ||
+          "https://brale-proxy.demo-burnt.workers.dev/webhooks/brale",
       },
       true
     );

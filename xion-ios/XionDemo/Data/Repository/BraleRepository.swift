@@ -3,6 +3,8 @@ import Foundation
 protocol BraleRepositoryProtocol {
     func createPlaidLinkToken(name: String, email: String, phone: String?, dob: String?) async throws -> PlaidLinkTokenResponse
     func registerBankAccount(publicToken: String) async throws -> String
+    func getLinkedBankAddresses() async throws -> [BraleAddress]
+    func useExistingBankAddress(_ addressId: String)
     func getInternalAddresses() async throws -> [BraleAddress]
     func findExistingXionAddress(walletAddress: String) async throws -> BraleAddress?
     func registerXionAddress(walletAddress: String) async throws -> BraleAddress
@@ -34,6 +36,22 @@ final class BraleRepositoryImpl: BraleRepositoryProtocol {
     }
 
     // MARK: - Addresses
+
+    /// Banks already linked to the Brale account. Brale returns bank addresses with no
+    /// `type` field (unlike on-chain external/internal addresses), identifiable by their
+    /// ACH transfer types. Use this to skip a redundant Plaid re-link (which Brale rejects
+    /// with a 500 when the bank already exists).
+    func getLinkedBankAddresses() async throws -> [BraleAddress] {
+        let all = try await braleService.getAddresses()
+        return all.filter { addr in
+            addr.type == nil
+                && addr.transferTypes?.contains(Constants.braleAchCreditType) == true
+        }
+    }
+
+    func useExistingBankAddress(_ addressId: String) {
+        secureStorage.saveBraleBankAddressId(addressId)
+    }
 
     func getInternalAddresses() async throws -> [BraleAddress] {
         try await braleService.getAddresses(type: "internal")

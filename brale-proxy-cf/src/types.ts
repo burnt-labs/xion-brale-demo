@@ -7,4 +7,5 @@ export interface Env {
   BRALE_API_URL: string;
   BRALE_AUTH_URL: string;
   ALLOWED_TRANSFER_TYPES: string;
+  BRALE_CUSTOMER_WEBHOOK_URL: string;
 }

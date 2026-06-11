@@ -12,6 +12,7 @@ struct LinkBankView: View {
                 LinkedContent(viewModel: viewModel, onDone: onDone)
             } else {
                 LinkFormContent(viewModel: viewModel)
+                    .onAppear { viewModel.loadExistingBanks() }
             }
 
             // Error overlay at top
@@ -44,6 +45,16 @@ private struct LinkFormContent: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
+                if !viewModel.existingBanks.isEmpty {
+                    ExistingBanksCard(viewModel: viewModel)
+                    Spacer().frame(height: 24)
+
+                    Text("Or link a new bank")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(Color.greetingText)
+                    Spacer().frame(height: 8)
+                }
+
                 Text("Connect your bank account via Plaid to enable stablecoin purchases")
                     .font(.system(size: 14))
                     .foregroundStyle(Color.subtitleText)
@@ -120,6 +131,64 @@ private struct LinkFormContent: View {
             }
             .padding(24)
         }
+    }
+}
+
+// MARK: - Existing Banks Card
+
+private struct ExistingBanksCard: View {
+    @ObservedObject var viewModel: LinkBankViewModel
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Use a linked bank")
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundStyle(Color.greetingText)
+
+            ForEach(viewModel.existingBanks) { bank in
+                Button(action: { viewModel.useExistingBank(bank) }) {
+                    HStack(spacing: 12) {
+                        Image(systemName: "building.columns.fill")
+                            .font(.system(size: 16))
+                            .foregroundStyle(Color.xionOrange)
+                            .frame(width: 24)
+
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(bank.name ?? "Bank account")
+                                .font(.system(size: 15, weight: .medium))
+                                .foregroundStyle(Color.greetingText)
+                            if let detail = subtitle(for: bank) {
+                                Text(detail)
+                                    .font(.system(size: 12))
+                                    .foregroundStyle(Color.subtitleText)
+                            }
+                        }
+
+                        Spacer()
+
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundStyle(Color.subtitleText)
+                    }
+                    .padding(12)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(Color.screenBackground)
+                    .clipShape(RoundedRectangle(cornerRadius: 10))
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(16)
+        .background(Color.cardBackground)
+        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .shadow(color: Color.cardShadow, radius: 2, y: 1)
+    }
+
+    private func subtitle(for bank: BraleAddress) -> String? {
+        var parts: [String] = []
+        if let owner = bank.owner { parts.append(owner) }
+        if let acct = bank.accountNumber { parts.append(acct) }
+        return parts.isEmpty ? nil : parts.joined(separator: " · ")
     }
 }
 

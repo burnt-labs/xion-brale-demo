@@ -32,6 +32,10 @@ final class LinkBankViewModel: ObservableObject {
     @Published var isLoading = false
     @Published var error: String?
 
+    // Existing linked banks (skip Plaid re-link when a bank is already on the account)
+    @Published var existingBanks: [BraleAddress] = []
+    @Published var isLoadingBanks = false
+
     // Plaid diagnostics — last 10 sessions, newest first, in-memory only
     @Published var diagnostics: [PlaidDiagnostic] = []
 
@@ -257,6 +261,28 @@ final class LinkBankViewModel: ObservableObject {
 
     func onPlaidCancelled() {
         isLoading = false
+    }
+
+    // MARK: - Existing Banks
+
+    func loadExistingBanks() {
+        Task {
+            isLoadingBanks = true
+            do {
+                existingBanks = try await braleRepository.getLinkedBankAddresses()
+            } catch {
+                // Non-fatal: the form is still available as a fallback
+                existingBanks = []
+            }
+            isLoadingBanks = false
+        }
+    }
+
+    func useExistingBank(_ bank: BraleAddress) {
+        braleRepository.useExistingBankAddress(bank.id)
+        bankAddressId = bank.id
+        bankName = bank.name
+        bankLinked = true
     }
 
     func unlinkBank() {

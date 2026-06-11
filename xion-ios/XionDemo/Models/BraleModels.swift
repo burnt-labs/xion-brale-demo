@@ -9,6 +9,8 @@ struct BraleAddress: Codable, Identifiable {
     let address: String?
     let status: String?
     let transferTypes: [String]?
+    let owner: String?
+    let accountNumber: String?
 }
 
 struct AddressListResponse: Codable {
