@@ -295,10 +295,16 @@ app.post("/plaid/register", async (c) => {
     // Normalize so the client always sees `address_id` regardless of Brale's shape.
     return c.json(id ? { ...(data as object), address_id: String(id) } : data);
   } catch (err) {
-    // Brale 500s when the bank is already registered on the (shared) account.
-    // The caller just proved access to it via Plaid, so share it with them:
-    // match the existing bank by its last-4 and add them as an owner.
-    if (owner && accountMask) {
+    // Only the duplicate-registration failure (Brale's opaque 500) means "this bank
+    // is already on the account" — recover from *that* by sharing it. Any other error
+    // (invalid token -> 4xx, permission -> 403) must propagate, so a failed register
+    // can't be turned into ownership.
+    const isDuplicate = err instanceof BraleError && err.status === 500;
+    // NOTE: account_mask is client-supplied and not cryptographically bound to the
+    // public_token, so this trusts the caller's claimed last-4. Acceptable here
+    // because reaching this point already requires signed wallet auth; a fully robust
+    // design would derive the mask from Brale's view of the exchanged token.
+    if (isDuplicate && owner && accountMask) {
       const existing = await findBankByMask(c.env, accountId, accountMask);
       if (existing?.id) {
         await recordOwner(c.env.DB, String(existing.id), owner, "address");

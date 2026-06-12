@@ -169,9 +169,10 @@ final class XionRepositoryImpl: XionRepositoryProtocol {
             var transferAmount = ""
             var transferDenom = ""
             var transferRecipient = ""
+            var transferCounterparty = ""
             var isOutgoing = false
             if let events = txResponse["events"] as? [[String: Any]] {
-                var best: (amount: String, denom: String, recipient: String, outgoing: Bool)?
+                var best: (amount: String, denom: String, recipient: String, counterparty: String, outgoing: Bool)?
                 for event in events {
                     guard (event["type"] as? String) == "transfer",
                           let attrs = event["attributes"] as? [[String: Any]] else { continue }
@@ -190,7 +191,8 @@ final class XionRepositoryImpl: XionRepositoryProtocol {
                     let raw = (attrMap["amount"] ?? "").components(separatedBy: ",").first ?? ""
                     let digits = raw.prefix { $0.isNumber }
                     let denom = String(raw.dropFirst(digits.count))
-                    let candidate = (String(digits), denom, recipient, sender == address)
+                    let outgoing = sender == address
+                    let candidate = (String(digits), denom, recipient, outgoing ? recipient : sender, outgoing)
                     if best == nil ||
                         (denom.lowercased().contains("sbc") &&
                          !(best?.denom.lowercased().contains("sbc") ?? false)) {
@@ -201,18 +203,18 @@ final class XionRepositoryImpl: XionRepositoryProtocol {
                     transferAmount = b.amount
                     transferDenom = b.denom
                     transferRecipient = b.recipient
+                    transferCounterparty = b.counterparty
                     isOutgoing = b.outgoing
                 }
             }
 
-            // App-aware label: Buy / Cash Out for SBC, Send / Received for XION.
-            let txType: String = {
-                guard !transferDenom.isEmpty else { return rawShortType }
-                if transferDenom.lowercased().contains("sbc") {
-                    return isOutgoing ? "Cash Out" : "Buy"
-                }
-                return isOutgoing ? "Send" : "Received"
-            }()
+            // On-chain transfers are labeled purely by direction (Send / Received) for
+            // both XION and SBC. Buy / Cash Out (Brale on/offramp) are surfaced from the
+            // Brale transfers list with real status, not inferred from chain history —
+            // so a peer SBC send/receive isn't mislabeled as ramp activity.
+            let txType = transferDenom.isEmpty
+                ? rawShortType
+                : (isOutgoing ? "Send" : "Received")
 
             return TransactionResult(
                 txHash: txHash,
@@ -226,7 +228,8 @@ final class XionRepositoryImpl: XionRepositoryProtocol {
                 txType: txType,
                 amount: transferAmount,
                 amountDenom: transferDenom,
-                recipient: transferRecipient
+                recipient: transferRecipient,
+                counterparty: transferCounterparty
             )
         }
     }

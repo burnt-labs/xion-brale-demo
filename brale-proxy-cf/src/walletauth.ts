@@ -46,14 +46,16 @@ function signatureMatchesAddress(
   } catch {
     return false;
   }
-  for (const recBit of [0, 1]) {
+  // Try all four recovery ids — 2 and 3 are rare (r wrapped past the curve order)
+  // but valid, so restricting to [0, 1] can reject legitimate signatures.
+  for (const recBit of [0, 1, 2, 3]) {
     try {
       const point = sig.addRecoveryBit(recBit).recoverPublicKey(msgHash);
       if (pubkeyToXionAddress(point.toRawBytes(true)) === claimedAddress) {
         return true;
       }
     } catch {
-      // try next recovery bit
+      // invalid recovery bit for this signature — try the next
     }
   }
   return false;

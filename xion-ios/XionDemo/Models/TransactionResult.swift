@@ -15,6 +15,9 @@ struct TransactionResult: Identifiable, Codable {
     var amount: String = ""
     var amountDenom: String = ""
     var recipient: String = ""
+    // The other party of an on-chain transfer (sender if received, recipient if sent),
+    // used to tell a peer SBC transfer apart from a Brale on/offramp leg.
+    var counterparty: String = ""
     // Brale-sourced rows: human status (Pending/Processing/Completed/...), a
     // preformatted amount (e.g. "$1.00") shown instead of the micro-unit `amount`,
     // and whether the transfer is still settling.

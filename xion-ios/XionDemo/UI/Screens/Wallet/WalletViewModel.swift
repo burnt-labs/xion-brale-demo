@@ -107,17 +107,24 @@ final class WalletViewModel: ObservableObject {
         }
         Task {
             // Buy/Cash Out come from Brale (they carry pending/processing/complete
-            // status, and a pending onramp has no on-chain record yet). Plain XION
-            // Send/Received come from on-chain history; drop on-chain SBC legs so an
-            // on/offramp isn't shown twice.
-            let onChain = (try? await repository.getRecentTransactions(address: addr)) ?? []
-            let xionOnly = onChain.filter { !$0.amountDenom.lowercased().contains("sbc") }
+            // status, and a pending onramp has no on-chain record yet). On-chain history
+            // contributes XION and *peer* SBC transfers (Send/Received) — but the SBC
+            // legs of a Brale ramp (mint from the issuer, deposit to a Brale custodial
+            // address) are dropped, since the Brale transfer already represents them.
+            async let onChainAsync = (try? await repository.getRecentTransactions(address: addr)) ?? []
+            async let custodialAsync = (try? await braleRepository.getInternalAddresses()) ?? []
+            let onChain = await onChainAsync
+            let braleParties = Set(await custodialAsync.compactMap { $0.address }).union([Constants.braleSbcIssuer])
+            let peerOnChain = onChain.filter { tx in
+                guard tx.amountDenom.lowercased().contains("sbc") else { return true } // keep all XION
+                return !braleParties.contains(tx.counterparty) // keep peer SBC, drop ramp legs
+            }
             let braleTxs = await loadBraleTransfers()
-            let merged = (braleTxs + xionOnly)
+            let merged = (braleTxs + peerOnChain)
                 .sorted { $0.timestamp > $1.timestamp }
                 .prefix(5)
             transactions = Array(merged)
-            NSLog("[WalletVM] %d brale + %d on-chain tx", braleTxs.count, xionOnly.count)
+            NSLog("[WalletVM] %d brale + %d on-chain tx", braleTxs.count, peerOnChain.count)
         }
     }
 

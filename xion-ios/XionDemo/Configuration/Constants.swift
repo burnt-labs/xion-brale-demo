@@ -53,6 +53,9 @@ enum Constants {
     static let braleStablecoinDenom = "SBC"
     // Same issuer address on both networks (verified via tokenfactory denoms_from_creator)
     static let braleSbcOnChainDenom = "factory/xion17grq736740r70awldugfs3mls3stu9haewctv2/sbc"
+    // SBC tokenfactory issuer — the on-chain sender of onramp mints. Used to tell an
+    // onramp's mint leg apart from a peer SBC transfer in the wallet history.
+    static let braleSbcIssuer = "xion17grq736740r70awldugfs3mls3stu9haewctv2"
     static let braleAchDebitType = "ach_debit"
     static let braleAchCreditType = "same_day_ach_credit"
     static let braleFiatValueType = "USD"
