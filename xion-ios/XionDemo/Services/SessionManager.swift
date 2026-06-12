@@ -2,6 +2,18 @@ import Combine
 import Foundation
 import Bip39
 
+enum SessionError: LocalizedError {
+    case treasuryNotConfigured
+
+    var errorDescription: String? {
+        switch self {
+        case .treasuryNotConfigured:
+            return "No treasury contract is configured for \(Constants.chainId). "
+                + "Create and fund one at https://dev.burnt.com, then set Constants.treasuryAddress."
+        }
+    }
+}
+
 final class SessionManager: ObservableObject {
 
     @Published private(set) var walletState: WalletState = .disconnected
@@ -23,6 +35,12 @@ final class SessionManager: ObservableObject {
 
     @MainActor
     func authenticate() async throws -> String {
+        // The grant flow and all fee-granted transactions require a treasury contract
+        // on the active chain — fail fast with a clear message instead of a mob error.
+        guard !Constants.treasuryAddress.isEmpty else {
+            throw SessionError.treasuryNotConfigured
+        }
+
         // Step 1: Generate session key BEFORE launching auth
         walletState = .connecting(step: .generatingSessionKey)
 
@@ -79,6 +97,13 @@ final class SessionManager: ObservableObject {
               let metaAccountAddress = secureStorage.getMetaAccountAddress(),
               let sessionKeyAddress = secureStorage.getSessionKeyAddress(),
               let treasuryAddress = secureStorage.getTreasuryAddress() else {
+            return false
+        }
+
+        // A session stored for another network (e.g. testnet) is useless here —
+        // its accounts and grants don't exist on this chain. Drop it.
+        if secureStorage.getSessionChainId() != Constants.chainId {
+            secureStorage.clearAll()
             return false
         }
 

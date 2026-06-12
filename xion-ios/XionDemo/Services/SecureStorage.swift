@@ -41,6 +41,10 @@ final class SecureStorage {
         save(key: Constants.keychainSessionExpiry, value: String(expiresAt))
     }
 
+    func getSessionChainId() -> String? {
+        load(key: Constants.keychainSessionChainId)
+    }
+
     func getSessionExpiry() -> Int64 {
         guard let value = load(key: Constants.keychainSessionExpiry) else { return 0 }
         return Int64(value) ?? 0
@@ -94,6 +98,7 @@ final class SecureStorage {
         saveMetaAccountAddress(metaAccountAddress)
         saveSessionKeyAddress(sessionKeyAddress)
         saveTreasuryAddress(treasuryAddress)
+        save(key: Constants.keychainSessionChainId, value: Constants.chainId)
     }
 
     func clearAll() {
@@ -103,6 +108,7 @@ final class SecureStorage {
             Constants.keychainSessionKeyAddress,
             Constants.keychainTreasuryAddress,
             Constants.keychainSessionExpiry,
+            Constants.keychainSessionChainId,
             Constants.keychainBraleBankAddressId,
             Constants.keychainBraleXionAddressId,
             Constants.keychainBraleUserName,

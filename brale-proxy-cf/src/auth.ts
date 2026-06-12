@@ -81,6 +81,7 @@ export async function braleRequest(
   }
 
   if (!res.ok) {
+    console.error(`[braleRequest] ${method} ${path} -> ${res.status}: ${text}`);
     throw new BraleError(`Brale API error (${res.status})`, res.status, data);
   }
 

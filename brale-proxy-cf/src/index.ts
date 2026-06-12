@@ -2,9 +2,21 @@ import { Hono } from "hono";
 import { cors } from "hono/cors";
 import type { Env } from "./types";
 import { braleRequest, BraleError } from "./auth";
-import { getAccountId, saveAccountMapping, getMappingCount } from "./db";
+import {
+  getAccountId,
+  saveAccountMapping,
+  getMappingCount,
+  recordOwner,
+  getOwnedIds,
+} from "./db";
+import { verifyWalletAuth } from "./walletauth";
 
-type HonoEnv = { Bindings: Env; Variables: { braleAccountId: string } };
+type HonoEnv = {
+  Bindings: Env;
+  // braleAccountId: the (shared) Brale account. authWallet: the verified caller
+  // wallet (meta account), or null when unauthenticated in soft mode.
+  Variables: { braleAccountId: string; authWallet: string | null };
+};
 
 const app = new Hono<HonoEnv>();
 
@@ -20,6 +32,28 @@ function errorResponse(err: unknown) {
   }
   const message = err instanceof Error ? err.message : "Internal server error";
   return { error: message, details: null, _status: 500 };
+}
+
+// Find an already-registered bank on the account by its last-4, used to recover
+// from Brale's duplicate-registration error and share the bank with a new owner.
+async function findBankByMask(
+  env: Env,
+  accountId: string,
+  mask: string
+): Promise<Record<string, unknown> | null> {
+  try {
+    const data = await braleRequest(env, "GET", `/accounts/${accountId}/addresses`);
+    const addresses =
+      (data as { addresses?: Array<Record<string, unknown>> })?.addresses ?? [];
+    const match = addresses.find(
+      (a) =>
+        typeof a.account_number === "string" &&
+        (a.account_number as string).endsWith(mask)
+    );
+    return match?.id ? match : null;
+  } catch {
+    return null;
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -89,6 +123,18 @@ app.get("/.well-known/apple-app-site-association", (c) => {
 // iOS will intercept as a Universal Link.
 // ---------------------------------------------------------------------------
 
+// Receiver for Brale customer/transfer status webhooks. We don't act on these
+// yet — just acknowledge with 200 so Brale considers delivery successful.
+app.post("/webhooks/brale", async (c) => {
+  try {
+    const payload = await c.req.json().catch(() => null);
+    console.log("[webhooks/brale]", JSON.stringify(payload));
+  } catch {
+    // ignore body parse errors — still ack
+  }
+  return c.json({ received: true });
+});
+
 app.get("/plaid-oauth", (c) => {
   const query = c.req.url.split("?")[1] ?? "";
   const returnUrl = `https://brale-proxy.demo-burnt.workers.dev/plaid-oauth${query ? "?" + query : ""}`;
@@ -124,11 +170,36 @@ app.use("*", async (c, next) => {
   const publicPaths = new Set([
     "/health",
     "/plaid-oauth",
+    "/webhooks/brale",
     "/.well-known/apple-app-site-association",
   ]);
   if (publicPaths.has(c.req.path)) return next();
 
   const walletAddress = c.req.header("x-wallet-address");
+  const requireAuth = c.env.REQUIRE_WALLET_AUTH === "true";
+
+  // Verify signed wallet auth: proves the caller controls the meta account via a
+  // session key that signed a fresh challenge and holds an on-chain authz grant.
+  const authWallet = await verifyWalletAuth(
+    c.env,
+    {
+      wallet: walletAddress,
+      timestamp: c.req.header("x-auth-timestamp"),
+      sessionAddress: c.req.header("x-auth-session-address"),
+      signatureHex: c.req.header("x-auth-signature"),
+    },
+    c.req.method,
+    c.req.path,
+    Math.floor(Date.now() / 1000)
+  );
+
+  if (c.req.header("x-auth-signature") && !authWallet) {
+    console.log(`[walletauth] verification failed (require=${requireAuth})`);
+  }
+  if (requireAuth && !authWallet) {
+    return c.json({ error: "Wallet authentication required" }, 401);
+  }
+  c.set("authWallet", authWallet);
 
   if (!walletAddress) {
     c.set("braleAccountId", c.env.BRALE_ACCOUNT_ID);
@@ -150,13 +221,22 @@ app.use("*", async (c, next) => {
     return next();
   }
 
-  // Stub: map all new wallets to the partner account
-  // Replace with actual Brale managed account creation when API is available
+  // All wallets share the partner account today (per-user Brale sub-accounts would
+  // require per-user KYB, which isn't possible here). Isolation is instead enforced
+  // by signed wallet auth + per-wallet ownership scoping on read endpoints.
   const accountId = c.env.BRALE_ACCOUNT_ID;
   await saveAccountMapping(c.env.DB, walletAddress, accountId);
   c.set("braleAccountId", accountId);
   return next();
 });
+
+// Wallet whose resources a read should be scoped to, or null to skip scoping
+// (soft mode, unauthenticated). Writes attribute to the verified or header wallet.
+function scopeWallet(c: {
+  get: (k: "authWallet") => string | null;
+}): string | null {
+  return c.get("authWallet");
+}
 
 // ---------------------------------------------------------------------------
 // Routes — Plaid
@@ -186,9 +266,11 @@ app.post("/plaid/link-token", async (c) => {
 });
 
 app.post("/plaid/register", async (c) => {
+  const body = await c.req.json();
+  const accountId = c.get("braleAccountId");
+  const owner = c.get("authWallet") ?? c.req.header("x-wallet-address");
+  const accountMask = typeof body.account_mask === "string" ? body.account_mask : undefined;
   try {
-    const body = await c.req.json();
-    const accountId = c.get("braleAccountId");
     const data = await braleRequest(
       c.env,
       "POST",
@@ -200,11 +282,37 @@ app.post("/plaid/register", async (c) => {
           "ach_credit",
           "same_day_ach_credit",
         ],
+        // Brale now requires this field; it's where they POST account/transfer
+        // status updates. Defaults to this proxy's own receiver (see /webhooks/brale).
+        customer_webhook_url:
+          body.customer_webhook_url ||
+          c.env.BRALE_CUSTOMER_WEBHOOK_URL ||
+          "https://brale-proxy.demo-burnt.workers.dev/webhooks/brale",
       },
       true
     );
-    return c.json(data);
+    const id = (data as { id?: string; address_id?: string })?.id ??
+      (data as { address_id?: string })?.address_id;
+    if (owner && id) await recordOwner(c.env.DB, String(id), owner, "address");
+    // Normalize so the client always sees `address_id` regardless of Brale's shape.
+    return c.json(id ? { ...(data as object), address_id: String(id) } : data);
   } catch (err) {
+    // Only the duplicate-registration failure (Brale's opaque 500) means "this bank
+    // is already on the account" — recover from *that* by sharing it. Any other error
+    // (invalid token -> 4xx, permission -> 403) must propagate, so a failed register
+    // can't be turned into ownership.
+    const isDuplicate = err instanceof BraleError && err.status === 500;
+    // NOTE: account_mask is client-supplied and not cryptographically bound to the
+    // public_token, so this trusts the caller's claimed last-4. Acceptable here
+    // because reaching this point already requires signed wallet auth; a fully robust
+    // design would derive the mask from Brale's view of the exchanged token.
+    if (isDuplicate && owner && accountMask) {
+      const existing = await findBankByMask(c.env, accountId, accountMask);
+      if (existing?.id) {
+        await recordOwner(c.env.DB, String(existing.id), owner, "address");
+        return c.json({ ...existing, address_id: String(existing.id) });
+      }
+    }
     const { error, details, _status } = errorResponse(err);
     return c.json({ error, details }, _status as 400);
   }
@@ -221,6 +329,20 @@ app.get("/addresses", async (c) => {
     let path = `/accounts/${accountId}/addresses`;
     if (type) path += `?type=${type}`;
     const data = await braleRequest(c.env, "GET", path);
+    // Scope to the caller's own resources. Always keep internal custodial
+    // addresses (shared infra, needed for offramp deposits) and the caller's own
+    // on-chain wallet; otherwise only addresses this wallet created.
+    const scope = scopeWallet(c);
+    const list = data as { addresses?: Array<Record<string, unknown>> };
+    if (scope && Array.isArray(list.addresses)) {
+      const owned = await getOwnedIds(c.env.DB, scope, "address");
+      list.addresses = list.addresses.filter(
+        (a) =>
+          a?.type === "internal" ||
+          a?.address === scope ||
+          owned.has(String(a?.id))
+      );
+    }
     return c.json(data);
   } catch (err) {
     const { error, details, _status } = errorResponse(err);
@@ -239,6 +361,10 @@ app.post("/addresses/external", async (c) => {
       body,
       true
     );
+    const owner = c.get("authWallet") ?? c.req.header("x-wallet-address");
+    const id = (data as { id?: string; address_id?: string })?.id ??
+      (data as { address_id?: string })?.address_id;
+    if (owner && id) await recordOwner(c.env.DB, String(id), owner, "address");
     return c.json(data);
   } catch (err) {
     const { error, details, _status } = errorResponse(err);
@@ -303,6 +429,9 @@ app.post("/transfers", async (c) => {
       transferBody,
       true
     );
+    const owner = c.get("authWallet") ?? c.req.header("x-wallet-address");
+    const id = (data as { id?: string })?.id;
+    if (owner && id) await recordOwner(c.env.DB, String(id), owner, "transfer");
     return c.json(data);
   } catch (err) {
     const { error, details, _status } = errorResponse(err);
@@ -335,6 +464,13 @@ app.get("/transfers", async (c) => {
     let path = `/accounts/${accountId}/transfers`;
     if (params.toString()) path += `?${params}`;
     const data = await braleRequest(c.env, "GET", path);
+    // Scope to transfers this wallet created.
+    const scope = scopeWallet(c);
+    const list = data as { transfers?: Array<Record<string, unknown>> };
+    if (scope && Array.isArray(list.transfers)) {
+      const owned = await getOwnedIds(c.env.DB, scope, "transfer");
+      list.transfers = list.transfers.filter((t) => owned.has(String(t?.id)));
+    }
     return c.json(data);
   } catch (err) {
     const { error, details, _status } = errorResponse(err);

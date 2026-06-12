@@ -4,15 +4,18 @@ final class BraleProxyService {
 
     private let baseURL: String
     private let walletAddressProvider: () -> String?
+    private let authHeaderProvider: (_ wallet: String, _ method: String, _ path: String) -> [String: String]?
     private let encoder: JSONEncoder
     private let decoder: JSONDecoder
 
     init(
         baseURL: String = Constants.braleProxyUrl,
-        walletAddressProvider: @escaping () -> String? = { nil }
+        walletAddressProvider: @escaping () -> String? = { nil },
+        authHeaderProvider: @escaping (_ wallet: String, _ method: String, _ path: String) -> [String: String]? = { _, _, _ in nil }
     ) {
         self.baseURL = baseURL.hasSuffix("/") ? String(baseURL.dropLast()) : baseURL
         self.walletAddressProvider = walletAddressProvider
+        self.authHeaderProvider = authHeaderProvider
 
         encoder = JSONEncoder()
         encoder.keyEncodingStrategy = .convertToSnakeCase
@@ -24,14 +27,24 @@ final class BraleProxyService {
     // MARK: - Plaid
 
     func createPlaidLinkToken(name: String, email: String, phone: String?, dob: String?) async throws -> PlaidLinkTokenResponse {
-        let body = PlaidLinkTokenRequest(legalName: name, emailAddress: email, phoneNumber: phone, dateOfBirth: dob)
+        func nilIfEmpty(_ value: String?) -> String? {
+            guard let value, !value.trimmingCharacters(in: .whitespaces).isEmpty else { return nil }
+            return value
+        }
+        let body = PlaidLinkTokenRequest(
+            legalName: nilIfEmpty(name),
+            emailAddress: nilIfEmpty(email),
+            phoneNumber: nilIfEmpty(phone),
+            dateOfBirth: nilIfEmpty(dob)
+        )
         return try await post(path: "/plaid/link-token", body: body)
     }
 
-    func registerBankAccount(publicToken: String) async throws -> String {
+    func registerBankAccount(publicToken: String, accountMask: String?) async throws -> String {
         let body = PlaidRegisterRequest(
             publicToken: publicToken,
-            transferTypes: [Constants.braleAchDebitType, Constants.braleAchCreditType]
+            transferTypes: [Constants.braleAchDebitType, Constants.braleAchCreditType],
+            accountMask: accountMask
         )
         let response: PlaidRegisterResponse = try await post(path: "/plaid/register", body: body)
         return response.addressId
@@ -49,7 +62,7 @@ final class BraleProxyService {
     }
 
     func createExternalAddress(request: CreateAddressRequest) async throws -> BraleAddress {
-        try await post(path: "/addresses", body: request)
+        try await post(path: "/addresses/external", body: request)
     }
 
     func getAddressBalance(id: String, transferType: String, valueType: String) async throws -> BraleBalance {
@@ -74,6 +87,21 @@ final class BraleProxyService {
 
     // MARK: - Private Helpers
 
+    /// Attaches X-Wallet-Address plus signed auth headers (timestamp, pubkey,
+    /// signature) so the proxy can verify wallet ownership and scope the response.
+    private func applyWalletHeaders(_ request: inout URLRequest) {
+        guard let walletAddress = walletAddressProvider() else { return }
+        request.setValue(walletAddress, forHTTPHeaderField: "X-Wallet-Address")
+        // Sign the method + path (matching the proxy's `c.req.path`, query excluded)
+        // so the signature is bound to this specific request.
+        let method = request.httpMethod ?? "GET"
+        let path = request.url?.path ?? ""
+        guard let headers = authHeaderProvider(walletAddress, method, path) else { return }
+        for (key, value) in headers {
+            request.setValue(value, forHTTPHeaderField: key)
+        }
+    }
+
     private func get<T: Decodable>(path: String) async throws -> T {
         guard let url = URL(string: "\(baseURL)\(path)") else {
             throw BraleServiceError.invalidURL(path)
@@ -82,9 +110,7 @@ final class BraleProxyService {
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
         request.setValue("application/json", forHTTPHeaderField: "Accept")
-        if let walletAddress = walletAddressProvider() {
-            request.setValue(walletAddress, forHTTPHeaderField: "X-Wallet-Address")
-        }
+        applyWalletHeaders(&request)
 
         let (data, response) = try await URLSession.shared.data(for: request)
         try validateResponse(response, data: data)
@@ -100,9 +126,7 @@ final class BraleProxyService {
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.setValue("application/json", forHTTPHeaderField: "Accept")
-        if let walletAddress = walletAddressProvider() {
-            request.setValue(walletAddress, forHTTPHeaderField: "X-Wallet-Address")
-        }
+        applyWalletHeaders(&request)
         request.httpBody = try encoder.encode(body)
 
         let (data, response) = try await URLSession.shared.data(for: request)

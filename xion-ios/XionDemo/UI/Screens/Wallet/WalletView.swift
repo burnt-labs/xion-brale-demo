@@ -7,7 +7,6 @@ struct WalletView: View {
     let onNavigateToOnramp: () -> Void
     let onNavigateToOfframp: () -> Void
     let onNavigateToLinkBank: () -> Void
-    let onNavigateToVault: () -> Void
     let onDisconnected: () -> Void
 
     @State private var showSendSheet = false
@@ -21,7 +20,6 @@ struct WalletView: View {
         onNavigateToOnramp: @escaping () -> Void,
         onNavigateToOfframp: @escaping () -> Void,
         onNavigateToLinkBank: @escaping () -> Void,
-        onNavigateToVault: @escaping () -> Void,
         onDisconnected: @escaping () -> Void
     ) {
         self.viewModel = viewModel
@@ -31,7 +29,6 @@ struct WalletView: View {
         self.onNavigateToOnramp = onNavigateToOnramp
         self.onNavigateToOfframp = onNavigateToOfframp
         self.onNavigateToLinkBank = onNavigateToLinkBank
-        self.onNavigateToVault = onNavigateToVault
         self.onDisconnected = onDisconnected
     }
 
@@ -141,25 +138,6 @@ struct WalletView: View {
                             .lineLimit(1)
                     }
 
-                    Divider()
-                        .padding(.vertical, 8)
-
-                    HStack {
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text("Vault Balance")
-                                .font(.system(size: 14))
-                                .foregroundStyle(Color.subtitleText)
-
-                            Text(CoinFormatter.formatWithDenom(viewModel.vaultBalance ?? "0"))
-                                .font(.system(size: 22, weight: .bold))
-                                .foregroundStyle(Color.greetingText)
-                                .lineLimit(1)
-                        }
-                        Spacer()
-                        Image(systemName: "lock.fill")
-                            .font(.system(size: 16))
-                            .foregroundStyle(Color.subtitleText)
-                    }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(24)
@@ -188,27 +166,6 @@ struct WalletView: View {
                 .listRowBackground(Color.screenBackground)
                 .listRowSeparator(.hidden)
                 .listRowInsets(EdgeInsets(top: 24, leading: 24, bottom: 0, trailing: 24))
-
-                // Vault button
-                Button(action: onNavigateToVault) {
-                    HStack(spacing: 8) {
-                        Image(systemName: "lock.fill")
-                            .font(.system(size: 16))
-                        Text("Vault")
-                            .font(.system(size: 16, weight: .semibold))
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 14)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 12)
-                            .stroke(Color.subtitleText.opacity(0.3), lineWidth: 1)
-                    )
-                    .foregroundStyle(Color.greetingText)
-                }
-                .buttonStyle(.plain)
-                .listRowBackground(Color.screenBackground)
-                .listRowSeparator(.hidden)
-                .listRowInsets(EdgeInsets(top: 8, leading: 24, bottom: 12, trailing: 24))
 
                 // Bank link status
                 if !viewModel.bankLinked {
@@ -242,7 +199,7 @@ struct WalletView: View {
                     .shadow(color: Color.cardShadow, radius: 2, y: 1)
                     .listRowBackground(Color.screenBackground)
                     .listRowSeparator(.hidden)
-                    .listRowInsets(EdgeInsets(top: 0, leading: 24, bottom: 0, trailing: 24))
+                    .listRowInsets(EdgeInsets(top: 12, leading: 24, bottom: 0, trailing: 24))
                 } else {
                     HStack(spacing: 8) {
                         Image(systemName: "checkmark.circle.fill")
@@ -251,10 +208,17 @@ struct WalletView: View {
                         Text("Bank Linked")
                             .font(.system(size: 14))
                             .foregroundStyle(Color.subtitleText)
+                        Spacer()
+                        Button(action: onNavigateToLinkBank) {
+                            Text("Manage")
+                                .font(.system(size: 13, weight: .semibold))
+                                .foregroundStyle(Color.xionOrange)
+                        }
+                        .buttonStyle(.plain)
                     }
                     .listRowBackground(Color.screenBackground)
                     .listRowSeparator(.hidden)
-                    .listRowInsets(EdgeInsets(top: 0, leading: 24, bottom: 0, trailing: 24))
+                    .listRowInsets(EdgeInsets(top: 12, leading: 24, bottom: 0, trailing: 24))
                 }
 
                 // Buy and Cash Out buttons side-by-side

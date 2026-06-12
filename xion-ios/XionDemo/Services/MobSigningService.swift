@@ -18,6 +18,7 @@ protocol MobSigningServiceProtocol {
     func queryContractSmart(contractAddress: String, queryMsg: Data) async throws -> Data
     func getTx(txHash: String) async throws -> TransactionResult
     func getSignerAddress() -> String?
+    func signAuthChallenge(_ message: Data) -> (signature: Data, address: String)?
     func disconnect()
 }
 
@@ -271,6 +272,17 @@ final class MobSigningService: MobSigningServiceProtocol {
 
     func getSignerAddress() -> String? {
         signer?.address()
+    }
+
+    // Signs `message` with the session key (signBytes hashes with SHA256, returns
+    // a low-S 64-byte r||s ECDSA signature) and returns it with the compressed
+    // public key, for the proxy to verify wallet ownership.
+    func signAuthChallenge(_ message: Data) -> (signature: Data, address: String)? {
+        queue.sync { () -> (signature: Data, address: String)? in
+            guard let signer = self.signer else { return nil }
+            guard let signature = try? signer.signBytes(message: message) else { return nil }
+            return (signature, signer.address())
+        }
     }
 
     func disconnect() {

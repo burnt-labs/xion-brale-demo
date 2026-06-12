@@ -75,75 +75,6 @@ final class XionRepositoryImpl: XionRepositoryProtocol {
         return confirmed
     }
 
-    func getVaultBalance() async throws -> BalanceInfo {
-        guard let address = sessionManager.walletState.metaAccountAddress else {
-            throw RepositoryError.notConnected
-        }
-        let query = "{\"balance\":{\"address\":\"\(address)\"}}"
-        let queryData = Data(query.utf8)
-        let responseData = try await mobService.queryContractSmart(
-            contractAddress: Constants.vaultContractAddress,
-            queryMsg: queryData
-        )
-        let json = try JSONSerialization.jsonObject(with: responseData) as? [String: Any]
-        let coins = json?["coins"] as? [[String: Any]] ?? []
-        guard let first = coins.first,
-              let amount = first["amount"] as? String,
-              let denom = first["denom"] as? String else {
-            return BalanceInfo(amount: "0", denom: Constants.coinDenom)
-        }
-        return BalanceInfo(amount: amount, denom: denom)
-    }
-
-    func vaultDeposit(amount: String, denom: String) async throws -> TransactionResult {
-        let msg = "{\"deposit\":{}}"
-        let funds = [Coin(denom: denom, amount: amount)]
-        let result = try await withGrantRecovery {
-            try await self.mobService.executeContract(
-                contractAddress: Constants.vaultContractAddress,
-                msg: Data(msg.utf8),
-                funds: funds,
-                memo: nil,
-                gasLimit: Constants.defaultExecuteGasLimit
-            )
-        }
-        let confirmed = result.success ? (await awaitTxConfirmation(txHash: result.txHash) ?? result) : result
-        sessionManager.appendTransaction(confirmed)
-        return confirmed
-    }
-
-    func vaultWithdraw(amount: String, denom: String) async throws -> TransactionResult {
-        let msg = "{\"withdraw\":{\"coins\":[{\"denom\":\"\(denom)\",\"amount\":\"\(amount)\"}]}}"
-        let result = try await withGrantRecovery {
-            try await self.mobService.executeContract(
-                contractAddress: Constants.vaultContractAddress,
-                msg: Data(msg.utf8),
-                funds: [],
-                memo: nil,
-                gasLimit: Constants.defaultExecuteGasLimit
-            )
-        }
-        let confirmed = result.success ? (await awaitTxConfirmation(txHash: result.txHash) ?? result) : result
-        sessionManager.appendTransaction(confirmed)
-        return confirmed
-    }
-
-    func vaultWithdrawAll() async throws -> TransactionResult {
-        let msg = "{\"withdraw_all\":{}}"
-        let result = try await withGrantRecovery {
-            try await self.mobService.executeContract(
-                contractAddress: Constants.vaultContractAddress,
-                msg: Data(msg.utf8),
-                funds: [],
-                memo: nil,
-                gasLimit: Constants.defaultExecuteGasLimit
-            )
-        }
-        let confirmed = result.success ? (await awaitTxConfirmation(txHash: result.txHash) ?? result) : result
-        sessionManager.appendTransaction(confirmed)
-        return confirmed
-    }
-
     func getTx(txHash: String) async throws -> TransactionResult {
         try await mobService.getTx(txHash: txHash)
     }
@@ -224,19 +155,24 @@ final class XionRepositoryImpl: XionRepositoryProtocol {
                 .flatMap { $0.first }
                 .flatMap { $0["amount"] as? String } ?? "0"
 
-            // Extract tx type from messages
+            // Raw cosmos message type — fallback label when there's no token transfer.
             let messages = (txBody?["body"] as? [String: Any])?["messages"] as? [[String: Any]]
-            let txType: String = {
+            let rawShortType: String = {
                 guard let msgs = messages, let first = msgs.first,
                       let typeUrl = first["@type"] as? String else { return "" }
                 let shortType = typeUrl.components(separatedBy: ".").last ?? typeUrl
                 return msgs.count > 1 ? "\(shortType) +\(msgs.count - 1)" : shortType
             }()
 
-            // Extract amount and recipient from transfer events
+            // Find the token transfer involving this wallet, preferring the SBC leg
+            // (a Cash Out can also carry a uxion fee transfer we don't want to label on).
             var transferAmount = ""
+            var transferDenom = ""
             var transferRecipient = ""
+            var transferCounterparty = ""
+            var isOutgoing = false
             if let events = txResponse["events"] as? [[String: Any]] {
+                var best: (amount: String, denom: String, recipient: String, counterparty: String, outgoing: Bool)?
                 for event in events {
                     guard (event["type"] as? String) == "transfer",
                           let attrs = event["attributes"] as? [[String: Any]] else { continue }
@@ -248,13 +184,37 @@ final class XionRepositoryImpl: XionRepositoryProtocol {
                     }
                     let sender = attrMap["sender"] ?? ""
                     let recipient = attrMap["recipient"] ?? ""
-                    if sender == address || recipient == address {
-                        transferAmount = (attrMap["amount"] ?? "").replacingOccurrences(of: "[^0-9]", with: "", options: .regularExpression)
-                        transferRecipient = recipient
-                        break
+                    guard sender == address || recipient == address else { continue }
+                    // "amount" looks like "1000000factory/xion.../sbc" or "1000uxion".
+                    // Split leading digits (amount) from the trailing denom — the SBC
+                    // factory denom contains digits, so a digit-only strip is wrong.
+                    let raw = (attrMap["amount"] ?? "").components(separatedBy: ",").first ?? ""
+                    let digits = raw.prefix { $0.isNumber }
+                    let denom = String(raw.dropFirst(digits.count))
+                    let outgoing = sender == address
+                    let candidate = (String(digits), denom, recipient, outgoing ? recipient : sender, outgoing)
+                    if best == nil ||
+                        (denom.lowercased().contains("sbc") &&
+                         !(best?.denom.lowercased().contains("sbc") ?? false)) {
+                        best = candidate
                     }
                 }
+                if let b = best {
+                    transferAmount = b.amount
+                    transferDenom = b.denom
+                    transferRecipient = b.recipient
+                    transferCounterparty = b.counterparty
+                    isOutgoing = b.outgoing
+                }
             }
+
+            // On-chain transfers are labeled purely by direction (Send / Received) for
+            // both XION and SBC. Buy / Cash Out (Brale on/offramp) are surfaced from the
+            // Brale transfers list with real status, not inferred from chain history —
+            // so a peer SBC send/receive isn't mislabeled as ramp activity.
+            let txType = transferDenom.isEmpty
+                ? rawShortType
+                : (isOutgoing ? "Send" : "Received")
 
             return TransactionResult(
                 txHash: txHash,
@@ -267,7 +227,9 @@ final class XionRepositoryImpl: XionRepositoryProtocol {
                 fee: feeAmount,
                 txType: txType,
                 amount: transferAmount,
-                recipient: transferRecipient
+                amountDenom: transferDenom,
+                recipient: transferRecipient,
+                counterparty: transferCounterparty
             )
         }
     }

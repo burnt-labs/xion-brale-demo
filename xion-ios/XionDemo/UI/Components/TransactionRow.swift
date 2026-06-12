@@ -8,8 +8,8 @@ struct CompactTransactionRow: View {
             // Row 1: Status icon + tx hash + type badge
             HStack {
                 HStack(spacing: 8) {
-                    Image(systemName: transaction.success ? "checkmark.circle.fill" : "xmark.circle.fill")
-                        .foregroundStyle(transaction.success ? Color(red: 0, green: 0.9, blue: 0.46) : .red)
+                    Image(systemName: iconName)
+                        .foregroundStyle(iconColor)
                         .font(.system(size: 18))
 
                     Text(shortHash)
@@ -19,30 +19,48 @@ struct CompactTransactionRow: View {
 
                 Spacer()
 
-                if !transaction.txType.isEmpty {
-                    Text(transaction.txType)
-                        .font(.system(size: 11))
-                        .foregroundStyle(Color.subtitleText)
-                        .padding(.horizontal, 6)
-                        .padding(.vertical, 2)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 4)
-                                .stroke(Color.subtitleText.opacity(0.4), lineWidth: 1)
-                        )
+                HStack(spacing: 6) {
+                    if !transaction.status.isEmpty {
+                        Text(transaction.status)
+                            .font(.system(size: 11, weight: .medium))
+                            .foregroundStyle(statusColor)
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 2)
+                            .background(statusColor.opacity(0.12))
+                            .clipShape(RoundedRectangle(cornerRadius: 4))
+                    }
+
+                    if !transaction.txType.isEmpty {
+                        Text(transaction.txType)
+                            .font(.system(size: 11))
+                            .foregroundStyle(Color.subtitleText)
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 2)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 4)
+                                    .stroke(Color.subtitleText.opacity(0.4), lineWidth: 1)
+                            )
+                    }
                 }
             }
 
             Spacer().frame(height: 10)
 
             // Detail rows
-            if !transaction.amount.isEmpty {
+            if !transaction.displayAmount.isEmpty {
+                TxDetailRow(label: "Amount", value: transaction.displayAmount)
+            } else if !transaction.amount.isEmpty {
                 TxDetailRow(label: "Amount", value: CoinFormatter.formatWithDenom(transaction.amount, denom: amountDisplayDenom))
             }
             if !transaction.recipient.isEmpty {
                 TxDetailRow(label: "To", value: shortRecipient)
             }
-            TxDetailRow(label: "Tx fee", value: CoinFormatter.formatWithDenom(transaction.fee))
-            TxDetailRow(label: "Height", value: formattedHeight)
+            if !transaction.fee.isEmpty {
+                TxDetailRow(label: "Tx fee", value: CoinFormatter.formatWithDenom(transaction.fee))
+            }
+            if transaction.height > 0 {
+                TxDetailRow(label: "Height", value: formattedHeight)
+            }
             if !formattedTime.isEmpty {
                 TxDetailRow(label: "Time", value: formattedTime)
             }
@@ -69,6 +87,24 @@ struct CompactTransactionRow: View {
             return Constants.sbcDisplayDenom
         }
         return Constants.displayDenom
+    }
+
+    private var iconName: String {
+        if transaction.inProgress { return "clock.fill" }
+        return transaction.success ? "checkmark.circle.fill" : "xmark.circle.fill"
+    }
+
+    private var iconColor: Color {
+        if transaction.inProgress { return .orange }
+        return transaction.success ? Color(red: 0, green: 0.9, blue: 0.46) : .red
+    }
+
+    private var statusColor: Color {
+        switch transaction.status {
+        case "Completed": return Color(red: 0, green: 0.7, blue: 0.4)
+        case "Failed", "Canceled": return .red
+        default: return .orange // Pending / Processing
+        }
     }
 
     private var shortHash: String {

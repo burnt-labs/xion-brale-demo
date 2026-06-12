@@ -1,11 +1,23 @@
 import Foundation
 
 enum Constants {
+    // Active network. Flip to .testnet to go back to test funds.
+    // Mainnet moves REAL money — Brale transfers use type "xion" and ACH debits hit real bank accounts.
+    static let network: Network = .mainnet
+
+    enum Network { case testnet, mainnet }
+
     // Chain configuration
     // To override: edit these values or load from Info.plist / xcconfig
-    static let rpcUrl = envString("XION_RPC_URL") ?? "https://rpc.xion-testnet-2.burnt.com:443"
-    static let restUrl = envString("XION_REST_URL") ?? "https://api.xion-testnet-2.burnt.com/"
-    static let chainId = envString("XION_CHAIN_ID") ?? "xion-testnet-2"
+    static let rpcUrl = envString("XION_RPC_URL") ?? (network == .mainnet
+        ? "https://rpc.xion-mainnet-1.burnt.com:443"
+        : "https://rpc.xion-testnet-2.burnt.com:443")
+    static let restUrl = envString("XION_REST_URL") ?? (network == .mainnet
+        ? "https://api.xion-mainnet-1.burnt.com/"
+        : "https://api.xion-testnet-2.burnt.com/")
+    static let chainId = envString("XION_CHAIN_ID") ?? (network == .mainnet
+        ? "xion-mainnet-1"
+        : "xion-testnet-2")
     static let coinDenom = "uxion"
     static let displayDenom = "XION"
     static let gasPrice = "0.025"
@@ -17,9 +29,16 @@ enum Constants {
     static let derivationPath = "m/44'/118'/0'/0/0"
 
     // Session / Abstraxion
-    static let treasuryAddress = envString("XION_TREASURY_ADDRESS") ?? "xion1rytzathz8y2r58lj26ls3z90tn475qdtpet58nc98v0mur78g4yqvm44qk"
+    // Mainnet treasury: instance of the official treasury code (code_id 63), deployed
+    // 2026-06-11 via xion-mcp. Admin key in macOS keychain ("xion-mainnet-deployer").
+    // Grants: MsgSend only (SBC + XION); fee allowance 10 XION per user.
+    static let treasuryAddress = envString("XION_TREASURY_ADDRESS") ?? (network == .mainnet
+        ? "xion1mp5g2nh06rjy87ruz5eq0sfn2u75g48qukjk55m0790ldak0k33syd5l0r"
+        : "xion1rytzathz8y2r58lj26ls3z90tn475qdtpet58nc98v0mur78g4yqvm44qk")
     static let oauthClientId = envString("XION_OAUTH_CLIENT_ID") ?? ""
-    static let oauthAuthorizationEndpoint = envString("XION_OAUTH_AUTHORIZATION_ENDPOINT") ?? "https://auth.testnet.burnt.com/"
+    static let oauthAuthorizationEndpoint = envString("XION_OAUTH_AUTHORIZATION_ENDPOINT") ?? (network == .mainnet
+        ? "https://auth.burnt.com/"
+        : "https://auth.testnet.burnt.com/")
     static let sessionGrantDurationSeconds: Int64 = 86400
 
     // OAuth2
@@ -27,10 +46,16 @@ enum Constants {
     static let oauthCallbackScheme = "xiondemo"
 
     // Brale onramp/offramp
+    // NOTE: the deployed proxy's ALLOWED_TRANSFER_TYPES must include "xion" for mainnet
+    // transfers — the demo worker ships with testnet-only types and will reject mainnet.
     static let braleProxyUrl = envString("BRALE_PROXY_URL") ?? "https://brale-proxy.demo-burnt.workers.dev/"
-    static let braleTransferType = "xion_testnet"
+    static let braleTransferType = network == .mainnet ? "xion" : "xion_testnet"
     static let braleStablecoinDenom = "SBC"
+    // Same issuer address on both networks (verified via tokenfactory denoms_from_creator)
     static let braleSbcOnChainDenom = "factory/xion17grq736740r70awldugfs3mls3stu9haewctv2/sbc"
+    // SBC tokenfactory issuer — the on-chain sender of onramp mints. Used to tell an
+    // onramp's mint leg apart from a peer SBC transfer in the wallet history.
+    static let braleSbcIssuer = "xion17grq736740r70awldugfs3mls3stu9haewctv2"
     static let braleAchDebitType = "ach_debit"
     static let braleAchCreditType = "same_day_ach_credit"
     static let braleFiatValueType = "USD"
@@ -45,6 +70,7 @@ enum Constants {
     static let keychainSessionKeyAddress = "session_key_address"
     static let keychainTreasuryAddress = "treasury_address"
     static let keychainSessionExpiry = "session_expiry"
+    static let keychainSessionChainId = "session_chain_id"
     // Brale keychain keys
     static let keychainBraleBankAddressId = "brale_bank_address_id"
     static let keychainBraleXionAddressId = "brale_xion_address_id"
@@ -56,9 +82,6 @@ enum Constants {
     // Sample contract for demo
     static let sampleContractAddress = ""
     static let sampleContractMsg = #"{"increment": {}}"#
-
-    // Vault contract (testnet)
-    static let vaultContractAddress = "xion1waen5muj0g5p76t35apjnje43t795478lmnpcxvcm7flmlry5szq0dzvlc"
 
     // Read a value from Info.plist (set via xcconfig or build settings)
     private static func envString(_ key: String) -> String? {

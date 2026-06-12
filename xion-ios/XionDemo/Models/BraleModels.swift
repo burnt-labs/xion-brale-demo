@@ -9,6 +9,8 @@ struct BraleAddress: Codable, Identifiable {
     let address: String?
     let status: String?
     let transferTypes: [String]?
+    let owner: String?
+    let accountNumber: String?
 }
 
 struct AddressListResponse: Codable {
@@ -60,8 +62,10 @@ struct CreateTransferRequest: Codable {
 // MARK: - Plaid Models
 
 struct PlaidLinkTokenRequest: Codable {
-    let legalName: String
-    let emailAddress: String
+    // All optional — Brale issues a link token with none of these; the encoder
+    // omits nil fields so an empty profile sends an empty body.
+    let legalName: String?
+    let emailAddress: String?
     let phoneNumber: String?
     let dateOfBirth: String?
 }
@@ -75,6 +79,9 @@ struct PlaidLinkTokenResponse: Codable {
 struct PlaidRegisterRequest: Codable {
     let publicToken: String
     let transferTypes: [String]
+    // Last 4 of the linked account — lets the proxy match an already-registered
+    // bank and share it with this wallet when Brale rejects the duplicate.
+    let accountMask: String?
 }
 
 struct PlaidRegisterResponse: Codable {

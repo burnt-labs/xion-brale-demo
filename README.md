@@ -218,28 +218,38 @@ Referenced from `AndroidManifest.xml` via `android:networkSecurityConfig="@xml/n
 
 ### iOS Configuration (`Constants.swift`)
 
-iOS reads configuration from `Info.plist` first (settable via xcconfig), falling back to hardcoded defaults.
+**Network toggle.** `Constants.swift` has a single switch at the top that selects every
+network-dependent value at once:
 
-**To override via xcconfig:**
-1. Create `XionDemo/Configuration/Debug.xcconfig`
-2. Add entries: `XION_RPC_URL = https://rpc.xion-testnet-2.burnt.com:443`
-3. In `Info.plist`, add: `<key>XION_RPC_URL</key><string>$(XION_RPC_URL)</string>`
-4. `Constants.swift` reads it via `Bundle.main.infoDictionary`
+```swift
+static let network: Network = .mainnet   // flip to .testnet for test funds
+```
 
-| Constant | Default | Override Key |
-|----------|---------|-------------|
-| `rpcUrl` | `https://rpc.xion-testnet-2.burnt.com:443` | `XION_RPC_URL` |
-| `restUrl` | `https://api.xion-testnet-2.burnt.com/` | `XION_REST_URL` |
-| `chainId` | `xion-testnet-2` | `XION_CHAIN_ID` |
-| `treasuryAddress` | `xion1sm3qp...hqa0mj` | `XION_TREASURY_ADDRESS` |
-| `oauthAuthorizationEndpoint` | `https://auth.testnet.burnt.com/` | `XION_OAUTH_AUTHORIZATION_ENDPOINT` |
-| `braleProxyUrl` | `http://localhost:3000/` | `BRALE_PROXY_URL` |
-| `vaultContractAddress` | `xion1waen5muj0g5p76t35apjnje43t795478lmnpcxvcm7flmlry5szq0dzvlc` | — (edit source) |
-| `coinType` | `118` | — (edit source) |
-| `derivationPath` | `m/44'/118'/0'/0/0` | — (edit source) |
-| `sessionGrantDurationSeconds` | `86400` | — (edit source) |
-| `defaultSendGasLimit` | `200000` | — (edit source) |
-| `defaultExecuteGasLimit` | `400000` | — (edit source) |
+It drives the RPC/REST endpoints, chain ID, the Abstraxion dashboard, and the Brale
+`transfer_type`. Mainnet moves **real money** (Brale transfers use `transfer_type: "xion"`
+and ACH debits hit real bank accounts), so flip to `.testnet` whenever you want test funds.
+
+| Constant | `.mainnet` | `.testnet` |
+|----------|-----------|-----------|
+| `rpcUrl` | `https://rpc.xion-mainnet-1.burnt.com:443` | `https://rpc.xion-testnet-2.burnt.com:443` |
+| `restUrl` | `https://api.xion-mainnet-1.burnt.com/` | `https://api.xion-testnet-2.burnt.com/` |
+| `chainId` | `xion-mainnet-1` | `xion-testnet-2` |
+| `oauthAuthorizationEndpoint` | `https://auth.burnt.com/` | `https://auth.testnet.burnt.com/` |
+| `treasuryAddress` | `xion1mp5g2nh06rjy87ruz5eq0sfn2u75g48qukjk55m0790ldak0k33syd5l0r` | `xion1rytza…44qk` |
+| `braleTransferType` | `xion` | `xion_testnet` |
+
+The mainnet treasury is an instance of the official treasury code (code_id 63) created via
+the [dev portal](https://dev.burnt.com) / xion-mcp; it must be funded with XION to sponsor
+gas. Any value can still be overridden from `Info.plist` (via xcconfig) — `Constants.swift`
+reads `Bundle.main.infoDictionary` first and falls back to these defaults.
+
+Other notable constants (edit source to change): `braleProxyUrl` (defaults to the deployed
+worker `https://brale-proxy.demo-burnt.workers.dev/`), `braleSbcOnChainDenom`
+(`factory/xion17grq…/sbc`, same on both networks), `coinType` (118),
+`sessionGrantDurationSeconds` (86400).
+
+> The iOS app no longer ships the non-custodial Vault feature (no mainnet deployment of
+> the contract). The `hm-vault` contract and the Android app retain it — see below.
 
 ---
 
@@ -472,15 +482,24 @@ docker run --rm -v "$(pwd)":/code \
 
 ### Mobile Integration
 
-Both apps interact with the vault via the mob library's `executeContract` (for deposit/withdraw) and `queryContractSmart` (for balance queries). The vault balance is always displayed on the home wallet screen alongside XION and SBC balances (even when zero), with a dedicated Vault screen for deposit/withdraw operations.
+> **iOS:** the Vault feature has been removed from the iOS app (the contract has no mainnet
+> deployment). The remainder of this section applies to the **Android** app, which still ships
+> it. The `hm-vault` contract itself is unchanged.
 
-**Repository methods:**
+The Android app interacts with the vault via the mob library's `executeContract` (for
+deposit/withdraw) and `queryContractSmart` (for balance queries). The vault balance is
+displayed on the home wallet screen alongside XION and SBC balances, with a dedicated Vault
+screen for deposit/withdraw operations.
+
+**Repository methods (Android):**
 - `getVaultBalance()` — queries the contract for the user's vault balance (read-only)
 - `vaultDeposit(amount, denom)` — deposits tokens into the vault
 - `vaultWithdraw(amount, denom)` — withdraws specific amount from the vault
 - `vaultWithdrawAll()` — withdraws entire vault balance
 
-**Confirmation dialogs:** Both platforms show a confirmation dialog before executing vault transactions. The dialog displays the action (Deposit/Withdraw/Withdraw All), token, and amount. On iOS this uses a native `.alert()` sheet; on Android it uses a Material3 `AlertDialog`. During a transaction, only the active button shows a loading spinner — the other buttons are disabled but display their normal text.
+**Confirmation dialogs:** the Android app shows a Material3 `AlertDialog` before executing
+vault transactions, displaying the action (Deposit/Withdraw/Withdraw All), token, and amount.
+During a transaction, only the active button shows a loading spinner.
 
 **Gas handling:** Gas estimation is handled automatically by the mob library. The `executeContract` method accepts an optional `gasLimit` parameter. The fee granter (treasury) pays all gas fees via the session's authz/feegrant setup.
 
@@ -488,7 +507,10 @@ Both apps interact with the vault via the mob library's `executeContract` (for d
 
 ## Stablecoin On/Off-Ramp (Brale)
 
-Brale provides stablecoin infrastructure on XION. The same Brale account and API credentials access **both testnet and mainnet** — the environment is determined by the `transfer_type` field in each transfer (`xion_testnet` vs `xion`).
+Brale provides stablecoin infrastructure on XION. The same Brale **account** spans testnet
+and mainnet, but the **API credentials are environment-scoped** — a mainnet transfer
+(`transfer_type: "xion"`) requires a mainnet key, and a testnet transfer (`xion_testnet`) a
+testnet key. The environment of each transfer is set by its `transfer_type`.
 
 ### How the ACH Onramp Works (Plain English)
 
@@ -512,19 +534,26 @@ Brale provides stablecoin infrastructure on XION. The same Brale account and API
 - **The `brand` field** is optional — it controls what name appears on the user's bank statement. This is a premium feature.
 - **Idempotency-Key header** — prevents duplicate transfers if a request is accidentally sent twice.
 
-**What this looks like in our app:**
+**What this looks like in our app (iOS):**
 
 ```
-User fills form (name, email, phone, DOB)
-        |
-Taps "Link" -> Plaid opens -> picks bank -> done
+Link Bank screen:
+  - "Use a linked bank" picker shows banks already owned by this wallet, OR
+  - "Link New Bank Account": enter phone (US +1, 10 digits) -> Plaid opens ->
+    pick bank -> proxy registers it (or shares an already-registered one)
         |
 Enters "$100" -> taps "Buy"
         |
 App tells proxy: pull $100 from bank, send SBC to wallet
         |
-Poll until tokens arrive on-chain -> show confirmation
+"Transfer submitted" — SBC arrives in 1-3 business days after ACH settles.
+Track status (Pending -> Processing -> Completed) in Recent Transactions.
 ```
+
+Only the phone is collected for a new link — it's all Brale's link-token needs, and using
+the user's own number avoids Brale prefilling the shared account owner's number into Plaid.
+ACH-funded SBC takes days to settle, so the app confirms submission rather than polling the
+wallet for tokens that won't arrive in-session.
 
 Brale is the bridge between the traditional banking system (ACH) and the blockchain (XION). Plaid is the secure way to connect a user's bank account without you ever touching their credentials.
 
@@ -635,22 +664,20 @@ Health check.
 
 ### `POST /plaid/link-token`
 
-Create a Plaid Link token for bank account linking.
+Create a Plaid Link token for bank account linking. All identity fields are **optional** —
+Brale issues a token with none of them. The iOS app sends only `phone_number` (the field
+that drives Plaid's prefill); omitting it makes Brale fall back to the shared account
+owner's number, so the client should always pass the end user's own.
 
 **Request:**
 ```json
-{
-  "legal_name": "John Doe",
-  "email_address": "john@example.com",
-  "phone_number": "+15551234567",
-  "date_of_birth": "1990-01-15"
-}
+{ "phone_number": "+15551234567" }
 ```
 
 **Response:**
 ```json
 {
-  "link_token": "link-sandbox-abc123...",
+  "link_token": "link-production-abc123...",
   "expiration": "2026-03-25T03:22:34.086Z"
 }
 ```
@@ -659,13 +686,17 @@ Use the `link_token` with the Plaid Link SDK (Android/iOS) to let the user selec
 
 ### `POST /plaid/register`
 
-Exchange a Plaid public token (received from the Plaid Link SDK callback) for a Brale bank address.
+Exchange a Plaid public token (from the Plaid Link SDK callback) for a Brale bank address.
+The proxy injects the required `customer_webhook_url` automatically. Pass `account_mask`
+(the linked account's last-4, from Plaid's success metadata) so an already-registered bank
+can be shared with this wallet instead of failing — see *Shared bank accounts* above.
 
 **Request:**
 ```json
 {
-  "public_token": "public-sandbox-xyz789...",
-  "transfer_types": ["ach_debit", "ach_credit", "same_day_ach_credit"]
+  "public_token": "public-production-xyz789...",
+  "transfer_types": ["ach_debit", "ach_credit", "same_day_ach_credit"],
+  "account_mask": "1039"
 }
 ```
 
@@ -676,7 +707,10 @@ Exchange a Plaid public token (received from the Plaid Link SDK callback) for a 
 }
 ```
 
-Store this `address_id` — it's used as the source (onramp) or destination (offramp) in transfers.
+The caller is recorded as an owner of this `address_id`. On a Brale duplicate-registration
+error, if `account_mask` matches an existing bank the proxy adds the caller as a co-owner and
+returns that bank instead of erroring. Store the `address_id` — it's the source (onramp) or
+destination (offramp) in transfers.
 
 ### `GET /addresses`
 
@@ -713,6 +747,10 @@ List all addresses on the Brale account.
 **Address types:**
 - `internal`: Brale-managed custodial wallet (for deposit-before-offramp)
 - `external`: User's blockchain wallet or bank account
+
+When the request is authenticated (signed wallet auth), the response is **scoped to the
+calling wallet** — only addresses it owns, plus the shared internal custodial addresses.
+`GET /transfers` is likewise scoped to the wallet's own transfers.
 
 ### `POST /addresses/external`
 
@@ -963,32 +1001,61 @@ The app uses a sealed class / enum to track wallet connection state:
 
 | Secret | Where it lives | Never exposed to |
 |--------|---------------|-----------------|
-| Brale `client_id` + `client_secret` | Proxy `.env` file | Mobile apps |
-| Brale bearer token | Proxy memory (55-min cache) | Mobile apps, disk |
+| Brale `client_id` + `client_secret` | Node proxy `.env`; CF worker `wrangler secret` (encrypted) | Mobile apps |
+| Brale bearer token | Node proxy memory; CF worker KV cache (TTL) | Mobile apps, disk |
 | Session mnemonic (Android) | EncryptedSharedPreferences + Android KeyStore AES-256-GCM | Plaintext on disk, other apps |
 | Session mnemonic (iOS) | iOS Keychain (`kSecClassGenericPassword`) | Plaintext on disk, other apps |
 | Session private key | In-memory only (mob Rust `Signer` object) | Disk, network |
 
-### Per-User Account Routing
+### Signed Wallet Authentication
 
-The proxy maps each user's XION wallet address to their own Brale managed sub-account. This provides data isolation — each user's bank links, wallet registrations, and transfer history are scoped to their own account.
+Reads and writes are authenticated by proving control of the meta account, not just by
+sending its address. The iOS app signs `xiondemo-auth:{wallet}:{unix_ts}` with the session
+key and attaches three headers to every Brale request: `X-Auth-Timestamp`,
+`X-Auth-Session-Address`, `X-Auth-Signature`. The proxy:
 
-**How it works:**
-1. Mobile apps send an `X-Wallet-Address` header with every proxy request (injected automatically by an OkHttp interceptor on Android, or in `BraleProxyService` on iOS)
-2. The proxy looks up the wallet address in a local SQLite database (`data/accounts.db`)
-3. If found, routes the request to that user's Brale account
-4. If not found, creates a new managed sub-account under the partner account, stores the mapping, then routes
-5. A race-condition guard deduplicates concurrent first-requests from the same wallet
+1. Checks the timestamp is fresh (±120s, anti-replay).
+2. Recovers the signer from the signature and confirms it matches the claimed session address.
+3. Verifies on-chain (LCD authz query, cached) that the session key holds an active grant
+   from the meta account — i.e. it's a currently-authorized session of that wallet.
 
-**Backward compatibility:** If the `X-Wallet-Address` header is missing, the proxy falls back to `BRALE_ACCOUNT_ID` (the partner account). This allows older app versions to continue working during rollout.
+Enforcement is gated by `REQUIRE_WALLET_AUTH`. When `true` (the deployed mainnet default),
+unauthenticated or spoofed requests get `401`. When `false` (soft mode), the proxy verifies
+when a signature is present but otherwise falls back to legacy behavior — useful while a
+client is being updated to sign. (The Cloudflare-Worker proxy implements this; the legacy
+Node proxy and the Android app do not yet sign and would need the same headers added.)
+
+### Per-Wallet Data Isolation
+
+True per-user Brale sub-accounts aren't viable here — each would need its own KYB — so all
+wallets share one Brale partner account, and isolation is enforced at the proxy instead:
+
+- The proxy records which wallet created each Brale `address_id` / `transfer_id` in a D1
+  table (`resource_owner`).
+- `GET /addresses` and `GET /transfers` are filtered to **only** the authenticated wallet's
+  own resources (Brale-internal custodial addresses are always returned, since the offramp
+  needs them).
+- Combined with signed wallet auth above, a caller can only see resources it provably owns.
+
+**Shared bank accounts.** A bank can be co-owned by multiple wallets (joint accounts,
+households). When a second user links a bank that's already registered on the partner
+account, Brale returns a duplicate-registration error; the proxy matches the existing bank
+by its account last-4 (passed from Plaid metadata as `account_mask`) and adds the caller as
+a co-owner. This stays secure because each owner had to prove access through Plaid's
+real-credential login.
 
 ### Transfer Type Allowlist
 
 The proxy's `ALLOWED_TRANSFER_TYPES` environment variable prevents accidental mainnet transfers. Since the same Brale credentials access both testnet and mainnet, a misconfigured `transfer_type` could move real money. The proxy rejects any `POST /transfers` request containing a type not in the allowlist before it reaches Brale.
 
-Default allowlist: `xion_testnet, ach_debit, ach_credit, same_day_ach_credit, rtp_credit`
+Code default allowlist: `xion_testnet, ach_debit, ach_credit, same_day_ach_credit, rtp_credit`.
+The deployed mainnet worker adds `xion` (so real-money on/off-ramp transfers are permitted);
+keep it out of any testnet-only deployment.
 
-To enable mainnet, add `xion` to the allowlist (after confirming all other config points to mainnet).
+> **Brale keys are environment-scoped.** The same account is reached by *different* API keys
+> for testnet vs mainnet — a mainnet `transfer_type: "xion"` request needs a mainnet key. The
+> mainnet key also needs the **Financial Institutions** permission for the Plaid link-token
+> endpoint, in addition to Mints, Redemptions, and View/Create Transfers & Addresses.
 
 ### Session Key Trust Model
 
@@ -1125,8 +1192,8 @@ XionDemo/
 │   └── SecureStorage.swift             # Keychain wrapper (SecItem API)
 ├── Data/
 │   ├── Repository/
-│   │   ├── XionRepository.swift        # Protocol (incl. vault methods)
-│   │   └── XionRepositoryImpl.swift    # Implementation with grant recovery, vault ops, REST tx history
+│   │   ├── XionRepository.swift        # Protocol (balance, send, contract, tx history)
+│   │   └── XionRepositoryImpl.swift    # Implementation with grant recovery, REST tx history
 │   └── Remote/
 │       └── XionOAuthAPI.swift
 ├── UI/
@@ -1144,8 +1211,7 @@ XionDemo/
 │       ├── Connect/                    # ConnectView + ConnectViewModel
 │       ├── Wallet/                     # WalletView + WalletViewModel (send sheet)
 │       ├── Send/                       # SendSheetContent (4-step bottom sheet)
-│       ├── Vault/                      # VaultView + VaultViewModel (deposit/withdraw)
-│       ├── LinkBank/                   # LinkBankView + LinkBankViewModel
+│       ├── LinkBank/                   # LinkBankView + LinkBankViewModel (phone-only Plaid + linked-bank picker)
 │       ├── Contract/                   # ContractView + ContractViewModel
 │       └── History/                    # HistoryView + HistoryViewModel
 ├── Utilities/
@@ -1336,15 +1402,16 @@ The mob SPM package can't resolve. Ensure:
 
 ### Balance Shows "0" After Onramp
 
-Onramp mints stablecoins (SBC denomination), not XION. The wallet screen shows XION (uxion) balance. The stablecoin balance is tracked by Brale — query it via `GET /addresses/:id/balance?transfer_type=xion_testnet&value_type=SBC`.
-
-### Vault Balance Shows "0" After Deposit (iOS)
-
-If vault deposits show as successful but the vault balance remains 0, check that `getVaultBalance()` in `XionRepositoryImpl.swift` properly unwraps the optional `metaAccountAddress`. A previous bug interpolated `Optional("xion1...")` into the contract query JSON instead of the unwrapped address, causing the vault contract to return no coins. The fix: use `guard let address = sessionManager.walletState.metaAccountAddress` instead of `state.metaAccountAddress` directly in string interpolation.
+Onramp mints stablecoins (SBC denomination), not XION. The wallet screen shows the XION
+(uxion) balance and the on-chain SBC balance, both read directly from the meta account on
+chain (`braleSbcOnChainDenom = factory/xion17grq…/sbc`). A pending ACH onramp won't change
+the SBC balance until it settles (1–3 business days) — track it in Recent Transactions.
 
 ### "Could not connect to the server" on Link Bank (iOS)
 
-The Brale proxy server at `localhost:3000` is not running. Start it with `cd brale-proxy && npm start`. This is not a QUIC issue — the proxy runs locally over HTTP.
+The iOS app defaults `braleProxyUrl` to the deployed Cloudflare worker
+(`https://brale-proxy.demo-burnt.workers.dev/`), so no local proxy is required. If you point
+it at a local proxy instead, make sure `cd brale-proxy && npm start` is running.
 
 ### Recent Transactions Not Loading (iOS Simulator)
 

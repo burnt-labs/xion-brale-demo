@@ -1,5 +1,11 @@
 import Foundation
 
+extension Data {
+    var hexEncoded: String {
+        map { String(format: "%02x", $0) }.joined()
+    }
+}
+
 final class AppContainer: ObservableObject {
 
     let secureStorage: SecureStorage
@@ -27,12 +33,28 @@ final class AppContainer: ObservableObject {
             mobService: mobService
         )
 
-        braleService = BraleProxyService(walletAddressProvider: { [weak sessionManager] in
-            if case .connected(let addr, _, _, _, _) = sessionManager?.walletState {
-                return addr
+        braleService = BraleProxyService(
+            walletAddressProvider: { [weak sessionManager] in
+                if case .connected(let addr, _, _, _, _) = sessionManager?.walletState {
+                    return addr
+                }
+                return nil
+            },
+            authHeaderProvider: { [mobService] wallet, method, path in
+                // Sign `xiondemo-auth:{method}:{path}:{wallet}:{unix_ts}` with the session
+                // key so the proxy can verify wallet ownership, scope the response, and
+                // bind the signature to this specific request (anti-replay).
+                let timestamp = String(Int(Date().timeIntervalSince1970))
+                let challenge = "xiondemo-auth:\(method):\(path):\(wallet):\(timestamp)"
+                guard let data = challenge.data(using: .utf8),
+                      let signed = mobService.signAuthChallenge(data) else { return nil }
+                return [
+                    "X-Auth-Timestamp": timestamp,
+                    "X-Auth-Session-Address": signed.address,
+                    "X-Auth-Signature": signed.signature.hexEncoded,
+                ]
             }
-            return nil
-        })
+        )
         braleRepository = BraleRepositoryImpl(
             braleService: braleService,
             secureStorage: secureStorage
