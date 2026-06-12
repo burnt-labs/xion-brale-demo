@@ -5,6 +5,9 @@ import UIKit
 struct PlaidLinkSuccessInfo {
     let publicToken: String
     let linkSessionId: String
+    // Last 4 of the linked account, used to match an already-registered bank when
+    // Brale rejects a duplicate registration (shared-account support).
+    let accountMask: String?
 }
 
 struct PlaidLinkExitInfo {
@@ -47,7 +50,8 @@ final class PlaidLinkService {
                 self?.handler = nil
                 let info = PlaidLinkSuccessInfo(
                     publicToken: success.publicToken,
-                    linkSessionId: success.metadata.linkSessionID
+                    linkSessionId: success.metadata.linkSessionID,
+                    accountMask: success.metadata.accounts.first?.mask
                 )
                 print("[PlaidLink] success linkSessionID=\(info.linkSessionId)")
                 continuation.resume(returning: .success(info))

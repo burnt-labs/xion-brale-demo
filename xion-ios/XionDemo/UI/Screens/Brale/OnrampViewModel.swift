@@ -25,9 +25,6 @@ final class OnrampViewModel: ObservableObject {
     private let xionRepository: XionRepositoryProtocol
     private let secureStorage: SecureStorage
 
-    private var initialSbcBalance: Int64 = 0
-    private var pollTask: Task<Void, Never>?
-
     var isFormValid: Bool {
         guard let num = Double(amount), num > 0, amountError == nil, bankLinked else {
             return false
@@ -79,8 +76,6 @@ final class OnrampViewModel: ObservableObject {
             step = .processing
 
             do {
-                initialSbcBalance = await getCurrentSbcBalance()
-
                 let resolvedXionId: String
                 if let existingId = xionAddressId {
                     resolvedXionId = existingId
@@ -101,7 +96,10 @@ final class OnrampViewModel: ObservableObject {
                 )
                 self.transfer = transfer
                 isLoading = false
-                pollForTokenArrival()
+                // ACH-funded SBC settles in 1–3 business days, so there's nothing to
+                // poll for in-session — show the submitted/pending confirmation. The
+                // wallet's recent transactions track the transfer's status from here.
+                step = .status
             } catch {
                 self.error = error.localizedDescription
                 isLoading = false
@@ -123,8 +121,6 @@ final class OnrampViewModel: ObservableObject {
         receivedAmount = nil
         error = nil
         step = .form
-        pollTask?.cancel()
-        pollTask = nil
     }
 
     // MARK: - Private
@@ -143,48 +139,6 @@ final class OnrampViewModel: ObservableObject {
         }
     }
 
-    private func getCurrentSbcBalance() async -> Int64 {
-        do {
-            let info = try await xionRepository.getSbcBalance()
-            return Int64(info.amount) ?? 0
-        } catch {
-            return 0
-        }
-    }
-
-    private func pollForTokenArrival() {
-        pollTask = Task {
-            for _ in 0..<60 {
-                try? await Task.sleep(nanoseconds: 3_000_000_000)
-                guard !Task.isCancelled else { return }
-
-                let currentBalance = await getCurrentSbcBalance()
-                if currentBalance > initialSbcBalance {
-                    let received = currentBalance - initialSbcBalance
-                    tokensReceived = true
-                    receivedAmount = "\(received)"
-                    step = .status
-
-                    await xionRepository.appendTransaction(TransactionResult(
-                        txHash: transfer?.id ?? "",
-                        success: true,
-                        gasUsed: "0",
-                        gasWanted: "0",
-                        height: 0,
-                        rawLog: "",
-                        timestamp: transfer?.createdAt ?? "",
-                        fee: "0",
-                        txType: "Buy SBC",
-                        amount: "\(received)",
-                        amountDenom: Constants.sbcDisplayDenom,
-                        recipient: ""
-                    ))
-                    return
-                }
-            }
-            step = .status
-        }
-    }
 }
 
 enum OnrampError: LocalizedError {

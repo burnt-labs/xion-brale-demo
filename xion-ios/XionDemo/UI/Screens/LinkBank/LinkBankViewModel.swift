@@ -43,15 +43,11 @@ final class LinkBankViewModel: ObservableObject {
     private let secureStorage: SecureStorage
     private let plaidLinkService: PlaidLinkService
 
-    var isLinkFormValid: Bool {
-        !userName.trimmingCharacters(in: .whitespaces).isEmpty
-            && userNameError == nil
-            && !userEmail.trimmingCharacters(in: .whitespaces).isEmpty
-            && userEmailError == nil
-            && !userPhone.trimmingCharacters(in: .whitespaces).isEmpty
-            && userPhoneError == nil
-            && !userDob.trimmingCharacters(in: .whitespaces).isEmpty
-            && userDobError == nil
+    // Only the phone is collected/sent — it's the field that drives Plaid's prefill,
+    // so requiring the user's own prevents Brale from falling back to the shared
+    // account owner's number (which would leak that person's phone to others).
+    var isPhoneValid: Bool {
+        !userPhone.trimmingCharacters(in: .whitespaces).isEmpty && userPhoneError == nil
     }
 
     init(
@@ -67,10 +63,20 @@ final class LinkBankViewModel: ObservableObject {
         let bankId = secureStorage.getBraleBankAddressId()
         bankLinked = bankId != nil && !bankId!.isEmpty
         bankAddressId = bankId
-        userName = secureStorage.getBraleUserName() ?? ""
-        userEmail = secureStorage.getBraleUserEmail() ?? ""
         userPhone = secureStorage.getBraleUserPhone() ?? ""
-        userDob = secureStorage.getBraleUserDob() ?? ""
+
+        if let bankId, !bankId.isEmpty {
+            Task { await resolveBankName(bankId) }
+        }
+    }
+
+    /// Resolves the linked bank's display name + masked number from the address
+    /// list so the "Bank Account Linked" screen says which account it is.
+    private func resolveBankName(_ addressId: String) async {
+        guard let banks = try? await braleRepository.getLinkedBankAddresses(),
+              let match = banks.first(where: { $0.id == addressId }) else { return }
+        let masked = match.accountNumber.map { " · \($0)" } ?? ""
+        bankName = (match.name ?? "Bank account") + masked
     }
 
     // MARK: - Validation
@@ -95,14 +101,14 @@ final class LinkBankViewModel: ObservableObject {
     func updateUserPhone(_ value: String) {
         userPhone = value
         let trimmed = value.trimmingCharacters(in: .whitespaces)
+        // The UI fixes a "+1" prefix and the user types only the 10 local digits.
+        let localDigits = trimmed.hasPrefix("+1")
+            ? trimmed.dropFirst(2).filter(\.isNumber)
+            : trimmed.filter(\.isNumber)
         if trimmed.isEmpty {
             userPhoneError = "Phone number is required"
-        } else if !trimmed.hasPrefix("+") {
-            userPhoneError = "Must start with + (e.g. +15551234567)"
-        } else if !trimmed.dropFirst().allSatisfy(\.isNumber) {
-            userPhoneError = "Only digits after +"
-        } else if trimmed.count < 12 {
-            userPhoneError = "E.164 format with country code (e.g. +15551234567)"
+        } else if localDigits.count != 10 {
+            userPhoneError = "Enter a 10-digit US phone number"
         } else {
             userPhoneError = nil
         }
@@ -123,24 +129,18 @@ final class LinkBankViewModel: ObservableObject {
     // MARK: - Plaid Link
 
     func requestPlaidLinkToken() {
-        let name = userName.trimmingCharacters(in: .whitespaces)
-        let email = userEmail.trimmingCharacters(in: .whitespaces)
         let phone = userPhone.trimmingCharacters(in: .whitespaces)
-        let dob = userDob.trimmingCharacters(in: .whitespaces)
-
-        // Persist user data
-        secureStorage.saveBraleUserName(name)
-        secureStorage.saveBraleUserEmail(email)
+        guard !phone.isEmpty, userPhoneError == nil else { return }
         secureStorage.saveBraleUserPhone(phone)
-        secureStorage.saveBraleUserDob(dob)
 
         Task {
             isLoading = true
             error = nil
             var tokenRequestId: String? = nil
             do {
+                // Phone only — name/email/dob are intentionally omitted (see isPhoneValid).
                 let response = try await braleRepository.createPlaidLinkToken(
-                    name: name, email: email, phone: phone, dob: dob
+                    name: "", email: "", phone: phone, dob: nil
                 )
                 tokenRequestId = response.requestId
                 let result = try await plaidLinkService.openLink(token: response.linkToken)
@@ -152,7 +152,7 @@ final class LinkBankViewModel: ObservableObject {
                         tokenRequestId: tokenRequestId,
                         linkSessionId: info.linkSessionId
                     )
-                    onPlaidSuccess(publicToken: info.publicToken)
+                    onPlaidSuccess(publicToken: info.publicToken, accountMask: info.accountMask)
                 case .cancelled(let info):
                     recordDiagnostic(
                         phone: phone,
@@ -242,18 +242,26 @@ final class LinkBankViewModel: ObservableObject {
         diagnostics.removeAll()
     }
 
-    func onPlaidSuccess(publicToken: String) {
+    func onPlaidSuccess(publicToken: String, accountMask: String?) {
         Task {
             isLoading = true
             error = nil
             do {
-                let addressId = try await braleRepository.registerBankAccount(publicToken: publicToken)
+                let addressId = try await braleRepository.registerBankAccount(
+                    publicToken: publicToken,
+                    accountMask: accountMask
+                )
                 secureStorage.saveBraleBankAddressId(addressId)
                 bankLinked = true
                 bankAddressId = addressId
                 isLoading = false
+                await resolveBankName(addressId)
             } catch {
-                self.error = error.localizedDescription
+                // Brale returns an opaque 500 when re-registering a bank that's already
+                // on the account. It may be linked under this wallet (shown in the
+                // picker) or under a different one. Reload and give an account-aware hint.
+                loadExistingBanks()
+                self.error = "That bank is already linked — possibly under a different account. Check \"Use a linked bank\", or try a different bank."
                 isLoading = false
             }
         }
@@ -281,7 +289,8 @@ final class LinkBankViewModel: ObservableObject {
     func useExistingBank(_ bank: BraleAddress) {
         braleRepository.useExistingBankAddress(bank.id)
         bankAddressId = bank.id
-        bankName = bank.name
+        let masked = bank.accountNumber.map { " · \($0)" } ?? ""
+        bankName = (bank.name ?? "Bank account") + masked
         bankLinked = true
     }
 

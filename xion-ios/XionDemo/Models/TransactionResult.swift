@@ -15,4 +15,10 @@ struct TransactionResult: Identifiable, Codable {
     var amount: String = ""
     var amountDenom: String = ""
     var recipient: String = ""
+    // Brale-sourced rows: human status (Pending/Processing/Completed/...), a
+    // preformatted amount (e.g. "$1.00") shown instead of the micro-unit `amount`,
+    // and whether the transfer is still settling.
+    var status: String = ""
+    var displayAmount: String = ""
+    var inProgress: Bool = false
 }

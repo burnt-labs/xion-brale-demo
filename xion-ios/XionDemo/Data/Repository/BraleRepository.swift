@@ -2,7 +2,7 @@ import Foundation
 
 protocol BraleRepositoryProtocol {
     func createPlaidLinkToken(name: String, email: String, phone: String?, dob: String?) async throws -> PlaidLinkTokenResponse
-    func registerBankAccount(publicToken: String) async throws -> String
+    func registerBankAccount(publicToken: String, accountMask: String?) async throws -> String
     func getLinkedBankAddresses() async throws -> [BraleAddress]
     func useExistingBankAddress(_ addressId: String)
     func getInternalAddresses() async throws -> [BraleAddress]
@@ -11,6 +11,7 @@ protocol BraleRepositoryProtocol {
     func createOnrampTransfer(amount: String, bankAddressId: String, xionAddressId: String) async throws -> BraleTransfer
     func createOfframpTransfer(amount: String, custodialAddressId: String, bankAddressId: String) async throws -> BraleTransfer
     func getTransfer(transferId: String) async throws -> BraleTransfer
+    func getRecentTransfers() async throws -> [BraleTransfer]
 }
 
 final class BraleRepositoryImpl: BraleRepositoryProtocol {
@@ -29,8 +30,8 @@ final class BraleRepositoryImpl: BraleRepositoryProtocol {
         try await braleService.createPlaidLinkToken(name: name, email: email, phone: phone, dob: dob)
     }
 
-    func registerBankAccount(publicToken: String) async throws -> String {
-        let addressId = try await braleService.registerBankAccount(publicToken: publicToken)
+    func registerBankAccount(publicToken: String, accountMask: String?) async throws -> String {
+        let addressId = try await braleService.registerBankAccount(publicToken: publicToken, accountMask: accountMask)
         secureStorage.saveBraleBankAddressId(addressId)
         return addressId
     }
@@ -133,5 +134,9 @@ final class BraleRepositoryImpl: BraleRepositoryProtocol {
 
     func getTransfer(transferId: String) async throws -> BraleTransfer {
         try await braleService.getTransfer(id: transferId)
+    }
+
+    func getRecentTransfers() async throws -> [BraleTransfer] {
+        try await braleService.listTransfers()
     }
 }

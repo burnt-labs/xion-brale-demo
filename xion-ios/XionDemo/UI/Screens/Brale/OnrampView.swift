@@ -134,10 +134,10 @@ private struct OnrampProcessingContent: View {
                 .scaleEffect(1.5)
                 .tint(.xionOrange)
             Spacer().frame(height: 8)
-            Text("Waiting for tokens...")
+            Text("Submitting your purchase…")
                 .font(.system(size: 16, weight: .medium))
                 .foregroundStyle(Color.greetingText)
-            Text("Checking your wallet for incoming stablecoins")
+            Text("Confirming the transfer — this takes a few seconds")
                 .font(.system(size: 13))
                 .foregroundStyle(Color.subtitleText)
             Spacer()
@@ -173,10 +173,11 @@ private struct OnrampStatusContent: View {
                 }
                 if !viewModel.tokensReceived {
                     Spacer().frame(height: 8)
-                    Text("Tokens are being minted. This may take a few minutes.")
+                    Text("Your SBC will arrive within 1–3 business days, once the ACH bank transfer settles. You can track it in Recent Transactions.")
                         .font(.system(size: 13))
                         .foregroundStyle(Color.subtitleText)
                         .multilineTextAlignment(.center)
+                        .padding(.horizontal, 16)
                 }
 
                 Spacer().frame(height: 20)

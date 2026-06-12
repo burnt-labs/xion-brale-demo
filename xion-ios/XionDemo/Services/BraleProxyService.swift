@@ -27,14 +27,24 @@ final class BraleProxyService {
     // MARK: - Plaid
 
     func createPlaidLinkToken(name: String, email: String, phone: String?, dob: String?) async throws -> PlaidLinkTokenResponse {
-        let body = PlaidLinkTokenRequest(legalName: name, emailAddress: email, phoneNumber: phone, dateOfBirth: dob)
+        func nilIfEmpty(_ value: String?) -> String? {
+            guard let value, !value.trimmingCharacters(in: .whitespaces).isEmpty else { return nil }
+            return value
+        }
+        let body = PlaidLinkTokenRequest(
+            legalName: nilIfEmpty(name),
+            emailAddress: nilIfEmpty(email),
+            phoneNumber: nilIfEmpty(phone),
+            dateOfBirth: nilIfEmpty(dob)
+        )
         return try await post(path: "/plaid/link-token", body: body)
     }
 
-    func registerBankAccount(publicToken: String) async throws -> String {
+    func registerBankAccount(publicToken: String, accountMask: String?) async throws -> String {
         let body = PlaidRegisterRequest(
             publicToken: publicToken,
-            transferTypes: [Constants.braleAchDebitType, Constants.braleAchCreditType]
+            transferTypes: [Constants.braleAchDebitType, Constants.braleAchCreditType],
+            accountMask: accountMask
         )
         let response: PlaidRegisterResponse = try await post(path: "/plaid/register", body: body)
         return response.addressId

@@ -43,7 +43,6 @@
 		90A26D567865E59B0FC9C4CB /* AppContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = F18B4B81972F35AC4535DE51 /* AppContainer.swift */; };
 		9A7BFC4F8BD8288854532938 /* LoadingOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = AABFBA1D457FE2C6B484C5D7 /* LoadingOverlay.swift */; };
 		A00D03509A43183B1CD2E2A3 /* TransactionResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A49C9B0124170FD65FFD03C /* TransactionResult.swift */; };
-		A0BD053B149775A9303BC857 /* VaultViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 492DF6A9CF9F6B427704D7FD /* VaultViewModel.swift */; };
 		A0D44613411CC9F865AFE0B5 /* HistoryViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85240F56DCF2F8120F75E8BA /* HistoryViewModel.swift */; };
 		A169AC3A653840778AC31B17 /* HistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3271C53EAC0A8B24F6763043 /* HistoryView.swift */; };
 		A1EBFE489E647E38E6DE5CC0 /* XionColors.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C03806F11CD471B10D00F8A /* XionColors.swift */; };
@@ -55,7 +54,6 @@
 		D18B425C0710913B9FF21160 /* CoinFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = B35EAFAF1E01E8DBDC753DF2 /* CoinFormatter.swift */; };
 		D63DE373E9C9584AE965FB96 /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3736E3B2AB010F41909D4EE3 /* Constants.swift */; };
 		DEBFDCC72523F4B69D052D02 /* MobSigningService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB8E1EED56FDEC7F2B145F9A /* MobSigningService.swift */; };
-		F0DF7C3155A1A193FFE798A6 /* VaultView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E47CB82D6662B9CEE3F4CC6 /* VaultView.swift */; };
 		F1AE9A17212021DAB14BB424 /* Mob in Frameworks */ = {isa = PBXBuildFile; productRef = C95720948FF60791957F6C31 /* Mob */; };
 		F4703AE01C9C9E35BCCF0080 /* OnrampViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E19024494C14DC15D7E2C4E4 /* OnrampViewModel.swift */; };
 		F4A721D77A903E159DEEC6F1 /* XionOAuthAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1286FBC2066DA3E22AF21E1A /* XionOAuthAPI.swift */; };
@@ -86,10 +84,8 @@
 		3736E3B2AB010F41909D4EE3 /* Constants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Constants.swift; sourceTree = "<group>"; };
 		3C8938EF7FEC159E30B83A79 /* BraleRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BraleRepository.swift; sourceTree = "<group>"; };
 		4109D21057DDFFED09E0233D /* XionRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = XionRepository.swift; sourceTree = "<group>"; };
-		492DF6A9CF9F6B427704D7FD /* VaultViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VaultViewModel.swift; sourceTree = "<group>"; };
 		4A24F045934613D8E8BC1978 /* BraleProxyService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BraleProxyService.swift; sourceTree = "<group>"; };
 		4AC85FB51C54F5970022B30F /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
-		4E47CB82D6662B9CEE3F4CC6 /* VaultView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VaultView.swift; sourceTree = "<group>"; };
 		547759FB6A926523455BCAB0 /* BalanceCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BalanceCard.swift; sourceTree = "<group>"; };
 		5C03806F11CD471B10D00F8A /* XionColors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = XionColors.swift; sourceTree = "<group>"; };
 		5C98DE21239BC938F03FAFCD /* mob */ = {isa = PBXFileReference; lastKnownFileType = folder; name = mob; path = vendor/mob; sourceTree = SOURCE_ROOT; };
@@ -170,15 +166,6 @@
 			path = Send;
 			sourceTree = "<group>";
 		};
-		23B42A7F8891F715A0EF1AC6 /* Vault */ = {
-			isa = PBXGroup;
-			children = (
-				4E47CB82D6662B9CEE3F4CC6 /* VaultView.swift */,
-				492DF6A9CF9F6B427704D7FD /* VaultViewModel.swift */,
-			);
-			path = Vault;
-			sourceTree = "<group>";
-		};
 		29CB05C61A3C83895EFD18AB /* Brale */ = {
 			isa = PBXGroup;
 			children = (
@@ -217,7 +204,6 @@
 				F6784800ECAF43483BF79E2D /* History */,
 				6DA4C258A2B3D735DABC47B8 /* LinkBank */,
 				0E613E97034CE3B8EB1C2763 /* Send */,
-				23B42A7F8891F715A0EF1AC6 /* Vault */,
 				FD9E9FAF935D6887D952F18B /* Wallet */,
 			);
 			path = Screens;
@@ -545,8 +531,6 @@
 				79FD5EDDF88C418741DB9C69 /* SessionManager.swift in Sources */,
 				A00D03509A43183B1CD2E2A3 /* TransactionResult.swift in Sources */,
 				16C6E1117C8181ED87D54778 /* TransactionRow.swift in Sources */,
-				F0DF7C3155A1A193FFE798A6 /* VaultView.swift in Sources */,
-				A0BD053B149775A9303BC857 /* VaultViewModel.swift in Sources */,
 				615AFE7C3E072A318FFCAC76 /* WalletState.swift in Sources */,
 				4C93DAE6A5CC9A02C3741497 /* WalletView.swift in Sources */,
 				27852C538E389F817485444E /* WalletViewModel.swift in Sources */,

@@ -34,6 +34,28 @@ function errorResponse(err: unknown) {
   return { error: message, details: null, _status: 500 };
 }
 
+// Find an already-registered bank on the account by its last-4, used to recover
+// from Brale's duplicate-registration error and share the bank with a new owner.
+async function findBankByMask(
+  env: Env,
+  accountId: string,
+  mask: string
+): Promise<Record<string, unknown> | null> {
+  try {
+    const data = await braleRequest(env, "GET", `/accounts/${accountId}/addresses`);
+    const addresses =
+      (data as { addresses?: Array<Record<string, unknown>> })?.addresses ?? [];
+    const match = addresses.find(
+      (a) =>
+        typeof a.account_number === "string" &&
+        (a.account_number as string).endsWith(mask)
+    );
+    return match?.id ? match : null;
+  } catch {
+    return null;
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Transfer type safety guard
 // ---------------------------------------------------------------------------
@@ -242,9 +264,11 @@ app.post("/plaid/link-token", async (c) => {
 });
 
 app.post("/plaid/register", async (c) => {
+  const body = await c.req.json();
+  const accountId = c.get("braleAccountId");
+  const owner = c.get("authWallet") ?? c.req.header("x-wallet-address");
+  const accountMask = typeof body.account_mask === "string" ? body.account_mask : undefined;
   try {
-    const body = await c.req.json();
-    const accountId = c.get("braleAccountId");
     const data = await braleRequest(
       c.env,
       "POST",
@@ -265,12 +289,22 @@ app.post("/plaid/register", async (c) => {
       },
       true
     );
-    const owner = c.get("authWallet") ?? c.req.header("x-wallet-address");
     const id = (data as { id?: string; address_id?: string })?.id ??
       (data as { address_id?: string })?.address_id;
     if (owner && id) await recordOwner(c.env.DB, String(id), owner, "address");
-    return c.json(data);
+    // Normalize so the client always sees `address_id` regardless of Brale's shape.
+    return c.json(id ? { ...(data as object), address_id: String(id) } : data);
   } catch (err) {
+    // Brale 500s when the bank is already registered on the (shared) account.
+    // The caller just proved access to it via Plaid, so share it with them:
+    // match the existing bank by its last-4 and add them as an owner.
+    if (owner && accountMask) {
+      const existing = await findBankByMask(c.env, accountId, accountMask);
+      if (existing?.id) {
+        await recordOwner(c.env.DB, String(existing.id), owner, "address");
+        return c.json({ ...existing, address_id: String(existing.id) });
+      }
+    }
     const { error, details, _status } = errorResponse(err);
     return c.json({ error, details }, _status as 400);
   }
