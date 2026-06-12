@@ -40,11 +40,12 @@ final class AppContainer: ObservableObject {
                 }
                 return nil
             },
-            authHeaderProvider: { [mobService] wallet in
-                // Sign `xiondemo-auth:{wallet}:{unix_ts}` with the session key so the
-                // proxy can verify wallet ownership and scope the response per-user.
+            authHeaderProvider: { [mobService] wallet, method, path in
+                // Sign `xiondemo-auth:{method}:{path}:{wallet}:{unix_ts}` with the session
+                // key so the proxy can verify wallet ownership, scope the response, and
+                // bind the signature to this specific request (anti-replay).
                 let timestamp = String(Int(Date().timeIntervalSince1970))
-                let challenge = "xiondemo-auth:\(wallet):\(timestamp)"
+                let challenge = "xiondemo-auth:\(method):\(path):\(wallet):\(timestamp)"
                 guard let data = challenge.data(using: .utf8),
                       let signed = mobService.signAuthChallenge(data) else { return nil }
                 return [

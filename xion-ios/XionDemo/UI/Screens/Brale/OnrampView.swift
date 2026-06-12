@@ -157,28 +157,22 @@ private struct OnrampStatusContent: View {
         ScrollView {
             VStack(spacing: 0) {
                 Spacer().frame(height: 32)
-                Image(systemName: viewModel.tokensReceived ? "checkmark.circle.fill" : "clock.fill")
+                // ACH-funded SBC settles over 1–3 days, so this screen always confirms
+                // submission; arrival is tracked from the wallet's Recent Transactions.
+                Image(systemName: "clock.fill")
                     .font(.system(size: 64))
-                    .foregroundStyle(viewModel.tokensReceived ? Color.xionGreen : Color.xionOrange)
+                    .foregroundStyle(Color.xionOrange)
                 Spacer().frame(height: 12)
-                Text(viewModel.tokensReceived ? "Tokens Received!" : "Transfer Submitted")
+                Text("Transfer Submitted")
                     .font(.system(size: 20, weight: .bold))
                     .foregroundStyle(Color.greetingText)
 
-                if viewModel.tokensReceived, let received = viewModel.receivedAmount {
-                    Spacer().frame(height: 8)
-                    Text("\(CoinFormatter.formatWithDenom(received, denom: Constants.sbcDisplayDenom)) added to your wallet")
-                        .font(.system(size: 14))
-                        .foregroundStyle(Color.subtitleText)
-                }
-                if !viewModel.tokensReceived {
-                    Spacer().frame(height: 8)
-                    Text("Your SBC will arrive within 1–3 business days, once the ACH bank transfer settles. You can track it in Recent Transactions.")
-                        .font(.system(size: 13))
-                        .foregroundStyle(Color.subtitleText)
-                        .multilineTextAlignment(.center)
-                        .padding(.horizontal, 16)
-                }
+                Spacer().frame(height: 8)
+                Text("Your SBC will arrive within 1–3 business days, once the ACH bank transfer settles. You can track it in Recent Transactions.")
+                    .font(.system(size: 13))
+                    .foregroundStyle(Color.subtitleText)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 16)
 
                 Spacer().frame(height: 20)
 
@@ -186,11 +180,7 @@ private struct OnrampStatusContent: View {
                     VStack(spacing: 8) {
                         OnrampDetailRow(label: "Transfer ID", value: String(transfer.id.prefix(12)) + "...")
                         OnrampDetailRow(label: "Amount", value: "$\(transfer.amount.value) \(transfer.amount.currency)")
-                        OnrampDetailRow(
-                            label: "Tokens",
-                            value: viewModel.tokensReceived ? "Received" : "Pending",
-                            valueColor: viewModel.tokensReceived ? Color.xionGreen : Color.xionOrange
-                        )
+                        OnrampDetailRow(label: "Status", value: "Pending", valueColor: Color.xionOrange)
                         if let createdAt = transfer.createdAt {
                             OnrampDetailRow(label: "Created", value: String(createdAt.prefix(19)).replacingOccurrences(of: "T", with: " "))
                         }
@@ -207,7 +197,7 @@ private struct OnrampStatusContent: View {
                     viewModel.reset()
                     onDone()
                 }) {
-                    Text(viewModel.tokensReceived ? "Done" : "Close")
+                    Text("Close")
                         .font(.system(size: 16, weight: .semibold))
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 14)

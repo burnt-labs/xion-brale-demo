@@ -111,6 +111,8 @@ final class WalletViewModel: ObservableObject {
             // contributes XION and *peer* SBC transfers (Send/Received) — but the SBC
             // legs of a Brale ramp (mint from the issuer, deposit to a Brale custodial
             // address) are dropped, since the Brale transfer already represents them.
+            // (If the custodial-address fetch fails, an offramp deposit leg may briefly
+            // show alongside its Brale "Cash Out" entry — cosmetic, self-heals on refresh.)
             async let onChainAsync = (try? await repository.getRecentTransactions(address: addr)) ?? []
             async let custodialAsync = (try? await braleRepository.getInternalAddresses()) ?? []
             let onChain = await onChainAsync

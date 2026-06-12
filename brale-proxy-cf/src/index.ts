@@ -188,6 +188,8 @@ app.use("*", async (c, next) => {
       sessionAddress: c.req.header("x-auth-session-address"),
       signatureHex: c.req.header("x-auth-signature"),
     },
+    c.req.method,
+    c.req.path,
     Math.floor(Date.now() / 1000)
   );
 

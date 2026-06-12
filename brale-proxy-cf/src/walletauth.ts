@@ -27,7 +27,8 @@ function hexToBytes(hex: string): Uint8Array {
 }
 
 // Cosmos/XION address = bech32(prefix, ripemd160(sha256(compressedPubkey))).
-function pubkeyToXionAddress(pubkey: Uint8Array): string {
+// Exported for unit testing.
+export function pubkeyToXionAddress(pubkey: Uint8Array): string {
   const hash = ripemd160(sha256(pubkey));
   return bech32.encode("xion", bech32.toWords(hash));
 }
@@ -35,7 +36,8 @@ function pubkeyToXionAddress(pubkey: Uint8Array): string {
 // The session key signs with a non-recoverable 64-byte r||s signature, so recover
 // candidate public keys and check whether any yields the claimed session address.
 // A match proves the signature came from the holder of that address's private key.
-function signatureMatchesAddress(
+// Exported for unit testing.
+export function signatureMatchesAddress(
   signature: Uint8Array,
   msgHash: Uint8Array,
   claimedAddress: string
@@ -61,11 +63,23 @@ function signatureMatchesAddress(
   return false;
 }
 
-// The exact message the iOS session key signs. MUST match the client.
-function challenge(wallet: string, timestamp: string): Uint8Array {
-  return new TextEncoder().encode(`xiondemo-auth:${wallet}:${timestamp}`);
+// The exact message the iOS session key signs. MUST match the client. Binds the
+// HTTP method + path so a captured signature can't be replayed on a different
+// endpoint within the freshness window.
+function challenge(
+  method: string,
+  path: string,
+  wallet: string,
+  timestamp: string
+): Uint8Array {
+  return new TextEncoder().encode(
+    `xiondemo-auth:${method}:${path}:${wallet}:${timestamp}`
+  );
 }
 
+// Note: a positive result is cached for GRANT_CACHE_TTL_SECONDS, so a grant revoked
+// on-chain still authenticates until the cache expires (≤5 min). Acceptable for
+// 24h session grants; shorten the TTL if tighter revocation is required.
 async function hasActiveGrant(
   env: Env,
   granter: string,
@@ -100,6 +114,8 @@ async function hasActiveGrant(
 export async function verifyWalletAuth(
   env: Env,
   h: WalletAuthHeaders,
+  method: string,
+  path: string,
   nowSeconds: number
 ): Promise<string | null> {
   if (!h.wallet || !h.timestamp || !h.sessionAddress || !h.signatureHex) {
@@ -121,7 +137,7 @@ export async function verifyWalletAuth(
 
   // signBytes hashes the message with SHA256 before signing. Recover the signer and
   // confirm it is the claimed session address.
-  const msgHash = sha256(challenge(h.wallet, h.timestamp));
+  const msgHash = sha256(challenge(method, path, h.wallet, h.timestamp));
   if (!signatureMatchesAddress(signature, msgHash, h.sessionAddress)) return null;
 
   // The signature proves possession of the session key; the grant proves that key

@@ -16,8 +16,6 @@ final class OnrampViewModel: ObservableObject {
     @Published var xionAddressId: String?
     @Published var isLoading = false
     @Published var transfer: BraleTransfer?
-    @Published var tokensReceived = false
-    @Published var receivedAmount: String?
     @Published var error: String?
     @Published var step: OnrampStep = .form
 
@@ -117,8 +115,6 @@ final class OnrampViewModel: ObservableObject {
         amountError = nil
         isLoading = false
         transfer = nil
-        tokensReceived = false
-        receivedAmount = nil
         error = nil
         step = .form
     }

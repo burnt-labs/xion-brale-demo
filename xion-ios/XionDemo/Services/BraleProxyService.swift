@@ -4,14 +4,14 @@ final class BraleProxyService {
 
     private let baseURL: String
     private let walletAddressProvider: () -> String?
-    private let authHeaderProvider: (String) -> [String: String]?
+    private let authHeaderProvider: (_ wallet: String, _ method: String, _ path: String) -> [String: String]?
     private let encoder: JSONEncoder
     private let decoder: JSONDecoder
 
     init(
         baseURL: String = Constants.braleProxyUrl,
         walletAddressProvider: @escaping () -> String? = { nil },
-        authHeaderProvider: @escaping (String) -> [String: String]? = { _ in nil }
+        authHeaderProvider: @escaping (_ wallet: String, _ method: String, _ path: String) -> [String: String]? = { _, _, _ in nil }
     ) {
         self.baseURL = baseURL.hasSuffix("/") ? String(baseURL.dropLast()) : baseURL
         self.walletAddressProvider = walletAddressProvider
@@ -92,7 +92,11 @@ final class BraleProxyService {
     private func applyWalletHeaders(_ request: inout URLRequest) {
         guard let walletAddress = walletAddressProvider() else { return }
         request.setValue(walletAddress, forHTTPHeaderField: "X-Wallet-Address")
-        guard let headers = authHeaderProvider(walletAddress) else { return }
+        // Sign the method + path (matching the proxy's `c.req.path`, query excluded)
+        // so the signature is bound to this specific request.
+        let method = request.httpMethod ?? "GET"
+        let path = request.url?.path ?? ""
+        guard let headers = authHeaderProvider(walletAddress, method, path) else { return }
         for (key, value) in headers {
             request.setValue(value, forHTTPHeaderField: key)
         }
