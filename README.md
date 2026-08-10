@@ -93,7 +93,7 @@ apps/
 | JDK | 17 | Kotlin compilation |
 | Android SDK | API 34 | Target SDK |
 | Xcode | 15+ | iOS build and simulator |
-| Node.js | 18+ | Brale proxy server |
+| Node.js | 24+ | Brale proxy server |
 | Rust | 1.75+ | Only if rebuilding mob from source or vault contract |
 | Docker | 20+ | Only if optimizing vault contract wasm binary |
 
